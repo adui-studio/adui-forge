@@ -58,6 +58,13 @@ P0 目标：建立领域核心与最小可运行闭环的骨架，验收标准�
 | MVP-6b  | Docker Sandbox 实现 + Prisma/PostgreSQL RunStore 持久化                            | ✅ 完成 |
 | MVP-7   | Web 任务发起 / Run 列表 / Run 详情页 + SSE 实时事件流                              | ✅ 完成 |
 | MVP-8   | token 级流式：`ModelCallContext` + `streamText` + `model.delta` 全链路             | ✅ 完成 |
+| MVP-9   | `packages/workflow`：agent / tool / condition 节点引擎 + workflow.* 事件族         | ✅ 完成 |
+| MVP-10  | `packages/mcp`：MCP Server 工具桥接（ajv 校验，默认 approval）                     | ✅ 完成 |
+| MVP-11  | Approval API 闭环：PendingApproval + REST 决策 + waiting_approval 状态投影         | ✅ 完成 |
+| MVP-12  | Web 审批页（批准 / 拒绝）+ Run 详情审批入口                                        | ✅ 完成 |
+| MVP-13  | Workflow API：多任务编排复用 Run / SSE 通道                                        | ✅ 完成 |
+| MVP-14  | Authentication：Argon2id + HS256 JWT + 全局 Guard（默认关闭）                      | ✅ 完成 |
+| MVP-15  | CI 流水线（GitHub Actions 全量验收）                                               | ✅ 完成 |
 
 > **首个 MVP 闭环达成**：任务发起 → Agent Loop 执行（模型 + 文件/Shell/Git 工具，
 > Docker Sandbox，Approval 审批）→ 事件流 SSE 实时推送 → Run 持久化与可视化。
