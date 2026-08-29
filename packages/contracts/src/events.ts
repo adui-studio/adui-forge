@@ -32,6 +32,12 @@ export const AGENT_EVENT_NAMES = [
   "approval.rejected",
 
   "artifact.created",
+
+  "workflow.started",
+  "workflow.step.started",
+  "workflow.step.completed",
+  "workflow.step.failed",
+  "workflow.completed",
 ] as const;
 
 export type AgentEventName = (typeof AGENT_EVENT_NAMES)[number];
