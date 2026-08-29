@@ -175,7 +175,14 @@ export class RunService {
       runId,
       onEvent: async (event: AgentEvent) => {
         events.push(event);
-        await this.store.update(runId, { events: [...events] });
+        // 运行中审批的状态投影：等待审批 / 审批后回到执行中
+        const statusPatch: Partial<RunRecord> =
+          event.name === "approval.required"
+            ? { status: "waiting_approval" }
+            : event.name === "approval.approved" || event.name === "approval.rejected"
+              ? { status: "running" }
+              : {};
+        await this.store.update(runId, { events: [...events], ...statusPatch });
         this.#emit(runId, event);
       },
     });

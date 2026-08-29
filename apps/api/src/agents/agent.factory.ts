@@ -58,6 +58,14 @@ export interface BuildDefaultAgentOptions {
 export const buildDefaultAgent = (
   config: ForgeModelConfig,
   options: BuildDefaultAgentOptions = {},
+  approvals?: {
+    createPending: (request: {
+      runId: string;
+      toolName: string;
+      input: unknown;
+      reason: string;
+    }) => { promise: Promise<"approved" | "rejected"> };
+  },
 ): Agent => {
   const tools: AgentTool[] = [];
   const {
@@ -99,6 +107,16 @@ export const buildDefaultAgent = (
     systemPrompt:
       "You are ADui Forge, a careful software engineering agent. " +
       "Inspect before you change, plan minimal diffs, and verify with tests.",
+    // 运行中审批：approval 级工具触发 PendingApproval，REST 决策后 resolve 继续执行
+    approval:
+      approvals === undefined
+        ? undefined
+        : {
+            requestApproval: async (request) => {
+              const { promise } = approvals.createPending(request);
+              return promise;
+            },
+          },
     model: createOpenAICompatibleModelAdapter({
       name: config.name,
       baseURL: config.baseURL,
@@ -119,6 +137,14 @@ export const buildDefaultAgent = (
 /** 组装并注册默认 Agent；模型未配置时跳过注册并告警（启动不失败，Run 时显式 404）。 */
 export const registerDefaultAgent = (
   registry: AgentRegistry,
+  approvals?: {
+    createPending: (request: {
+      runId: string;
+      toolName: string;
+      input: unknown;
+      reason: string;
+    }) => { promise: Promise<"approved" | "rejected"> };
+  },
   env: NodeJS.ProcessEnv = process.env,
 ): void => {
   const logger = new Logger("AgentFactory");
@@ -136,12 +162,16 @@ export const registerDefaultAgent = (
     logger.warn("Trusted Local Mode 已开启：进程可在宿主机执行（无隔离）");
   }
   registry.register(
-    buildDefaultAgent(config, {
-      workspaceRoot,
-      trustedLocalMode,
-      sandbox,
-      sandboxImage: env.FORGE_SANDBOX_IMAGE,
-    }),
+    buildDefaultAgent(
+      config,
+      {
+        workspaceRoot,
+        trustedLocalMode,
+        sandbox,
+        sandboxImage: env.FORGE_SANDBOX_IMAGE,
+      },
+      approvals,
+    ),
   );
   logger.log(`default agent "${DEFAULT_AGENT_NAME}" registered (model: ${config.modelId})`);
 };

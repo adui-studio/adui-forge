@@ -297,6 +297,9 @@ importers:
       '@adui-forge/agent':
         specifier: workspace:*
         version: link:../../packages/agent
+      '@adui-forge/agent-runtime':
+        specifier: workspace:*
+        version: link:../../packages/agent-runtime
       '@adui-forge/ai':
         specifier: workspace:*
         version: link:../../packages/ai

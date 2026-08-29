@@ -1,5 +1,10 @@
 import type { AgentTool, ModelAdapter } from "@adui-forge/contracts";
-import { runAgent, type AgentLoopOptions, type AgentRunResult } from "@adui-forge/agent-runtime";
+import {
+  runAgent,
+  type AgentLoopOptions,
+  type AgentRunResult,
+  type ApprovalHandler,
+} from "@adui-forge/agent-runtime";
 
 /** Loop 运行参数中必须由定义给定的部分。 */
 export type AgentLoopDefaults = Pick<AgentLoopOptions, "maxSteps" | "timeoutMs"> &
@@ -13,6 +18,8 @@ export interface AgentDefinition {
   model: ModelAdapter;
   tools: AgentTool[];
   loop: AgentLoopDefaults;
+  /** 运行中审批处理器；approval 级工具触发时由 Loop 调用（REQUIREMENTS §48）。 */
+  approval?: ApprovalHandler;
 }
 
 /** 单次运行可覆盖的部分；定义级默认值始终兜底。 */
@@ -37,6 +44,7 @@ export const defineAgent = (definition: AgentDefinition): Agent => {
         maxSteps: definition.loop.maxSteps,
         timeoutMs: definition.loop.timeoutMs,
         tokenLimit: definition.loop.tokenLimit,
+        approval: definition.approval,
         ...overrides,
       });
     },
