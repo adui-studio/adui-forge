@@ -7,7 +7,9 @@ ADui Forge Web 工作台（React + React Router + TanStack Query）。
 
 ## 页面（按 REQUIREMENTS §12 逐步补充）
 
-- `/` — Home（P0 占位）
+- `/` — 任务发起（对话式输入）
+- `/runs` — Run 列表
+- `/runs/:id` — Run 详情 + SSE 实时事件流
 
 ## 命令
 

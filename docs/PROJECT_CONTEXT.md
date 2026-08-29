@@ -44,19 +44,22 @@ P0 目标：建立领域核心与最小可运行闭环的骨架，验收标准�
 - [x] `apps/web` — React 19 + React Router 8 + TanStack Query 最小骨架。
 - [x] `apps/docs` — Rspress 2 文档站。
 
-# 2.1 MVP 主开发阶段计划（进行中）
+# 2.1 MVP 主开发阶段计划（✅ 已完成 —— 首个 MVP 闭环达成）
 
-| 阶段    | 内容                                                                               | 状态      |
-| ------- | ---------------------------------------------------------------------------------- | --------- |
-| MVP-1   | 运行时协议下沉 `contracts`（`AgentTool` / `ModelAdapter` / 消息配对）              | ✅ 完成   |
-| MVP-2   | `packages/tool-sdk`：`defineTool` / `ToolRegistry` / 文件工具 + Workspace 边界防御 | ✅ 完成   |
-| MVP-3   | `packages/ai`：AI SDK 桥接 `ModelAdapter` + `ModelRegistry` + 端到端集成测试       | ✅ 完成   |
-| MVP-4   | `packages/agent`：Agent 定义组装（system prompt + tools + model）                  | ✅ 完成   |
-| MVP-4.5 | 文档站部署：GitHub Pages 与 Void（`void-deploy.yml`，OIDC）双通道并存              | ✅ 完成   |
-| MVP-5   | `apps/api` Agent/Run Module + `packages/workflow` 前置契约                         | ✅ 完成   |
-| MVP-6a  | Sandbox 接口 + `shell_exec` / Git 工具（Approval 闭环，Trusted Local Mode 门控）   | ✅ 完成   |
-| MVP-6b  | Docker Sandbox 实现 + Prisma/PostgreSQL RunStore 持久化                            | ✅ 完成   |
-| MVP-7   | Web Chat / Run 页面 + SSE Streaming                                                | ⏳ 待开始 |
+| 阶段    | 内容                                                                               | 状态    |
+| ------- | ---------------------------------------------------------------------------------- | ------- |
+| MVP-1   | 运行时协议下沉 `contracts`（`AgentTool` / `ModelAdapter` / 消息配对）              | ✅ 完成 |
+| MVP-2   | `packages/tool-sdk`：`defineTool` / `ToolRegistry` / 文件工具 + Workspace 边界防御 | ✅ 完成 |
+| MVP-3   | `packages/ai`：AI SDK 桥接 `ModelAdapter` + `ModelRegistry` + 端到端集成测试       | ✅ 完成 |
+| MVP-4   | `packages/agent`：Agent 定义组装（system prompt + tools + model）                  | ✅ 完成 |
+| MVP-4.5 | 文档站部署：GitHub Pages 与 Void（`void-deploy.yml`，OIDC）双通道并存              | ✅ 完成 |
+| MVP-5   | `apps/api` Agent/Run Module + `packages/workflow` 前置契约                         | ✅ 完成 |
+| MVP-6a  | Sandbox 接口 + `shell_exec` / Git 工具（Approval 闭环，Trusted Local Mode 门控）   | ✅ 完成 |
+| MVP-6b  | Docker Sandbox 实现 + Prisma/PostgreSQL RunStore 持久化                            | ✅ 完成 |
+| MVP-7   | Web 任务发起 / Run 列表 / Run 详情页 + SSE 实时事件流                              | ✅ 完成 |
+
+> **首个 MVP 闭环达成**：任务发起 → Agent Loop 执行（模型 + 文件/Shell/Git 工具，
+> Docker Sandbox，Approval 审批）→ 事件流 SSE 实时推送 → Run 持久化与可视化。
 
 ---
 
