@@ -22,3 +22,13 @@ model Run {
   @@index([createdAt])
   @@map("runs")
 }
+
+/// 平台用户（REQUIREMENTS.md §56）
+model User {
+  id           String   @id
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  @@map("users")
+}
