@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
+import { firstValueFrom } from "rxjs";
+import { toArray } from "rxjs/operators";
 import { z } from "zod";
 import type { AgentMessage, AgentTool, ModelAdapter, ModelTurnResult } from "@adui-forge/contracts";
 import { defineAgent, AgentRegistry } from "@adui-forge/agent";
@@ -112,5 +114,29 @@ describe("ZodValidationPipe", () => {
   it("rejects invalid bodies with a BadRequest message", () => {
     const pipe = new ZodValidationPipe(createRunSchema);
     expect(() => pipe.transform({ task: "" }, {} as never)).toThrow(/validation failed/);
+  });
+});
+
+describe("RunService.streamEvents (SSE)", () => {
+  it("replays snapshot, pushes live events and completes on terminal event", async () => {
+    const { registry } = buildRegistry();
+    const service = new RunService(new InMemoryRunStore(), registry);
+    const record = await service.createRun({ agentName: "forge-dev", task: "stream me" });
+
+    // 等 Run 跑完再订阅：验证快照补发 + 终态完成
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const events = await firstValueFrom(service.streamEvents(record.id).pipe(toArray()));
+    const names = events.map((event) => (event.data as { name: string }).name);
+    expect(names).toContain("run.started");
+    expect(names).toContain("run.completed");
+  }, 10_000);
+
+  it("errors for unknown run ids", async () => {
+    const { registry } = buildRegistry();
+    const service = new RunService(new InMemoryRunStore(), registry);
+    await expect(firstValueFrom(service.streamEvents("missing"))).rejects.toThrow(
+      'unknown run: "missing"',
+    );
   });
 });

@@ -1,5 +1,6 @@
-import { Injectable, Logger, NotFoundException } from "@nestjs/common";
-import { Inject } from "@nestjs/common";
+import { Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import type { MessageEvent } from "@nestjs/common";
+import { Observable } from "rxjs";
 import type { AgentEvent, RunStatus } from "@adui-forge/contracts";
 import { AgentRegistry, type Agent } from "@adui-forge/agent";
 import type { RunRecord, RunStore } from "./run.types";
@@ -10,6 +11,12 @@ const TERMINAL_STATUSES: ReadonlySet<RunStatus> = new Set<RunStatus>([
   "failed",
   "cancelled",
   "timeout",
+]);
+
+const TERMINAL_EVENTS: ReadonlySet<string> = new Set<string>([
+  "run.completed",
+  "run.failed",
+  "run.cancelled",
 ]);
 
 const toRunStatus = (result: string): RunStatus => {
@@ -35,11 +42,95 @@ export interface CreateRunInput {
 @Injectable()
 export class RunService {
   private readonly logger = new Logger(RunService.name);
+  readonly #subscribers = new Map<string, Set<(event: AgentEvent) => void>>();
 
   constructor(
     @Inject(RUN_STORE) private readonly store: RunStore,
     @Inject(AgentRegistry) private readonly agents: AgentRegistry,
   ) {}
+
+  /** 订阅某个 Run 的实时事件（SSE 用）；返回取消订阅函数。 */
+  subscribe(runId: string, listener: (event: AgentEvent) => void): () => void {
+    let listeners = this.#subscribers.get(runId);
+    if (listeners === undefined) {
+      listeners = new Set();
+      this.#subscribers.set(runId, listeners);
+    }
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+      if (listeners.size === 0) {
+        this.#subscribers.delete(runId);
+      }
+    };
+  }
+
+  #emit(runId: string, event: AgentEvent): void {
+    for (const listener of this.#subscribers.get(runId) ?? []) {
+      try {
+        listener(event);
+      } catch (error) {
+        this.logger.warn(
+          `event listener for ${runId} threw: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+  }
+
+  /**
+   * SSE 事件流：先补发快照事件，再推送实时事件，终态事件后完成。
+   * 订阅先于快照建立并缓冲，避免快照读取与订阅之间的事件竞态。
+   */
+  streamEvents(runId: string): Observable<MessageEvent> {
+    return new Observable<MessageEvent>((subscriber) => {
+      let buffer: AgentEvent[] = [];
+      let snapshotSent = false;
+      let finished = false;
+
+      const complete = (): void => {
+        if (!finished) {
+          finished = true;
+          subscriber.complete();
+        }
+      };
+
+      const unsubscribe = this.subscribe(runId, (event) => {
+        if (!snapshotSent) {
+          buffer.push(event);
+          return;
+        }
+        subscriber.next({ data: event });
+        if (TERMINAL_EVENTS.has(event.name)) {
+          complete();
+        }
+      });
+
+      void this.getRun(runId)
+        .then((record) => {
+          for (const event of record.events) {
+            subscriber.next({ data: event });
+          }
+          snapshotSent = true;
+          for (const event of buffer) {
+            subscriber.next({ data: event });
+            if (TERMINAL_EVENTS.has(event.name)) {
+              complete();
+            }
+          }
+          if (TERMINAL_STATUSES.has(record.status)) {
+            complete();
+          }
+        })
+        .catch((error: unknown) => {
+          subscriber.error(error);
+        });
+
+      return () => {
+        unsubscribe();
+        complete();
+      };
+    });
+  }
 
   async createRun(input: CreateRunInput): Promise<RunRecord> {
     const agent: Agent | undefined = this.agents.get(input.agentName);
@@ -85,6 +176,7 @@ export class RunService {
       onEvent: async (event: AgentEvent) => {
         events.push(event);
         await this.store.update(runId, { events: [...events] });
+        this.#emit(runId, event);
       },
     });
 

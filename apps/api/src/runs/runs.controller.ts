@@ -1,4 +1,6 @@
-import { Body, Controller, Get, Inject, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, Inject, Param, Post, Sse } from "@nestjs/common";
+import type { MessageEvent } from "@nestjs/common";
+import type { Observable } from "rxjs";
 import { z } from "zod";
 import { DEFAULT_AGENT_NAME } from "../agents/agent.factory";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
@@ -28,5 +30,11 @@ export class RunsController {
   @Get(":id")
   get(@Param("id") id: string) {
     return this.runs.getRun(id);
+  }
+
+  /** SSE 事件流：快照补发 + 实时推送，domain.action 事件以 JSON 编码在 data 中。 */
+  @Sse(":id/events")
+  events(@Param("id") id: string): Observable<MessageEvent> {
+    return this.runs.streamEvents(id);
   }
 }
