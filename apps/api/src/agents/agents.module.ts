@@ -16,9 +16,9 @@ import { AgentsController } from "./agents.controller";
   providers: [
     {
       provide: AgentRegistry,
-      useFactory: (approvals: ApprovalService) => {
+      useFactory: async (approvals: ApprovalService) => {
         const registry = new AgentRegistry();
-        registerDefaultAgent(registry, approvals);
+        await registerDefaultAgent(registry, approvals);
         return registry;
       },
       inject: [APPROVAL_SERVICE],

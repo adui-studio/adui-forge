@@ -16,6 +16,7 @@
     "@adui-forge/agent-runtime": "workspace:*",
     "@adui-forge/ai": "workspace:*",
     "@adui-forge/contracts": "workspace:*",
+    "@adui-forge/mcp": "workspace:*",
     "@adui-forge/tool-sdk": "workspace:*",
     "@adui-forge/workflow": "workspace:*",
     "@nestjs/common": "catalog:",

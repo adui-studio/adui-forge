@@ -53,6 +53,8 @@ export interface BuildDefaultAgentOptions {
   /** DockerSandbox 使用的镜像，默认 node:22-bookworm。 */
   sandboxImage?: string;
   trustedLocalMode?: boolean;
+  /** 由 MCP Server 桥接而来的工具（启动时连接并列举）。 */
+  mcpTools?: AgentTool[];
 }
 
 export const buildDefaultAgent = (
@@ -134,8 +136,40 @@ export const buildDefaultAgent = (
   });
 };
 
+/**
+ * 解析 FORGE_MCP_SERVERS 环境变量（JSON 数组：name / command / args? / env?）。
+ */
+export interface McpServerConfig {
+  name: string;
+  command: string;
+  args?: string[];
+  env?: Record<string, string>;
+}
+
+export const parseMcpServers = (raw: string | undefined): McpServerConfig[] => {
+  if (raw === undefined || raw.trim() === "") {
+    return [];
+  }
+  const parsed: unknown = JSON.parse(raw);
+  if (!Array.isArray(parsed)) {
+    throw new Error("FORGE_MCP_SERVERS must be a JSON array");
+  }
+  return parsed.map((item) => {
+    const server = item as Partial<McpServerConfig>;
+    if (typeof server.name !== "string" || typeof server.command !== "string") {
+      throw new Error("FORGE_MCP_SERVERS entry requires name and command");
+    }
+    return {
+      name: server.name,
+      command: server.command,
+      args: server.args,
+      env: server.env,
+    };
+  });
+};
+
 /** 组装并注册默认 Agent；模型未配置时跳过注册并告警（启动不失败，Run 时显式 404）。 */
-export const registerDefaultAgent = (
+export const registerDefaultAgent = async (
   registry: AgentRegistry,
   approvals?: {
     createPending: (request: {
@@ -146,7 +180,7 @@ export const registerDefaultAgent = (
     }) => { promise: Promise<"approved" | "rejected"> };
   },
   env: NodeJS.ProcessEnv = process.env,
-): void => {
+): Promise<void> => {
   const logger = new Logger("AgentFactory");
   const config = readForgeModelConfig(env);
   if (config === null) {
@@ -160,6 +194,24 @@ export const registerDefaultAgent = (
   const sandbox = (env.FORGE_SANDBOX ?? "docker") as "docker" | "host" | "off";
   if (trustedLocalMode) {
     logger.warn("Trusted Local Mode 已开启：进程可在宿主机执行（无隔离）");
+  }
+  let mcpTools: AgentTool[] = [];
+  for (const server of parseMcpServers(env.FORGE_MCP_SERVERS)) {
+    try {
+      const { connectStdioServer, createMcpTools } = await import("@adui-forge/mcp");
+      const connection = await connectStdioServer({
+        name: server.name,
+        command: server.command,
+        args: server.args,
+        env: server.env,
+      });
+      mcpTools = mcpTools.concat(await createMcpTools(connection));
+      logger.log(`MCP server "${server.name}" connected`);
+    } catch (error) {
+      logger.warn(
+        `MCP server "${server.name}" 连接失败，已跳过: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
   registry.register(
     buildDefaultAgent(
