@@ -44,7 +44,7 @@ P0 目标：建立领域核心与最小可运行闭环的骨架，验收标准�
 - [x] `apps/web` — React 19 + React Router 8 + TanStack Query 最小骨架。
 - [x] `apps/docs` — Rspress 2 文档站。
 
-# 2.1 MVP 主开发阶段计划（✅ MVP-1 至 MVP-25 全部完成）
+# 2.1 MVP 主开发阶段计划（✅ MVP-1 至 MVP-35 全部完成）
 
 | 阶段    | 内容                                                                               | 状态    |
 | ------- | ---------------------------------------------------------------------------------- | ------- |
@@ -78,6 +78,17 @@ P0 目标：建立领域核心与最小可运行闭环的骨架，验收标准�
 > | MVP-23 | Observability metrics 端点 | ✅ 完成 |
 > | MVP-24 | Web 首页会话化（最近 Run 列表） | ✅ 完成 |
 > | MVP-25 | Dockerfile / compose 发布工程 | ✅ 完成 |
+
+| MVP-26 | Multi-Agent：agentToTool 委派（子 Run 独立，ADR-003） | ✅ 完成 |
+| MVP-27 | git_push 工具（强制审批、防选项注入、禁 force） | ✅ 完成 |
+| MVP-28 | Workflow 注册表 + 定义/运行 API | ✅ 完成 |
+| MVP-29 | Web Workflows 编排页 | ✅ 完成 |
+| MVP-30 | Run 重试端点（POST /runs/:id/retry） | ✅ 完成 |
+| MVP-31 | Rate limit 守卫（登录/Run/Task 路由） | ✅ 完成 |
+| MVP-32 | OpenAPI 描述端点（GET /api/v1/openapi.json） | ✅ 完成 |
+| MVP-33 | Run 详情事件域过滤与失败高亮 | ✅ 完成 |
+| MVP-34 | 冒烟脚本（pnpm run smoke） | ✅ 完成 |
+| MVP-35 | ADR-003 与文档收尾 | ✅ 完成 |
 
 ---
 
