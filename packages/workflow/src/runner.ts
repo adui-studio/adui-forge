@@ -1,4 +1,4 @@
-import { createAgentEvent, type AgentEvent, type AgentEventName } from "@adui-forge/contracts";
+import { createAgentEvent, type AgentEventName } from "@adui-forge/contracts";
 import type {
   WorkflowContext,
   WorkflowDefinition,

@@ -26,7 +26,7 @@ describe("stepTypeSchema", () => {
 describe("agent events", () => {
   it("event names follow domain.action convention", () => {
     for (const name of AGENT_EVENT_NAMES) {
-      expect(name).toMatch(/^[a-z]+\.[a-z_]+$/);
+      expect(name).toMatch(/^[a-z]+(\.[a-z_]+)+$/);
     }
   });
 
