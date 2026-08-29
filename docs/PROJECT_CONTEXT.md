@@ -57,6 +57,7 @@ P0 目标：建立领域核心与最小可运行闭环的骨架，验收标准�
 | MVP-6a  | Sandbox 接口 + `shell_exec` / Git 工具（Approval 闭环，Trusted Local Mode 门控）   | ✅ 完成 |
 | MVP-6b  | Docker Sandbox 实现 + Prisma/PostgreSQL RunStore 持久化                            | ✅ 完成 |
 | MVP-7   | Web 任务发起 / Run 列表 / Run 详情页 + SSE 实时事件流                              | ✅ 完成 |
+| MVP-8   | token 级流式：`ModelCallContext` + `streamText` + `model.delta` 全链路             | ✅ 完成 |
 
 > **首个 MVP 闭环达成**：任务发起 → Agent Loop 执行（模型 + 文件/Shell/Git 工具，
 > Docker Sandbox，Approval 审批）→ 事件流 SSE 实时推送 → Run 持久化与可视化。
