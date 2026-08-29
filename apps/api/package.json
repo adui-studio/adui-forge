@@ -11,11 +11,16 @@
     "check": "vp check"
   },
   "dependencies": {
+    "@adui-forge/agent": "workspace:*",
+    "@adui-forge/ai": "workspace:*",
+    "@adui-forge/contracts": "workspace:*",
+    "@adui-forge/tool-sdk": "workspace:*",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
     "@nestjs/platform-fastify": "catalog:",
     "reflect-metadata": "catalog:",
-    "rxjs": "catalog:"
+    "rxjs": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
