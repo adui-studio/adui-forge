@@ -179,3 +179,16 @@ describe("retryRun", () => {
     await expect(service.retryRun("missing")).rejects.toThrow('unknown run: "missing"');
   });
 });
+
+describe("listRuns 过滤", () => {
+  it("filters by status and limits", async () => {
+    const { registry } = buildRegistry();
+    const service = new RunService(new InMemoryRunStore(), registry);
+    await service.createRun({ agentName: "forge-dev", task: "a" });
+    await service.createRun({ agentName: "forge-dev", task: "b" });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const completed = await service.listRuns({ status: "completed", limit: 1 });
+    expect(completed).toHaveLength(1);
+    expect(await service.listRuns({ agentName: "other" })).toHaveLength(0);
+  });
+});

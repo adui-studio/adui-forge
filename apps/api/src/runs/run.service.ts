@@ -207,8 +207,22 @@ export class RunService {
     return this.createRun({ agentName: previous.agentName, task: previous.task });
   }
 
-  async listRuns(): Promise<RunRecord[]> {
-    return this.store.list();
+  async listRuns(options?: {
+    status?: string;
+    agentName?: string;
+    limit?: number;
+  }): Promise<RunRecord[]> {
+    let runs = await this.store.list();
+    if (options?.status !== undefined) {
+      runs = runs.filter((run) => run.status === options.status);
+    }
+    if (options?.agentName !== undefined) {
+      runs = runs.filter((run) => run.agentName === options.agentName);
+    }
+    if (options?.limit !== undefined) {
+      runs = runs.slice(0, options.limit);
+    }
+    return runs;
   }
 
   async #execute(runId: string, agent: Agent, task: string, systemPrompt?: string): Promise<void> {

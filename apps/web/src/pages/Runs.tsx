@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Link } from "react-router";
 import { fetchRuns } from "../lib/api.ts";
 
@@ -18,6 +19,7 @@ const STATUS_LABEL: Record<string, string> = {
 export const statusLabel = (status: string): string => STATUS_LABEL[status] ?? status;
 
 export function RunsPage() {
+  const [statusFilter, setStatusFilter] = useState("");
   const {
     data: runs,
     isLoading,
@@ -38,6 +40,17 @@ export function RunsPage() {
       {isLoading && <p>加载中…</p>}
       {isError && <p role="alert">{String(error)}</p>}
       {runs !== undefined && runs.length === 0 && <p>还没有 Run，去发一个任务吧。</p>}
+      <label>
+        状态过滤:{" "}
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="">全部</option>
+          {Object.entries(STATUS_LABEL).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </label>
       {runs !== undefined && runs.length > 0 && (
         <table>
           <thead>
@@ -49,16 +62,18 @@ export function RunsPage() {
             </tr>
           </thead>
           <tbody>
-            {runs.map((run) => (
-              <tr key={run.id}>
-                <td>
-                  <Link to={`/runs/${run.id}`}>{run.id.slice(0, 16)}…</Link>
-                </td>
-                <td>{statusLabel(run.status)}</td>
-                <td>{run.task.slice(0, 60)}</td>
-                <td>{new Date(run.createdAt).toLocaleString()}</td>
-              </tr>
-            ))}
+            {runs
+              .filter((run) => statusFilter === "" || run.status === statusFilter)
+              .map((run) => (
+                <tr key={run.id}>
+                  <td>
+                    <Link to={`/runs/${run.id}`}>{run.id.slice(0, 16)}…</Link>
+                  </td>
+                  <td>{statusLabel(run.status)}</td>
+                  <td>{run.task.slice(0, 60)}</td>
+                  <td>{new Date(run.createdAt).toLocaleString()}</td>
+                </tr>
+              ))}
           </tbody>
         </table>
       )}

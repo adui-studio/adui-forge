@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Inject, Param, Post, Sse } from "@nestjs/common";
+import { Body, Controller, Get, Inject, Param, Post, Query, Sse } from "@nestjs/common";
 import type { MessageEvent } from "@nestjs/common";
 import type { Observable } from "rxjs";
 import { z } from "zod";
@@ -23,8 +23,12 @@ export class RunsController {
   }
 
   @Get()
-  list() {
-    return this.runs.listRuns();
+  list(@Query() query: { status?: string; agentName?: string; limit?: string }) {
+    return this.runs.listRuns({
+      status: query.status,
+      agentName: query.agentName,
+      limit: query.limit === undefined ? undefined : Number(query.limit),
+    });
   }
 
   @Get(":id")
