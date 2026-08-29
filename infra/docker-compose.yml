@@ -59,6 +59,16 @@ services:
       postgres:
         condition: service_healthy
 
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    container_name: forge-web
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
 volumes:
   forge-pgdata:
   forge-redisdata:

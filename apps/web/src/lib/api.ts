@@ -1,5 +1,5 @@
 import type { AgentEvent } from "@adui-forge/contracts";
-import { authHeader } from "./auth.ts";
+import { authHeader, clearToken } from "./auth.ts";
 
 /** Run 记录（与 apps/api 的 RunRecord 对齐，经 contracts 事件协议关联）。 */
 export interface RunRecord {
@@ -19,6 +19,11 @@ const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
     headers: { "content-type": "application/json", ...authHeader() },
     ...init,
   });
+  if (response.status === 401) {
+    clearToken();
+    window.location.href = "/login";
+    throw new Error("未登录或令牌已过期");
+  }
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as { message?: string } | null;
     throw new Error(body?.message ?? `request failed: ${response.status}`);

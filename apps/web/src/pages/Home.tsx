@@ -47,7 +47,15 @@ export function HomePage() {
       </form>
       <p>
         <a href="/runs">查看全部 Runs →</a> · <a href="/workflows">Workflows →</a> ·{" "}
-        <a href="/approvals">待审批 →</a> · <a href="/login">登录 →</a>
+        <a href="/approvals">待审批 →</a> · <a href="/login">登录 →</a> ·{" "}
+        <a
+          href="/"
+          onClick={() => {
+            localStorage.removeItem("forge.accessToken");
+          }}
+        >
+          登出 →
+        </a>
       </p>
       {runs !== undefined && runs.length > 0 && (
         <section>
