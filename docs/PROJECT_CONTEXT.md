@@ -55,7 +55,7 @@ P0 目标：建立领域核心与最小可运行闭环的骨架，验收标准�
 | MVP-4.5 | 文档站部署：GitHub Pages 与 Void（`void-deploy.yml`，OIDC）双通道并存              | ✅ 完成   |
 | MVP-5   | `apps/api` Agent/Run Module + `packages/workflow` 前置契约                         | ✅ 完成   |
 | MVP-6a  | Sandbox 接口 + `shell_exec` / Git 工具（Approval 闭环，Trusted Local Mode 门控）   | ✅ 完成   |
-| MVP-6b  | Docker Sandbox 实现 + Prisma/PostgreSQL RunStore 持久化                            | ⏳ 待开始 |
+| MVP-6b  | Docker Sandbox 实现 + Prisma/PostgreSQL RunStore 持久化                            | ✅ 完成   |
 | MVP-7   | Web Chat / Run 页面 + SSE Streaming                                                | ⏳ 待开始 |
 
 ---
