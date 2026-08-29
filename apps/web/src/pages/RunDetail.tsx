@@ -98,7 +98,14 @@ export function RunDetailPage() {
           </li>
         ))}
       </ol>
-      {!isTerminalStatus(run.status) && <p>订阅中，事件将实时推送…</p>}
+      {run.status === "waiting_approval" && (
+        <p role="alert">
+          该 Run 正在等待人工审批，去 <a href="/approvals">审批页</a> 处理。
+        </p>
+      )}
+      {!isTerminalStatus(run.status) && run.status !== "waiting_approval" && (
+        <p>订阅中，事件将实时推送…</p>
+      )}
     </main>
   );
 }

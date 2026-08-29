@@ -41,7 +41,7 @@ export function HomePage() {
         {mutation.isError && <p role="alert">{String(mutation.error)}</p>}
       </form>
       <p>
-        <a href="/runs">查看全部 Runs →</a>
+        <a href="/runs">查看全部 Runs →</a> · <a href="/approvals">待审批 →</a>
       </p>
     </main>
   );
