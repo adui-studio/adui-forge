@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
+
+process.env.FORGE_JWT_SECRET ??= "test-secret";
 import { AuthService, InMemoryUsersStore } from "../src/auth/auth.service";
 import { signJwt, verifyJwt } from "../src/auth/jwt";
 
