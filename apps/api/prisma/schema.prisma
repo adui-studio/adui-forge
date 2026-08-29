@@ -32,3 +32,15 @@ model User {
 
   @@map("users")
 }
+
+/// 任务台账（标题 → 派生 Run）
+model Task {
+  id        String   @id
+  title     String
+  runId     String
+  status    String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("tasks")
+}

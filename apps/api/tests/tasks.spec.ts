@@ -31,7 +31,7 @@ describe("TaskService", () => {
     const task = await service.createTask({ title: "加搜索功能", task: "implement search" });
     expect(task.title).toBe("加搜索功能");
     expect(task.runId).toMatch(/^run_/);
-    expect(service.list()).toHaveLength(1);
+    expect(await service.list()).toHaveLength(1);
   });
 
   it("createTaskSchema rejects empty titles", () => {

@@ -13,20 +13,20 @@ export interface TaskRecord {
 }
 
 export interface TaskStore {
-  create(task: Omit<TaskRecord, "createdAt">): TaskRecord;
-  list(): TaskRecord[];
+  create(task: Omit<TaskRecord, "createdAt">): Promise<TaskRecord>;
+  list(): Promise<TaskRecord[]>;
 }
 
 export class InMemoryTaskStore implements TaskStore {
   readonly #tasks: TaskRecord[] = [];
 
-  create(task: Omit<TaskRecord, "createdAt">): TaskRecord {
+  async create(task: Omit<TaskRecord, "createdAt">): Promise<TaskRecord> {
     const record: TaskRecord = { ...task, createdAt: new Date().toISOString() };
     this.#tasks.unshift(record);
     return record;
   }
 
-  list(): TaskRecord[] {
+  async list(): Promise<TaskRecord[]> {
     return [...this.#tasks];
   }
 }
@@ -56,7 +56,7 @@ export class TaskService {
     });
   }
 
-  list(): TaskRecord[] {
+  async list(): Promise<TaskRecord[]> {
     return this.store.list();
   }
 }
