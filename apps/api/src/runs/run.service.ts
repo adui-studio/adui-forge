@@ -49,6 +49,19 @@ export class RunService {
     @Inject(AgentRegistry) private readonly agents: AgentRegistry,
   ) {}
 
+  private artifactRegistrar?: (input: {
+    runId: string;
+    name: string;
+    type: string;
+    content: string;
+  }) => void;
+
+  setArtifactRegistrar(
+    fn: (input: { runId: string; name: string; type: string; content: string }) => void,
+  ): void {
+    this.artifactRegistrar = fn;
+  }
+
   /** 供 WorkflowService 等复用的事件推送通道。 */
   emitEvent = (runId: string, event: AgentEvent): void => {
     this.#emit(runId, event);
@@ -201,6 +214,16 @@ export class RunService {
 
     if (status === "failed" && result.error !== undefined) {
       this.logger.warn(`run ${runId} failed: ${result.error}`);
+    }
+
+    if (this.artifactRegistrar !== undefined && status === "completed") {
+      const summary = result.messages.filter((m) => m.role === "assistant").at(-1)?.content ?? "";
+      this.artifactRegistrar({
+        runId,
+        name: "execution-summary",
+        type: "report",
+        content: summary,
+      });
     }
   }
 }

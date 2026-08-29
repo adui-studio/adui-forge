@@ -1,10 +1,14 @@
 import { Module } from "@nestjs/common";
 import { PrismaClient } from "@prisma/client";
+import { AgentRegistry } from "@adui-forge/agent";
 import { InMemoryRunStore } from "./in-memory-run.store";
 import { PrismaRunStore } from "./prisma-run.store";
 import { RunService } from "./run.service";
 import { RUN_STORE } from "./run.tokens";
+import type { RunStore } from "./run.types";
 import { RunsController } from "./runs.controller";
+import { ArtifactService } from "./artifact.service";
+import { ArtifactsController } from "./artifacts.controller";
 import { AgentsModule } from "../agents/agents.module";
 import { ApprovalsModule } from "../approvals/approvals.module";
 
@@ -14,9 +18,10 @@ import { ApprovalsModule } from "../approvals/approvals.module";
  */
 @Module({
   imports: [AgentsModule, ApprovalsModule],
-  controllers: [RunsController],
+  controllers: [RunsController, ArtifactsController],
   exports: [RunService],
   providers: [
+    ArtifactService,
     {
       provide: RUN_STORE,
       useFactory: () => {
@@ -26,7 +31,15 @@ import { ApprovalsModule } from "../approvals/approvals.module";
         return new InMemoryRunStore();
       },
     },
-    RunService,
+    {
+      provide: RunService,
+      useFactory: (store: RunStore, registry: AgentRegistry, artifacts: ArtifactService) => {
+        const service = new RunService(store, registry);
+        service.setArtifactRegistrar((input) => artifacts.register(input));
+        return service;
+      },
+      inject: [RUN_STORE, AgentRegistry, ArtifactService],
+    },
   ],
 })
 export class RunsModule {}

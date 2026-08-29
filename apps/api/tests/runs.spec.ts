@@ -140,3 +140,23 @@ describe("RunService.streamEvents (SSE)", () => {
     );
   });
 });
+
+describe("Artifacts", () => {
+  it("registers an execution summary artifact on completion", async () => {
+    const { registry } = buildRegistry();
+    const store = new InMemoryRunStore();
+    const service = new RunService(store, registry);
+    const registered: Array<{ runId: string; name: string; type: string; content: string }> = [];
+    service.setArtifactRegistrar((input) => {
+      registered.push(input);
+    });
+
+    const record = await service.createRun({ agentName: "forge-dev", task: "make artifact" });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(registered).toHaveLength(1);
+    expect(registered[0]?.runId).toBe(record.id);
+    expect(registered[0]?.name).toBe("execution-summary");
+    expect(registered[0]?.content.length).toBeGreaterThan(0);
+  }, 10_000);
+});
