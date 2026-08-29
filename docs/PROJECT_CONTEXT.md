@@ -52,8 +52,8 @@ P0 目标：建立领域核心与最小可运行闭环的骨架，验收标准�
 | MVP-2   | `packages/tool-sdk`：`defineTool` / `ToolRegistry` / 文件工具 + Workspace 边界防御 | ✅ 完成   |
 | MVP-3   | `packages/ai`：AI SDK 桥接 `ModelAdapter` + `ModelRegistry` + 端到端集成测试       | ✅ 完成   |
 | MVP-4   | `packages/agent`：Agent 定义组装（system prompt + tools + model）                  | ✅ 完成   |
-| MVP-4.5 | `.github/workflows/deploy-docs.yml`：文档站自动部署 GitHub Pages（SHA 固定加固）   | ✅ 完成   |
-| MVP-5   | `apps/api` Agent/Run Module + `packages/workflow` 前置契约                         | ⏳ 待开始 |
+| MVP-4.5 | 文档站部署：GitHub Pages → 切换 Void 平台（`void-deploy.yml`，OIDC 无凭证）        | ✅ 完成   |
+| MVP-5   | `apps/api` Agent/Run Module + `packages/workflow` 前置契约                         | ✅ 完成   |
 | MVP-6   | Sandbox（Docker）+ Shell/Git 工具 + Approval 闭环                                  | ⏳ 待开始 |
 | MVP-7   | Web Chat / Run 页面 + SSE Streaming                                                | ⏳ 待开始 |
 
