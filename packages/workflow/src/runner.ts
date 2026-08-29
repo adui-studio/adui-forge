@@ -4,7 +4,6 @@ import type {
   WorkflowDefinition,
   WorkflowRunOptions,
   WorkflowRunResult,
-  WorkflowRunStatus,
   WorkflowStep,
 } from "./types.ts";
 

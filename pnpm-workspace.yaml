@@ -8,6 +8,7 @@ catalogMode: prefer
 catalog:
   "@ai-sdk/openai-compatible": ^3.0.39
   "@ai-sdk/provider": ^4.0.8
+  "@modelcontextprotocol/sdk": ^1.30.0
   "@nestjs/common": ^12.0.1
   "@nestjs/core": ^12.0.1
   "@nestjs/platform-fastify": ^12.0.1
@@ -19,6 +20,7 @@ catalog:
   "@types/react-dom": ^19.2.5
   "@vitejs/plugin-react": ^6.1.1
   ai: ^7.0.83
+  ajv: ^8.20.0
   prisma: 8.0.0-rc.12
   react: ^19.2.8
   react-dom: ^19.2.8
