@@ -2,7 +2,13 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vite-plus/test";
-import { createGitTools, createShellExecTool, HostSandbox, type Sandbox } from "../src/index.ts";
+import {
+  createGitPushTool,
+  createGitTools,
+  createShellExecTool,
+  HostSandbox,
+  type Sandbox,
+} from "../src/index.ts";
 
 let workspace: string;
 const sandbox: Sandbox = new HostSandbox();
@@ -127,5 +133,34 @@ describe("git tools", () => {
     writeFileSync(join(workspace, "a.txt"), "hello world\n");
     const diff = (await runTool("git_diff", {})) as string;
     expect(diff).toContain("hello world");
+  });
+});
+
+describe("git_push", () => {
+  it("pushes to a local bare remote with approval permission and option-injection guard", async () => {
+    const remote = mkdtempSync(join(tmpdir(), "tool-sdk-remote-"));
+    await sandbox.execFile("git", ["init", "--bare"], { cwd: remote, timeoutMs: 10_000 });
+    await sandbox.execFile("git", ["add", "-A"], { cwd: workspace, timeoutMs: 10_000 });
+    await sandbox.execFile("git", ["commit", "-m", "init", "--allow-empty"], {
+      cwd: workspace,
+      timeoutMs: 10_000,
+    });
+    await sandbox.execFile("git", ["branch", "-M", "main"], { cwd: workspace, timeoutMs: 10_000 });
+
+    const pushTool = createGitPushTool({ sandbox, workspaceRoot: workspace });
+    expect(pushTool.permission).toBe("approval");
+
+    const output = (await pushTool.execute(
+      { remote: remote.split("\\").join("/"), branch: "main" },
+      { runId: "run_test", signal: new AbortController().signal },
+    )) as string;
+    expect(output).toContain("exitCode: 0");
+
+    await expect(
+      pushTool.execute(
+        { remote: "--upload-pack=evil", branch: "main" },
+        { runId: "run_test", signal: new AbortController().signal },
+      ),
+    ).rejects.toThrow("must not contain options");
   });
 });

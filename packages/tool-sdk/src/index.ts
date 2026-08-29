@@ -53,6 +53,7 @@ export {
   type GitToolsOptions,
 } from "./git-tools.ts";
 export { createShellExecTool, type ShellExecToolOptions } from "./shell-exec.ts";
+export { createGitPushTool, type GitPushToolOptions } from "./git-push.ts";
 export {
   HostSandbox,
   type Sandbox,
