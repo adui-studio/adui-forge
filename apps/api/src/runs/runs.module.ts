@@ -9,6 +9,8 @@ import type { RunStore } from "./run.types";
 import { RunsController } from "./runs.controller";
 import { ArtifactService } from "./artifact.service";
 import { ArtifactsController } from "./artifacts.controller";
+import { MemoryController } from "./memory.controller";
+import { MemoryService } from "./memory.service";
 import { AgentsModule } from "../agents/agents.module";
 import { ApprovalsModule } from "../approvals/approvals.module";
 
@@ -18,10 +20,11 @@ import { ApprovalsModule } from "../approvals/approvals.module";
  */
 @Module({
   imports: [AgentsModule, ApprovalsModule],
-  controllers: [RunsController, ArtifactsController],
+  controllers: [RunsController, ArtifactsController, MemoryController],
   exports: [RunService],
   providers: [
     ArtifactService,
+    MemoryService,
     {
       provide: RUN_STORE,
       useFactory: () => {
@@ -33,12 +36,18 @@ import { ApprovalsModule } from "../approvals/approvals.module";
     },
     {
       provide: RunService,
-      useFactory: (store: RunStore, registry: AgentRegistry, artifacts: ArtifactService) => {
+      useFactory: (
+        store: RunStore,
+        registry: AgentRegistry,
+        artifacts: ArtifactService,
+        memory: MemoryService,
+      ) => {
         const service = new RunService(store, registry);
         service.setArtifactRegistrar((input) => artifacts.register(input));
+        service.setMemory(memory);
         return service;
       },
-      inject: [RUN_STORE, AgentRegistry, ArtifactService],
+      inject: [RUN_STORE, AgentRegistry, ArtifactService, MemoryService],
     },
   ],
 })

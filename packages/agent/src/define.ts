@@ -24,7 +24,7 @@ export interface AgentDefinition {
 
 /** 单次运行可覆盖的部分；定义级默认值始终兜底。 */
 export interface AgentRunOverrides extends Partial<
-  Pick<AgentLoopOptions, "runId" | "signal" | "approval" | "onEvent">
+  Pick<AgentLoopOptions, "runId" | "signal" | "approval" | "onEvent" | "systemPrompt">
 > {}
 
 export interface Agent extends AgentDefinition {

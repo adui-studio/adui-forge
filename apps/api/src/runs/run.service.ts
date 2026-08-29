@@ -49,12 +49,23 @@ export class RunService {
     @Inject(AgentRegistry) private readonly agents: AgentRegistry,
   ) {}
 
+  private memory?: {
+    record(input: { agentName: string; task: string; status: RunStatus; summary: string }): void;
+    recent(
+      agentName: string,
+      limit?: number,
+    ): Array<{ task: string; status: string; summary: string }>;
+  };
   private artifactRegistrar?: (input: {
     runId: string;
     name: string;
     type: string;
     content: string;
   }) => void;
+
+  setMemory(memory: NonNullable<RunService["memory"]>): void {
+    this.memory = memory;
+  }
 
   setArtifactRegistrar(
     fn: (input: { runId: string; name: string; type: string; content: string }) => void,
@@ -162,8 +173,17 @@ export class RunService {
       task: input.task,
     });
 
+    // Session Memory：把同 Agent 最近几次任务的摘要注入系统提示，形成会话连续性
+    const memoryLines = this.memory
+      ?.recent(input.agentName)
+      .map((entry) => `- [${entry.status}] ${entry.task} → ${entry.summary.slice(0, 200)}`);
+    const systemPrompt =
+      memoryLines !== undefined && memoryLines.length > 0
+        ? `${agent.systemPrompt}\n\n# Recent session memory\n${memoryLines.join("\n")}`
+        : agent.systemPrompt;
+
     // AGENTS.md §30：API 请求不阻塞等待 Agent Run，创建即返回，执行在后台推进
-    void this.#execute(record.id, agent, input.task).catch((error: unknown) => {
+    void this.#execute(record.id, agent, input.task, systemPrompt).catch((error: unknown) => {
       this.logger.error(
         `run ${record.id} crashed`,
         error instanceof Error ? error.stack : String(error),
@@ -185,12 +205,13 @@ export class RunService {
     return this.store.list();
   }
 
-  async #execute(runId: string, agent: Agent, task: string): Promise<void> {
+  async #execute(runId: string, agent: Agent, task: string, systemPrompt?: string): Promise<void> {
     await this.store.update(runId, { status: "running", startedAt: new Date().toISOString() });
     const events: AgentEvent[] = [];
 
     const result = await agent.run(task, {
       runId,
+      systemPrompt: systemPrompt ?? agent.systemPrompt,
       onEvent: async (event: AgentEvent) => {
         events.push(event);
         // 运行中审批的状态投影：等待审批 / 审批后回到执行中
@@ -214,6 +235,16 @@ export class RunService {
 
     if (status === "failed" && result.error !== undefined) {
       this.logger.warn(`run ${runId} failed: ${result.error}`);
+    }
+
+    if (this.memory !== undefined) {
+      this.memory.record({
+        agentName: agent.name,
+        task,
+        status,
+        summary:
+          result.messages.filter((message) => message.role === "assistant").at(-1)?.content ?? "",
+      });
     }
 
     if (this.artifactRegistrar !== undefined && status === "completed") {
