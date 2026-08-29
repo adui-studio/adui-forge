@@ -32,6 +32,11 @@ export class RunsController {
     return this.runs.getRun(id);
   }
 
+  @Post(":id/retry")
+  retry(@Param("id") id: string) {
+    return this.runs.retryRun(id);
+  }
+
   /** SSE 事件流：快照补发 + 实时推送，domain.action 事件以 JSON 编码在 data 中。 */
   @Sse(":id/events")
   events(@Param("id") id: string): Observable<MessageEvent> {

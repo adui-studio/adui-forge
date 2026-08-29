@@ -160,3 +160,22 @@ describe("Artifacts", () => {
     expect(registered[0]?.content.length).toBeGreaterThan(0);
   }, 10_000);
 });
+
+describe("retryRun", () => {
+  it("creates a new run with the same agent and task", async () => {
+    const { registry } = buildRegistry();
+    const service = new RunService(new InMemoryRunStore(), registry);
+    const first = await service.createRun({ agentName: "forge-dev", task: "original task" });
+
+    const retried = await service.retryRun(first.id);
+    expect(retried.id).not.toBe(first.id);
+    expect(retried.agentName).toBe("forge-dev");
+    expect(retried.task).toBe("original task");
+  });
+
+  it("rejects retry of unknown runs", async () => {
+    const { registry } = buildRegistry();
+    const service = new RunService(new InMemoryRunStore(), registry);
+    await expect(service.retryRun("missing")).rejects.toThrow('unknown run: "missing"');
+  });
+});

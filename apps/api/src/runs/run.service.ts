@@ -201,6 +201,12 @@ export class RunService {
     return record;
   }
 
+  /** 重试：以原 Run 的 agent 与任务创建一个新 Run（REQUIREMENTS §54 Recoverable）。 */
+  async retryRun(id: string): Promise<RunRecord> {
+    const previous = await this.getRun(id);
+    return this.createRun({ agentName: previous.agentName, task: previous.task });
+  }
+
   async listRuns(): Promise<RunRecord[]> {
     return this.store.list();
   }

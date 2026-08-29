@@ -2,7 +2,6 @@ import { describe, expect, it } from "vite-plus/test";
 import { ApprovalService } from "../src/approvals/approval.service";
 import { MemoryService } from "../src/runs/memory.service";
 import { MetricsController } from "../src/metrics/metrics.controller";
-import { RunService } from "../src/runs/run.service";
 
 describe("MetricsController", () => {
   it("aggregates run / approval / memory counters", async () => {
