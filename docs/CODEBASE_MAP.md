@@ -20,8 +20,11 @@ adui-forge/
 ├─ .vscode/                   # 编辑器推荐配置
 ├─ .vite-hooks/               # Vite+ 管理的 git hooks（pre-commit: vp staged）
 │
-├─ apps/                      # 应用层（当前为空）
-├─ packages/                  # 共享包层（当前为空）
+├─ apps/                      # 应用层（当前为空，P0 后续增量）
+├─ packages/                  # 共享包层
+│  ├─ shared/                 # Result / ID 等通用工具
+│  ├─ contracts/              # Run / Step / 事件契约（Zod Schema）
+│  └─ agent-runtime/          # Agent Loop 领域核心（P0）
 │
 ├─ docs/
 │  ├─ REQUIREMENTS.md         # 完整需求定义

@@ -31,18 +31,20 @@ Human Approval → Deliver
 
 # 2. 当前阶段
 
-**Phase 0 — 项目初始化已完成。**
+**P0 — 可运行的领域核心骨架（进行中）。**
 
-- 仓库结构与工程规范已确立（AGENTS.md / docs/ / .agents/skills/ / evals/）。
-- 脚手架生成的 starter 代码（`apps/website`、`packages/utils`）已删除。
-- `apps/`、`packages/` 目前为空，等待按 REQUIREMENTS.md 第 7 节逐步搭建。
+P0 目标：建立领域核心与最小可运行闭环的骨架，验收标准为 `pnpm run ready`（check / test / build）全绿。
 
-下一步（按优先级）：
+- [x] 仓库结构与工程规范（AGENTS.md / docs/ / .agents/skills/ / evals/）。
+- [x] `packages/shared` — Result / ID 等通用工具。
+- [x] `packages/contracts` — Run 状态、Step 类型、`domain.action` 事件契约（Zod Schema）。
+- [x] `packages/agent-runtime` — Agent Loop 核心（maxSteps / timeout / abort / tokenLimit /
+      tool 权限与 approval），Provider / UI / Transport 无关，13 个单元测试。
+- [ ] `apps/api` — NestJS 最小骨架（健康检查 + Domain Module 结构）。
+- [ ] `apps/web` — React 最小骨架（Router + TanStack Query）。
+- [ ] `apps/docs` — Rspress 文档站。
 
-1. 搭建 `packages/contracts`、`packages/shared` 等基础包骨架。
-2. 搭建 `packages/agent-runtime` 领域核心 + 单元测试。
-3. 搭建 `apps/api`（NestJS）与 `apps/web`（React）最小可运行骨架。
-4. 搭建 `apps/docs`（Rspress）。
+P0 完成后进入 MVP 主开发（见 REQUIREMENTS.md §69）。
 
 ---
 
