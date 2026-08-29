@@ -6,9 +6,15 @@ export interface WorkflowDefinitionRecord {
   tasks: string[];
 }
 
-/** Workflow 定义注册表（内存实现；MVP 阶段定义以 tasks 序列表达）。 */
+export interface WorkflowsRegistryContract {
+  register(definition: WorkflowDefinitionRecord): void | Promise<void>;
+  get(name: string): WorkflowDefinitionRecord | Promise<WorkflowDefinitionRecord>;
+  list(): WorkflowDefinitionRecord[] | Promise<WorkflowDefinitionRecord[]>;
+}
+
+/** 内存实现（同步语义；MVP 阶段定义以 tasks 序列表达）。 */
 @Injectable()
-export class WorkflowsRegistry {
+export class WorkflowsRegistry implements WorkflowsRegistryContract {
   readonly #definitions = new Map<string, WorkflowDefinitionRecord>();
 
   register(definition: WorkflowDefinitionRecord): void {

@@ -21,7 +21,7 @@ export class WorkflowsRegistryController {
   ) {}
 
   @Get()
-  list() {
+  async list() {
     return this.registry.list();
   }
 
@@ -39,7 +39,7 @@ export class WorkflowsRegistryController {
 
   @Post(":name/runs")
   async run(@Param("name") name: string) {
-    const definition = this.registry.get(name);
+    const definition = await this.registry.get(name);
     return this.workflows.createWorkflowRun({ tasks: definition.tasks });
   }
 }
