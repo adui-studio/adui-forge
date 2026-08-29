@@ -44,7 +44,7 @@ P0 目标：建立领域核心与最小可运行闭环的骨架，验收标准�
 - [x] `apps/web` — React 19 + React Router 8 + TanStack Query 最小骨架。
 - [x] `apps/docs` — Rspress 2 文档站。
 
-# 2.1 MVP 主开发阶段计划（✅ 已完成 —— 首个 MVP 闭环达成）
+# 2.1 MVP 主开发阶段计划（✅ MVP-1 至 MVP-25 全部完成）
 
 | 阶段    | 内容                                                                               | 状态    |
 | ------- | ---------------------------------------------------------------------------------- | ------- |
@@ -68,6 +68,16 @@ P0 目标：建立领域核心与最小可运行闭环的骨架，验收标准�
 
 > **首个 MVP 闭环达成**：任务发起 → Agent Loop 执行（模型 + 文件/Shell/Git 工具，
 > Docker Sandbox，Approval 审批）→ 事件流 SSE 实时推送 → Run 持久化与可视化。
+> | MVP-16 | Prisma UsersStore（AUTH 持久化） | ✅ 完成 |
+> | MVP-17 | Web 登录/注册页（Bearer Token） | ✅ 完成 |
+> | MVP-18 | Agents API（列表 + 工具清单） | ✅ 完成 |
+> | MVP-19 | MCP Server 配置化接入（FORGE_MCP_SERVERS） | ✅ 完成 |
+> | MVP-20 | Tasks API（任务派生 Run） | ✅ 完成 |
+> | MVP-21 | Run 产物登记（Artifacts） | ✅ 完成 |
+> | MVP-22 | Session Memory（摘要注入上下文） | ✅ 完成 |
+> | MVP-23 | Observability metrics 端点 | ✅ 完成 |
+> | MVP-24 | Web 首页会话化（最近 Run 列表） | ✅ 完成 |
+> | MVP-25 | Dockerfile / compose 发布工程 | ✅ 完成 |
 
 ---
 
