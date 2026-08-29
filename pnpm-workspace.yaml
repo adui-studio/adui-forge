@@ -26,6 +26,7 @@ catalog:
   typescript: ^7.0.2
   vite: npm:@voidzero-dev/vite-plus-core@0.2.9
   vite-plus: 0.2.9
+  void: ^0.10.12
   zod: ^4.5.2
 overrides:
   vite: "catalog:"
@@ -37,4 +38,6 @@ peerDependencyRules:
 minimumReleaseAgeExclude:
   - zod@4.5.2
 allowBuilds:
+  better-sqlite3: true
   esbuild: true
+  workerd: true

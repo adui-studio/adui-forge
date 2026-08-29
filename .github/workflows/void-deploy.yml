@@ -1,0 +1,48 @@
+name: 部署文档站到 Void
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/docs/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/void-deploy.yml"
+  workflow_dispatch:
+
+# GitHub OIDC 无密码部署：id-token 用于向 Void 换取短效项目级部署令牌，
+# 仓库中不保存长期 VOID_TOKEN（void github connect 只信任本文件路径）
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: void-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        # 版本读取根 package.json 的 packageManager 字段
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 构建文档站
+        run: pnpm --filter @adui-forge/docs build
+
+      - name: 部署到 Void
+        run: pnpm --filter @adui-forge/docs exec void deploy --dir doc_build --project adui-forge
