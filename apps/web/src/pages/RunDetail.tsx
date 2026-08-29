@@ -65,6 +65,12 @@ export function RunDetailPage() {
       ? run.events
       : [...run.events, ...liveEvents.slice(run.events.length)];
 
+  // token 级增量（model.delta）聚合为实时输出面板
+  const streamedText = events
+    .filter((event) => event.name === "model.delta")
+    .map((event) => (event.payload as { text?: string } | undefined)?.text ?? "")
+    .join("");
+
   return (
     <main>
       <p>
@@ -76,6 +82,12 @@ export function RunDetailPage() {
       <p>Agent: {run.agentName}</p>
       <p>任务：{run.task}</p>
       {run.error !== undefined && <p role="alert">错误：{run.error}</p>}
+      {streamedText.length > 0 && (
+        <section>
+          <h2>模型输出（实时流式）</h2>
+          <pre>{streamedText}</pre>
+        </section>
+      )}
       <h2>执行事件流</h2>
       <ol>
         {events.map((event, index) => (

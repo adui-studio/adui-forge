@@ -152,6 +152,28 @@ describe("runAgent", () => {
     expect(result.messages.at(-2)?.content).toBe("Error: exploded");
   });
 
+  it("bridges token deltas to model.delta events", async () => {
+    const adapter: ModelAdapter = {
+      async generate(_messages, _tools, context) {
+        context.onDelta?.("he");
+        context.onDelta?.("llo");
+        return { content: "hello", toolCalls: [] };
+      },
+    };
+    const events: AgentEvent[] = [];
+
+    const result = await runAgent(adapter, [echoTool], "hi", {
+      ...baseOptions,
+      onEvent: (event) => events.push(event),
+    });
+
+    expect(result.status).toBe("completed");
+    const deltas = events
+      .filter((event) => event.name === "model.delta")
+      .map((event) => (event.payload as { text: string }).text);
+    expect(deltas).toEqual(["he", "llo"]);
+  });
+
   it("stops with max_steps_reached when the model always requests tools", async () => {
     const { adapter } = scriptedModel([toolCall("echo", { message: "loop" })]);
 
@@ -226,9 +248,9 @@ describe("runAgent", () => {
     const controller = new AbortController();
     controller.abort();
     const adapter: ModelAdapter = {
-      generate: (_messages, _tools, signal) =>
+      generate: (_messages, _tools, context) =>
         new Promise((_resolve, reject) => {
-          signal.addEventListener("abort", () => reject(signal.reason));
+          context.signal.addEventListener("abort", () => reject(context.signal.reason));
         }),
     };
     const events: AgentEvent[] = [];
@@ -245,9 +267,9 @@ describe("runAgent", () => {
 
   it("returns aborted on timeout", async () => {
     const adapter: ModelAdapter = {
-      generate: (_messages, _tools, signal) =>
+      generate: (_messages, _tools, context) =>
         new Promise((_resolve, reject) => {
-          signal.addEventListener("abort", () => reject(signal.reason));
+          context.signal.addEventListener("abort", () => reject(context.signal.reason));
         }),
     };
 

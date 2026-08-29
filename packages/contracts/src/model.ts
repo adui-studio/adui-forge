@@ -42,6 +42,15 @@ export interface ModelTurnResult {
 }
 
 /**
+ * 单次模型调用的运行上下文。
+ */
+export interface ModelCallContext {
+  signal: AbortSignal;
+  /** token 级文本增量回调；REQUIREMENTS.md §60 要求真实流式，禁止生成完再模拟。 */
+  onDelta?: (text: string) => void;
+}
+
+/**
  * Provider 无关的模型适配接口。
  * 业务代码禁止直接依赖 OpenAI / Anthropic SDK，一律实现本接口（REQUIREMENTS.md §31）。
  */
@@ -49,6 +58,6 @@ export interface ModelAdapter {
   generate(
     messages: AgentMessage[],
     tools: AgentTool[],
-    signal: AbortSignal,
+    context: ModelCallContext,
   ): Promise<ModelTurnResult>;
 }

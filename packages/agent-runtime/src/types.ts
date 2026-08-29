@@ -4,6 +4,7 @@ import type { AgentEvent, AgentEventName, AgentMessage } from "@adui-forge/contr
 export type {
   AgentMessage,
   AgentTool,
+  ModelCallContext,
   MessageRole,
   ModelAdapter,
   ModelToolCall,

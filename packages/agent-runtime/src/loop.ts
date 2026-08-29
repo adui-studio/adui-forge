@@ -6,6 +6,7 @@ import type {
   AgentRunStatus,
   AgentTool,
   ModelAdapter,
+  ModelCallContext,
   ModelTurnResult,
 } from "./types.ts";
 
@@ -85,9 +86,14 @@ export const runAgent = async (
       }
 
       emit("model.started", stepId);
+      const callContext: ModelCallContext = {
+        signal,
+        // token 增量 → model.delta 事件 → SSE → 浏览器实时呈现
+        onDelta: (text) => emit("model.delta", stepId, { text }),
+      };
       let turn: ModelTurnResult;
       try {
-        turn = await model.generate(messages, tools, signal);
+        turn = await model.generate(messages, tools, callContext);
       } catch (error) {
         if (signal.aborted) {
           emit("run.cancelled", stepId, {
