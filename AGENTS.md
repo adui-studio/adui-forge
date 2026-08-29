@@ -56,6 +56,29 @@ README.md
 
 ---
 
+# 2.1 Skill 使用
+
+仓库级 Skill 统一存放在 `.agents/skills/`（清单见该目录 README）。
+执行相关任务时必须主动使用对应 Skill，不要凭记忆重复其中的规范：
+
+| 任务场景                    | Skill                                                                                         |
+| --------------------------- | --------------------------------------------------------------------------------------------- |
+| 开始任何开发任务            | `plan` → `repo-conventions`                                                                   |
+| 修复 Bug                    | `bug-fixing`                                                                                  |
+| Git 提交 / 分支             | `git-commit` / `conventional-commit` / `conventional-branch`                                  |
+| GitHub Issue / Release / CI | `github-issues` / `github-release` / `github-actions-*`                                       |
+| NestJS 后端代码             | `nestjs-best-practices`                                                                       |
+| Prisma / 数据库             | `prisma-*`                                                                                    |
+| SQL / PostgreSQL            | `sql-code-review` / `sql-optimization` / `postgresql-code-review` / `postgresql-optimization` |
+| React / 前端代码            | `vercel-react-best-practices` / `vercel-composition-patterns` / `react19-*`                   |
+| UI 设计与审查               | `ui-ux-pro-max` / `web-design-guidelines`                                                     |
+| Tauri 桌面端                | `tauri-v2`                                                                                    |
+| Vite / 构建配置             | `vite`                                                                                        |
+| 安全审查（含 MCP）          | `security-review` / `mcp-security-audit`                                                      |
+| E2E 测试                    | `playwright-generate-test`                                                                    |
+
+---
+
 # 3. 每次任务执行顺序
 
 Agent 必须遵循：
