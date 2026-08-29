@@ -1,0 +1,46 @@
+# ADui Forge 开发基础设施（REQUIREMENTS.md §66）
+# 用法：docker compose -f infra/docker-compose.yml up -d
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: forge-postgres
+    environment:
+      POSTGRES_USER: forge
+      POSTGRES_PASSWORD: forge
+      POSTGRES_DB: forge
+    ports:
+      - "5432:5432"
+    volumes:
+      - forge-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U forge"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: forge-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - forge-redisdata:/data
+
+  minio:
+    image: minio/minio:latest
+    container_name: forge-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: forge
+      MINIO_ROOT_PASSWORD: forge12345
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - forge-miniodata:/data
+
+volumes:
+  forge-pgdata:
+  forge-redisdata:
+  forge-miniodata:

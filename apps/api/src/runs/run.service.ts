@@ -41,13 +41,13 @@ export class RunService {
     @Inject(AgentRegistry) private readonly agents: AgentRegistry,
   ) {}
 
-  createRun(input: CreateRunInput): RunRecord {
+  async createRun(input: CreateRunInput): Promise<RunRecord> {
     const agent: Agent | undefined = this.agents.get(input.agentName);
     if (agent === undefined) {
       throw new NotFoundException(`unknown agent: "${input.agentName}"`);
     }
 
-    const record = this.store.create({
+    const record = await this.store.create({
       id: `run_${globalThis.crypto.randomUUID()}`,
       agentName: agent.name,
       task: input.task,
@@ -64,32 +64,32 @@ export class RunService {
     return record;
   }
 
-  getRun(id: string): RunRecord {
-    const record = this.store.get(id);
+  async getRun(id: string): Promise<RunRecord> {
+    const record = await this.store.get(id);
     if (record === undefined) {
       throw new NotFoundException(`unknown run: "${id}"`);
     }
     return record;
   }
 
-  listRuns(): RunRecord[] {
+  async listRuns(): Promise<RunRecord[]> {
     return this.store.list();
   }
 
   async #execute(runId: string, agent: Agent, task: string): Promise<void> {
-    this.store.update(runId, { status: "running", startedAt: new Date().toISOString() });
+    await this.store.update(runId, { status: "running", startedAt: new Date().toISOString() });
     const events: AgentEvent[] = [];
 
     const result = await agent.run(task, {
       runId,
-      onEvent: (event: AgentEvent) => {
+      onEvent: async (event: AgentEvent) => {
         events.push(event);
-        this.store.update(runId, { events: [...events] });
+        await this.store.update(runId, { events: [...events] });
       },
     });
 
     const status = toRunStatus(result.status);
-    this.store.update(runId, {
+    await this.store.update(runId, {
       status,
       finishedAt: TERMINAL_STATUSES.has(status) ? new Date().toISOString() : undefined,
       error: result.error,

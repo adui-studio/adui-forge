@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// 一次 Agent Run 的持久化记录（REQUIREMENTS.md §50）
+model Run {
+  id         String    @id
+  agentName  String
+  task       String
+  status     String
+  createdAt  DateTime  @default(now())
+  startedAt  DateTime?
+  finishedAt DateTime?
+  error      String?
+  events     Json      @default("[]")
+
+  @@index([createdAt])
+  @@map("runs")
+}

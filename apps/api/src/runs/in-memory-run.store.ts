@@ -20,7 +20,7 @@ export class InMemoryRunStore implements RunStore {
   readonly #entries = new Map<string, Entry>();
   #seq = 0;
 
-  create(input: Pick<RunRecord, "id" | "agentName" | "task">): RunRecord {
+  async create(input: Pick<RunRecord, "id" | "agentName" | "task">): Promise<RunRecord> {
     if (this.#entries.has(input.id)) {
       throw new Error(`run already exists: "${input.id}"`);
     }
@@ -34,18 +34,18 @@ export class InMemoryRunStore implements RunStore {
     return cloneRecord(record);
   }
 
-  get(id: string): RunRecord | undefined {
+  async get(id: string): Promise<RunRecord | undefined> {
     const entry = this.#entries.get(id);
     return entry === undefined ? undefined : cloneRecord(entry.record);
   }
 
-  list(): RunRecord[] {
+  async list(): Promise<RunRecord[]> {
     return [...this.#entries.values()]
       .sort((a, b) => b.seq - a.seq)
       .map((entry) => cloneRecord(entry.record));
   }
 
-  update(id: string, patch: Partial<Omit<RunRecord, "id">>): RunRecord | undefined {
+  async update(id: string, patch: Partial<Omit<RunRecord, "id">>): Promise<RunRecord | undefined> {
     const entry = this.#entries.get(id);
     if (entry === undefined) {
       return undefined;

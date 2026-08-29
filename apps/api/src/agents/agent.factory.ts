@@ -6,7 +6,9 @@ import {
   createFileTools,
   createGitTools,
   createShellExecTool,
+  DockerSandbox,
   HostSandbox,
+  type Sandbox,
 } from "@adui-forge/tool-sdk";
 
 /** 默认示例 Agent 的名字。 */
@@ -43,7 +45,13 @@ export const readForgeModelConfig = (
 
 export interface BuildDefaultAgentOptions {
   workspaceRoot?: string;
-  /** Trusted Local Mode（REQUIREMENTS.md §47）：默认关闭；开启后追加 Shell/Git 工具。 */
+  /**
+   * Sandbox 选择：docker（默认，容器隔离，无需信任模式）| host | off。
+   * host 仅在 trustedLocalMode 开启时生效（REQUIREMENTS.md §47）。
+   */
+  sandbox?: "docker" | "host" | "off";
+  /** DockerSandbox 使用的镜像，默认 node:22-bookworm。 */
+  sandboxImage?: string;
   trustedLocalMode?: boolean;
 }
 
@@ -52,12 +60,24 @@ export const buildDefaultAgent = (
   options: BuildDefaultAgentOptions = {},
 ): Agent => {
   const tools: AgentTool[] = [];
-  const { workspaceRoot, trustedLocalMode } = options;
+  const {
+    workspaceRoot,
+    trustedLocalMode,
+    sandbox: sandboxMode = "docker",
+    sandboxImage,
+  } = options;
   if (workspaceRoot !== undefined && workspaceRoot !== "") {
     tools.push(...createFileTools({ root: workspaceRoot }));
-    if (trustedLocalMode === true) {
-      const sandbox = new HostSandbox();
-      // HostSandbox 无隔离边界，仅因 Trusted Local Mode 显式开启而存在；
+
+    let sandbox: Sandbox | undefined;
+    if (sandboxMode === "docker") {
+      sandbox = new DockerSandbox({ workspaceRoot, image: sandboxImage });
+    } else if (sandboxMode === "host" && trustedLocalMode === true) {
+      // HostSandbox 无隔离边界，仅因 Trusted Local Mode 显式开启而存在
+      sandbox = new HostSandbox();
+    }
+
+    if (sandbox !== undefined) {
       // shell_exec / git_add / git_commit 均为 approval 权限，Loop 会强制人工审批
       tools.push(
         ...createGitTools({ sandbox, workspaceRoot }),
@@ -70,7 +90,11 @@ export const buildDefaultAgent = (
     name: DEFAULT_AGENT_NAME,
     description:
       "ADui Forge 默认开发 Agent（OpenAI Compatible 模型 + Workspace 文件工具" +
-      (trustedLocalMode === true ? " + Shell/Git（Trusted Local Mode）" : "") +
+      (sandboxMode === "docker"
+        ? " + Shell/Git（Docker Sandbox）"
+        : trustedLocalMode === true
+          ? " + Shell/Git（Trusted Local Mode）"
+          : "") +
       "）",
     systemPrompt:
       "You are ADui Forge, a careful software engineering agent. " +
@@ -107,9 +131,17 @@ export const registerDefaultAgent = (
   }
   const workspaceRoot = env.FORGE_WORKSPACE_ROOT;
   const trustedLocalMode = env.FORGE_TRUSTED_LOCAL_MODE === "1";
+  const sandbox = (env.FORGE_SANDBOX ?? "docker") as "docker" | "host" | "off";
   if (trustedLocalMode) {
-    logger.warn("Trusted Local Mode 已开启：Shell/Git 工具可用，进程将在宿主机执行（无隔离）");
+    logger.warn("Trusted Local Mode 已开启：进程可在宿主机执行（无隔离）");
   }
-  registry.register(buildDefaultAgent(config, { workspaceRoot, trustedLocalMode }));
+  registry.register(
+    buildDefaultAgent(config, {
+      workspaceRoot,
+      trustedLocalMode,
+      sandbox,
+      sandboxImage: env.FORGE_SANDBOX_IMAGE,
+    }),
+  );
   logger.log(`default agent "${DEFAULT_AGENT_NAME}" registered (model: ${config.modelId})`);
 };

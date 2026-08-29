@@ -6,9 +6,10 @@
   "scripts": {
     "dev": "tsx watch src/main.ts",
     "start": "tsx src/main.ts",
-    "build": "tsc -p tsconfig.build.json",
-    "test": "vp test",
-    "check": "vp check"
+    "build": "prisma generate && tsc -p tsconfig.build.json",
+    "test": "prisma generate && vp test",
+    "check": "vp check",
+    "db:migrate": "prisma migrate deploy"
   },
   "dependencies": {
     "@adui-forge/agent": "workspace:*",
@@ -18,12 +19,14 @@
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
     "@nestjs/platform-fastify": "catalog:",
+    "@prisma/client": "^6.19.3",
     "reflect-metadata": "catalog:",
     "rxjs": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "prisma": "6.19.3",
     "tsx": "catalog:",
     "typescript": "catalog:",
     "vite-plus": "catalog:"

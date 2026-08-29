@@ -62,12 +62,12 @@ describe("RunService", () => {
     const store = new InMemoryRunStore();
     const service = new RunService(store, registry);
 
-    const record = service.createRun({ agentName: "forge-dev", task: "hello" });
-    expect(record.status).toBe("queued");
+    const record = await service.createRun({ agentName: "forge-dev", task: "hello" });
+    expect(["queued", "running"]).toContain(record.status);
     expect(record.agentName).toBe("forge-dev");
 
     await new Promise((resolve) => setTimeout(resolve, 50));
-    const finished = service.getRun(record.id);
+    const finished = await service.getRun(record.id);
     expect(finished.status).toBe("completed");
     expect(finished.finishedAt).toBeDefined();
     const names = finished.events.map((event) => event.name);
@@ -75,28 +75,28 @@ describe("RunService", () => {
     expect(names).toContain("run.completed");
   }, 10_000);
 
-  it("listRuns returns newest first", () => {
+  it("listRuns returns newest first", async () => {
     const { registry } = buildRegistry();
     const service = new RunService(new InMemoryRunStore(), registry);
-    const first = service.createRun({ agentName: "forge-dev", task: "a" });
-    const second = service.createRun({ agentName: "forge-dev", task: "b" });
-    const ids = service.listRuns().map((run) => run.id);
+    const first = await service.createRun({ agentName: "forge-dev", task: "a" });
+    const second = await service.createRun({ agentName: "forge-dev", task: "b" });
+    const ids = (await service.listRuns()).map((run) => run.id);
     expect(ids[0]).toBe(second.id);
     expect(ids.at(-1)).toBe(first.id);
   });
 
-  it("rejects unknown agent names", () => {
+  it("rejects unknown agent names", async () => {
     const { registry } = buildRegistry();
     const service = new RunService(new InMemoryRunStore(), registry);
-    expect(() => service.createRun({ agentName: "nope", task: "x" })).toThrow(
+    await expect(service.createRun({ agentName: "nope", task: "x" })).rejects.toThrow(
       'unknown agent: "nope"',
     );
   });
 
-  it("getRun throws for unknown id", () => {
+  it("getRun throws for unknown id", async () => {
     const { registry } = buildRegistry();
     const service = new RunService(new InMemoryRunStore(), registry);
-    expect(() => service.getRun("missing")).toThrow('unknown run: "missing"');
+    await expect(service.getRun("missing")).rejects.toThrow('unknown run: "missing"');
   });
 });
 

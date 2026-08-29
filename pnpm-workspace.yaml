@@ -10,6 +10,7 @@ catalog:
   "@nestjs/common": ^12.0.1
   "@nestjs/core": ^12.0.1
   "@nestjs/platform-fastify": ^12.0.1
+  "@prisma/client": ^7.10.0
   "@rspress/core": ^2.0.21
   "@tanstack/react-query": ^5.102.8
   "@types/node": ^24.13.3
@@ -17,6 +18,7 @@ catalog:
   "@types/react-dom": ^19.2.5
   "@vitejs/plugin-react": ^6.1.1
   ai: ^7.0.83
+  prisma: 8.0.0-rc.12
   react: ^19.2.8
   react-dom: ^19.2.8
   react-router: ^8.3.0
@@ -38,6 +40,10 @@ peerDependencyRules:
 minimumReleaseAgeExclude:
   - zod@4.5.2
 allowBuilds:
+  "@prisma/client": true
+  "@prisma/engines": true
   better-sqlite3: true
   esbuild: true
+  msgpackr-extract: true
+  prisma: true
   workerd: true
