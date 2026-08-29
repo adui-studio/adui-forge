@@ -92,3 +92,65 @@ describe("WorkflowRunner", () => {
     void failing;
   });
 });
+
+describe("WorkflowRunner 回归", () => {
+  it("支持嵌套 condition 且被中止时返回 aborted", async () => {
+    const runner = new WorkflowRunner();
+    const controller = new AbortController();
+    const steps: WorkflowStep[] = [
+      {
+        id: "outer",
+        type: "condition",
+        when: () => true,
+        steps: [
+          {
+            id: "inner",
+            type: "condition",
+            when: () => true,
+            steps: [
+              {
+                id: "slow",
+                type: "tool",
+                tool: {
+                  name: "slow",
+                  description: "waits for abort",
+                  permission: "free",
+                  inputSchema: z.object({}),
+                  execute: async (_input, context) => {
+                    await new Promise((_resolve, reject) => {
+                      context.signal.addEventListener("abort", () => reject(new Error("aborted")));
+                    });
+                    return "never";
+                  },
+                },
+                input: {},
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    controller.abort();
+    const result = await runner.run({ name: "abort-flow", steps }, { signal: controller.signal });
+
+    expect(result.status).toBe("aborted");
+  });
+
+  it("condition 为 false 时跳过分支", async () => {
+    const runner = new WorkflowRunner();
+    const result = await runner.run({
+      name: "skip-flow",
+      steps: [
+        {
+          id: "gate",
+          type: "condition",
+          when: () => false,
+          steps: [{ id: "agent-node", type: "agent", agent: scriptedAgent("never"), task: "x" }],
+        },
+      ],
+    });
+    expect(result.status).toBe("completed");
+    expect(result.outputs["agent-node"]).toBeUndefined();
+  });
+});
