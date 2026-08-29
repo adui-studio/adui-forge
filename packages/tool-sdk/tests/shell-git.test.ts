@@ -137,17 +137,46 @@ describe("git tools", () => {
 });
 
 describe("git_push", () => {
+  // 直连 spawnSync 的轻量 Sandbox：隔离 HostSandbox 并行压测下
+  // cygwin fork 的偶发崩溃（Win32 487），push 语义独立验证
+  const directSandbox: Sandbox = {
+    name: "direct",
+    async execShell(command, options) {
+      const { spawnSync } = await import("node:child_process");
+      const r = spawnSync(command, { shell: true, cwd: options.cwd, encoding: "utf8" });
+      return {
+        exitCode: r.status ?? -1,
+        stdout: r.stdout ?? "",
+        stderr: r.stderr ?? "",
+        truncated: false,
+      };
+    },
+    async execFile(file, args, options) {
+      const { spawnSync } = await import("node:child_process");
+      const r = spawnSync(file, args, { cwd: options.cwd, encoding: "utf8" });
+      return {
+        exitCode: r.status ?? -1,
+        stdout: r.stdout ?? "",
+        stderr: r.stderr ?? "",
+        truncated: false,
+      };
+    },
+  };
+
   it("pushes to a local bare remote with approval permission and option-injection guard", async () => {
     const remote = mkdtempSync(join(tmpdir(), "tool-sdk-remote-"));
-    await sandbox.execFile("git", ["init", "--bare"], { cwd: remote, timeoutMs: 10_000 });
-    await sandbox.execFile("git", ["add", "-A"], { cwd: workspace, timeoutMs: 10_000 });
-    await sandbox.execFile("git", ["commit", "-m", "init", "--allow-empty"], {
+    await directSandbox.execFile("git", ["init", "--bare"], { cwd: remote, timeoutMs: 10_000 });
+    await directSandbox.execFile("git", ["add", "-A"], { cwd: workspace, timeoutMs: 10_000 });
+    await directSandbox.execFile("git", ["commit", "-m", "init", "--allow-empty"], {
       cwd: workspace,
       timeoutMs: 10_000,
     });
-    await sandbox.execFile("git", ["branch", "-M", "main"], { cwd: workspace, timeoutMs: 10_000 });
+    await directSandbox.execFile("git", ["branch", "-M", "main"], {
+      cwd: workspace,
+      timeoutMs: 10_000,
+    });
 
-    const pushTool = createGitPushTool({ sandbox, workspaceRoot: workspace });
+    const pushTool = createGitPushTool({ sandbox: directSandbox, workspaceRoot: workspace });
     expect(pushTool.permission).toBe("approval");
 
     const output = (await pushTool.execute(
