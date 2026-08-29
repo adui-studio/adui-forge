@@ -31,7 +31,7 @@ Human Approval → Deliver
 
 # 2. 当前阶段
 
-**P0 — 可运行的领域核心骨架（进行中）。**
+**P0 — 可运行的领域核心骨架（已完成）。**
 
 P0 目标：建立领域核心与最小可运行闭环的骨架，验收标准为 `pnpm run ready`（check / test / build）全绿。
 
@@ -40,11 +40,12 @@ P0 目标：建立领域核心与最小可运行闭环的骨架，验收标准�
 - [x] `packages/contracts` — Run 状态、Step 类型、`domain.action` 事件契约（Zod Schema）。
 - [x] `packages/agent-runtime` — Agent Loop 核心（maxSteps / timeout / abort / tokenLimit /
       tool 权限与 approval），Provider / UI / Transport 无关，13 个单元测试。
-- [ ] `apps/api` — NestJS 最小骨架（健康检查 + Domain Module 结构）。
-- [ ] `apps/web` — React 最小骨架（Router + TanStack Query）。
-- [ ] `apps/docs` — Rspress 文档站。
+- [x] `apps/api` — NestJS 12 + Fastify 最小骨架（`GET /api/v1/health`，冒烟验证通过）。
+- [x] `apps/web` — React 19 + React Router 8 + TanStack Query 最小骨架。
+- [x] `apps/docs` — Rspress 2 文档站。
 
-P0 完成后进入 MVP 主开发（见 REQUIREMENTS.md §69）。
+下一步：进入 MVP 主开发（见 REQUIREMENTS.md §69），优先 `packages/ai`（Model Adapter）
+与 `packages/tool-sdk`（内置 Tool），接入 `agent-runtime` 形成第一个真实 Agent 闭环。
 
 ---
 

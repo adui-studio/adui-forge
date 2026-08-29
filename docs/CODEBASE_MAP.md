@@ -20,7 +20,10 @@ adui-forge/
 ├─ .vscode/                   # 编辑器推荐配置
 ├─ .vite-hooks/               # Vite+ 管理的 git hooks（pre-commit: vp staged）
 │
-├─ apps/                      # 应用层（当前为空，P0 后续增量）
+├─ apps/                      # 应用层
+│  ├─ api/                   # NestJS 12 + Fastify（/api/v1，P0）
+│  ├─ web/                   # React 19 + Router + TanStack Query（P0）
+│  └─ docs/                  # Rspress 2 文档站（P0）
 ├─ packages/                  # 共享包层
 │  ├─ shared/                 # Result / ID 等通用工具
 │  ├─ contracts/              # Run / Step / 事件契约（Zod Schema）

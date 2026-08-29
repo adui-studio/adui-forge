@@ -6,7 +6,21 @@ packages:
 catalogMode: prefer
 
 catalog:
-  "@types/node": ^24
+  "@nestjs/common": ^12.0.1
+  "@nestjs/core": ^12.0.1
+  "@nestjs/platform-fastify": ^12.0.1
+  "@rspress/core": ^2.0.21
+  "@tanstack/react-query": ^5.102.8
+  "@types/node": ^24.13.3
+  "@types/react": ^19.2.18
+  "@types/react-dom": ^19.2.5
+  "@vitejs/plugin-react": ^6.1.1
+  react: ^19.2.8
+  react-dom: ^19.2.8
+  react-router: ^8.3.0
+  reflect-metadata: ^0.2.2
+  rxjs: ^7.8.2
+  tsx: ^4.23.12
   typescript: ^7.0.2
   vite: npm:@voidzero-dev/vite-plus-core@0.2.9
   vite-plus: 0.2.9
@@ -20,3 +34,5 @@ peerDependencyRules:
     vite: "*"
 minimumReleaseAgeExclude:
   - zod@4.5.2
+allowBuilds:
+  esbuild: true

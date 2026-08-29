@@ -1,0 +1,19 @@
+{
+  "name": "@adui-forge/docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "rspress dev",
+    "build": "rspress build",
+    "preview": "rspress preview",
+    "test": "vp test --passWithNoTests",
+    "check": "vp check"
+  },
+  "devDependencies": {
+    "@rspress/core": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}
