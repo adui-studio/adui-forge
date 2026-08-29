@@ -26,8 +26,10 @@ adui-forge/
 │  └─ docs/                  # Rspress 2 文档站（P0）
 ├─ packages/                  # 共享包层
 │  ├─ shared/                 # Result / ID 等通用工具
-│  ├─ contracts/              # Run / Step / 事件契约（Zod Schema）
-│  └─ agent-runtime/          # Agent Loop 领域核心（P0）
+│  ├─ contracts/              # Run / Step / 事件 / 模型与工具协议（Zod Schema）
+│  ├─ agent-runtime/          # Agent Loop 领域核心（P0）
+│  ├─ tool-sdk/               # Tool 定义器 + 内置文件工具 + Workspace 边界防御（MVP-2）
+│  └─ ai/                     # AI SDK 桥接 ModelAdapter + ModelRegistry（MVP-3）
 │
 ├─ docs/
 │  ├─ REQUIREMENTS.md         # 完整需求定义

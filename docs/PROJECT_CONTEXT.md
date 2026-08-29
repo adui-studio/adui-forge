@@ -44,8 +44,17 @@ P0 目标：建立领域核心与最小可运行闭环的骨架，验收标准�
 - [x] `apps/web` — React 19 + React Router 8 + TanStack Query 最小骨架。
 - [x] `apps/docs` — Rspress 2 文档站。
 
-下一步：进入 MVP 主开发（见 REQUIREMENTS.md §69），优先 `packages/ai`（Model Adapter）
-与 `packages/tool-sdk`（内置 Tool），接入 `agent-runtime` 形成第一个真实 Agent 闭环。
+# 2.1 MVP 主开发阶段计划（进行中）
+
+| 阶段  | 内容                                                                               | 状态      |
+| ----- | ---------------------------------------------------------------------------------- | --------- |
+| MVP-1 | 运行时协议下沉 `contracts`（`AgentTool` / `ModelAdapter` / 消息配对）              | ✅ 完成   |
+| MVP-2 | `packages/tool-sdk`：`defineTool` / `ToolRegistry` / 文件工具 + Workspace 边界防御 | ✅ 完成   |
+| MVP-3 | `packages/ai`：AI SDK 桥接 `ModelAdapter` + `ModelRegistry` + 端到端集成测试       | ✅ 完成   |
+| MVP-4 | `packages/agent`：Agent 定义组装（system prompt + tools + model）                  | ⏳ 待开始 |
+| MVP-5 | `apps/api` Agent/Run Module + `packages/workflow` 前置契约                         | ⏳ 待开始 |
+| MVP-6 | Sandbox（Docker）+ Shell/Git 工具 + Approval 闭环                                  | ⏳ 待开始 |
+| MVP-7 | Web Chat / Run 页面 + SSE Streaming                                                | ⏳ 待开始 |
 
 ---
 
