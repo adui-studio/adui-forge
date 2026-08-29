@@ -1,0 +1,65 @@
+name: 部署文档站
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/docs/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/deploy-docs.yml"
+  workflow_dispatch:
+
+# 顶级最小授权；Pages 写权限只在 deploy job 内授予（github-actions-hardening）
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy-docs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        # 版本读取根 package.json 的 packageManager 字段
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 构建文档站
+        run: pnpm --filter @adui-forge/docs build
+        env:
+          # Pages 以项目子路径托管：https://adui-studio.github.io/adui-forge/
+          RSPRESS_BASE: /adui-forge/
+
+      - name: 配置 GitHub Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      - name: 上传构建产物
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: apps/docs/doc_build
+
+      - name: 部署
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
