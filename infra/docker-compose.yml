@@ -40,6 +40,25 @@ services:
     volumes:
       - forge-miniodata:/data
 
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    container_name: forge-api
+    environment:
+      DATABASE_URL: postgresql://forge:forge@postgres:5432/forge
+      REDIS_URL: redis://redis:6379/0
+      FORGE_MODEL_BASE_URL: ${FORGE_MODEL_BASE_URL:-}
+      FORGE_MODEL_ID: ${FORGE_MODEL_ID:-}
+      FORGE_MODEL_API_KEY: ${FORGE_MODEL_API_KEY:-}
+      FORGE_WORKSPACE_ROOT: /workspace
+      FORGE_JWT_SECRET: ${FORGE_JWT_SECRET:-change-me-in-production}
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   forge-pgdata:
   forge-redisdata:
