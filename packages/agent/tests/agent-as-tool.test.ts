@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import type { AgentTool, ModelAdapter, ModelTurnResult } from "@adui-forge/contracts";
+import type { ModelAdapter, ModelTurnResult } from "@adui-forge/contracts";
 import { defineAgent } from "../src/define.ts";
 import { agentToTool } from "../src/agent-as-tool.ts";
 
