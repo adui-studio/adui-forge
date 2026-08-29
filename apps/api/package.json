@@ -17,6 +17,7 @@
     "@adui-forge/ai": "workspace:*",
     "@adui-forge/contracts": "workspace:*",
     "@adui-forge/tool-sdk": "workspace:*",
+    "@adui-forge/workflow": "workspace:*",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
     "@nestjs/platform-fastify": "catalog:",

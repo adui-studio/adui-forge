@@ -15,6 +15,7 @@ import { ApprovalsModule } from "../approvals/approvals.module";
 @Module({
   imports: [AgentsModule, ApprovalsModule],
   controllers: [RunsController],
+  exports: [RunService],
   providers: [
     {
       provide: RUN_STORE,

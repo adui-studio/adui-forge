@@ -49,6 +49,11 @@ export class RunService {
     @Inject(AgentRegistry) private readonly agents: AgentRegistry,
   ) {}
 
+  /** 供 WorkflowService 等复用的事件推送通道。 */
+  emitEvent = (runId: string, event: AgentEvent): void => {
+    this.#emit(runId, event);
+  };
+
   /** 订阅某个 Run 的实时事件（SSE 用）；返回取消订阅函数。 */
   subscribe(runId: string, listener: (event: AgentEvent) => void): () => void {
     let listeners = this.#subscribers.get(runId);
