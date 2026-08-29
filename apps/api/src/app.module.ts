@@ -5,11 +5,12 @@ import { RunsModule } from "./runs/runs.module";
 import { ApprovalsModule } from "./approvals/approvals.module";
 import { WorkflowsModule } from "./workflows/workflows.module";
 import { AuthModule } from "./auth/auth.module";
+import { TasksModule } from "./tasks/tasks.module";
 import { AuthGuard } from "./auth/auth.guard";
 import { APP_GUARD } from "@nestjs/core";
 
 @Module({
-  imports: [AgentsModule, ApprovalsModule, RunsModule, WorkflowsModule, AuthModule],
+  imports: [AgentsModule, ApprovalsModule, RunsModule, WorkflowsModule, AuthModule, TasksModule],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }],
   controllers: [HealthController],
 })
