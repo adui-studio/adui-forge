@@ -23,6 +23,7 @@ export function RunDetailPage() {
 
   // SSE 实时事件；事件列表用本地状态承接，避免整个 Run 查询频繁失效
   const [liveEvents, setLiveEvents] = useState<AgentEvent[]>([]);
+  const [eventFilter, setEventFilter] = useState<string>("all");
   const closeStream = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -89,6 +90,17 @@ export function RunDetailPage() {
         </section>
       )}
       <h2>执行事件流</h2>
+      <label>
+        过滤:{" "}
+        <select value={eventFilter} onChange={(e) => setEventFilter(e.target.value)}>
+          <option value="all">全部</option>
+          <option value="model">模型</option>
+          <option value="tool">工具</option>
+          <option value="approval">审批</option>
+          <option value="workflow">Workflow</option>
+          <option value="run">Run</option>
+        </select>
+      </label>
       <ol>
         {events.map((event, index) => (
           <li key={`${event.timestamp}-${index}`}>

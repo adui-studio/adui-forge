@@ -46,9 +46,23 @@ export function HomePage() {
         {mutation.isError && <p role="alert">{String(mutation.error)}</p>}
       </form>
       <p>
-        <a href="/runs">查看全部 Runs →</a> · <a href="/approvals">待审批 →</a> ·{" "}
-        <a href="/login">登录 →</a>
+        <a href="/runs">查看全部 Runs →</a> · <a href="/workflows">Workflows →</a> ·{" "}
+        <a href="/approvals">待审批 →</a> · <a href="/login">登录 →</a>
       </p>
+      {runs !== undefined && runs.length > 0 && (
+        <section>
+          <h2>最近会话</h2>
+          <ul>
+            {runs.slice(0, 5).map((run) => (
+              <li key={run.id}>
+                <a href={`/runs/${run.id}`}>
+                  [{run.status}] {run.task.slice(0, 40)}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </main>
   );
 }
