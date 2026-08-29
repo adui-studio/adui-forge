@@ -110,7 +110,12 @@ export const runAgent = async (
         return buildResult("token_limit_reached");
       }
 
-      messages.push({ role: "assistant", content: turn.content ?? "" });
+      messages.push({
+        role: "assistant",
+        content: turn.content ?? "",
+        // 真实 Provider 要求 assistant 的 tool-call 与后续 tool-result 严格配对
+        toolCalls: turn.toolCalls.length > 0 ? turn.toolCalls : undefined,
+      });
 
       if (turn.toolCalls.length === 0) {
         emit("step.completed", stepId);

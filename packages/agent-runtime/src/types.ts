@@ -1,56 +1,18 @@
-import type { AgentEvent, AgentEventName } from "@adui-forge/contracts";
-import type { ZodType } from "zod";
+import type { AgentEvent, AgentEventName, AgentMessage } from "@adui-forge/contracts";
 
-/** Tool 权限级别：free 直接执行；approval 需要人工审批（REQUIREMENTS.md §48）。 */
-export type ToolPermission = "free" | "approval";
+// 模型与工具的运行时协议统一定义在 contracts，此处再导出保持兼容
+export type {
+  AgentMessage,
+  AgentTool,
+  MessageRole,
+  ModelAdapter,
+  ModelToolCall,
+  ModelTurnResult,
+  ToolContext,
+  ToolPermission,
+} from "@adui-forge/contracts";
 
-export interface ToolContext {
-  runId: string;
-  signal: AbortSignal;
-}
-
-/** Agent 可执行的原子能力，见 REQUIREMENTS.md §33。 */
-export interface AgentTool<TInput = unknown> {
-  name: string;
-  description: string;
-  permission: ToolPermission;
-  inputSchema: ZodType<TInput>;
-  execute(input: TInput, context: ToolContext): Promise<unknown>;
-}
-
-export type MessageRole = "system" | "user" | "assistant" | "tool";
-
-export interface AgentMessage {
-  role: MessageRole;
-  content: string;
-  toolName?: string;
-  toolCallId?: string;
-}
-
-export interface ModelToolCall {
-  id: string;
-  name: string;
-  input: unknown;
-}
-
-export interface ModelTurnResult {
-  content: string | null;
-  toolCalls: ModelToolCall[];
-  inputTokens?: number;
-  outputTokens?: number;
-}
-
-/**
- * Provider 无关的模型适配接口。
- * 业务代码禁止直接依赖 OpenAI / Anthropic SDK，一律实现本接口（REQUIREMENTS.md §31）。
- */
-export interface ModelAdapter {
-  generate(
-    messages: AgentMessage[],
-    tools: AgentTool[],
-    signal: AbortSignal,
-  ): Promise<ModelTurnResult>;
-}
+export type { AgentEvent, AgentEventName };
 
 export interface ApprovalRequest {
   runId: string;
@@ -95,5 +57,3 @@ export interface AgentLoopOptions {
   approval?: ApprovalHandler;
   onEvent?: (event: AgentEvent) => void;
 }
-
-export type { AgentEvent, AgentEventName };

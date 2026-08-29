@@ -100,6 +100,10 @@ describe("runAgent", () => {
       toolName: "echo",
       content: "echo: yo",
     });
+    // assistant 消息必须携带 toolCalls，供 Provider 构造 tool-call/result 配对
+    expect(result.messages[1]?.toolCalls).toEqual([
+      { id: "call_1", name: "echo", input: { message: "yo" } },
+    ]);
   });
 
   it("keeps running after an unknown tool call", async () => {
