@@ -17,6 +17,6 @@ export const defineTool = <TInput>(spec: ToolDefinition<TInput>): AgentTool<TInp
     description: spec.description,
     permission: spec.permission ?? "free",
     inputSchema: spec.inputSchema,
-    execute: spec.execute,
+    execute: (input, context) => spec.execute(input, context),
   };
 };

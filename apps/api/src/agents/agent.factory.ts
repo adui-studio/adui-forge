@@ -2,7 +2,12 @@ import { Logger } from "@nestjs/common";
 import type { AgentTool } from "@adui-forge/contracts";
 import { defineAgent, type Agent, AgentRegistry } from "@adui-forge/agent";
 import { createOpenAICompatibleModelAdapter } from "@adui-forge/ai";
-import { createFileTools } from "@adui-forge/tool-sdk";
+import {
+  createFileTools,
+  createGitTools,
+  createShellExecTool,
+  HostSandbox,
+} from "@adui-forge/tool-sdk";
 
 /** 默认示例 Agent 的名字。 */
 export const DEFAULT_AGENT_NAME = "forge-dev";
@@ -36,12 +41,37 @@ export const readForgeModelConfig = (
   };
 };
 
-export const buildDefaultAgent = (config: ForgeModelConfig, workspaceRoot?: string): Agent => {
-  const tools: AgentTool[] = workspaceRoot ? createFileTools({ root: workspaceRoot }) : [];
+export interface BuildDefaultAgentOptions {
+  workspaceRoot?: string;
+  /** Trusted Local Mode（REQUIREMENTS.md §47）：默认关闭；开启后追加 Shell/Git 工具。 */
+  trustedLocalMode?: boolean;
+}
+
+export const buildDefaultAgent = (
+  config: ForgeModelConfig,
+  options: BuildDefaultAgentOptions = {},
+): Agent => {
+  const tools: AgentTool[] = [];
+  const { workspaceRoot, trustedLocalMode } = options;
+  if (workspaceRoot !== undefined && workspaceRoot !== "") {
+    tools.push(...createFileTools({ root: workspaceRoot }));
+    if (trustedLocalMode === true) {
+      const sandbox = new HostSandbox();
+      // HostSandbox 无隔离边界，仅因 Trusted Local Mode 显式开启而存在；
+      // shell_exec / git_add / git_commit 均为 approval 权限，Loop 会强制人工审批
+      tools.push(
+        ...createGitTools({ sandbox, workspaceRoot }),
+        createShellExecTool({ sandbox, workspaceRoot }),
+      );
+    }
+  }
 
   return defineAgent({
     name: DEFAULT_AGENT_NAME,
-    description: "ADui Forge 默认开发 Agent（OpenAI Compatible 模型 + Workspace 文件工具）",
+    description:
+      "ADui Forge 默认开发 Agent（OpenAI Compatible 模型 + Workspace 文件工具" +
+      (trustedLocalMode === true ? " + Shell/Git（Trusted Local Mode）" : "") +
+      "）",
     systemPrompt:
       "You are ADui Forge, a careful software engineering agent. " +
       "Inspect before you change, plan minimal diffs, and verify with tests.",
@@ -76,6 +106,10 @@ export const registerDefaultAgent = (
     return;
   }
   const workspaceRoot = env.FORGE_WORKSPACE_ROOT;
-  registry.register(buildDefaultAgent(config, workspaceRoot));
+  const trustedLocalMode = env.FORGE_TRUSTED_LOCAL_MODE === "1";
+  if (trustedLocalMode) {
+    logger.warn("Trusted Local Mode 已开启：Shell/Git 工具可用，进程将在宿主机执行（无隔离）");
+  }
+  registry.register(buildDefaultAgent(config, { workspaceRoot, trustedLocalMode }));
   logger.log(`default agent "${DEFAULT_AGENT_NAME}" registered (model: ${config.modelId})`);
 };
