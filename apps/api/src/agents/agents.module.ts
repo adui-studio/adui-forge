@@ -3,6 +3,7 @@ import { AgentRegistry } from "@adui-forge/agent";
 import { APPROVAL_SERVICE, ApprovalService } from "../approvals/approval.service";
 import { ApprovalsModule } from "../approvals/approvals.module";
 import { registerDefaultAgent } from "./agent.factory";
+import { AgentsController } from "./agents.controller";
 
 /**
  * Agent 装配模块：组装并注册默认 Agent（含运行中审批处理器）。
@@ -11,6 +12,7 @@ import { registerDefaultAgent } from "./agent.factory";
  */
 @Module({
   imports: [ApprovalsModule],
+  controllers: [AgentsController],
   providers: [
     {
       provide: AgentRegistry,
