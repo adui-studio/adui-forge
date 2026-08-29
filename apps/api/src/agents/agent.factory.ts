@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Logger } from "@nestjs/common";
 import type { AgentTool } from "@adui-forge/contracts";
 import { defineAgent, type Agent, AgentRegistry } from "@adui-forge/agent";
 import { createOpenAICompatibleModelAdapter } from "@adui-forge/ai";
