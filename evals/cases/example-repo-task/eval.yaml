@@ -1,0 +1,28 @@
+id: example-repo-task
+name: 示例 — 仓库任务评估
+description: |
+  演示 eval.yaml 的用例格式：给 Agent 一个本仓库任务，
+  评估其是否遵循仓库规范并交付可验证结果。
+  本用例同时作为 Harness 的输入格式参考。
+type: repo-task
+setup: []
+task: |
+  在 ADui Forge 仓库中，为 packages/utils 新增一个 debounce 函数，
+  并补充单元测试。
+checks:
+  - id: reads-conventions-first
+    type: rubric
+    description: 实现前阅读了 AGENTS.md 与目标模块 README，方案符合最小改动原则
+  - id: test-exists
+    type: file-exists
+    pattern: "packages/utils/tests/**"
+    description: 新增了对应的单元测试文件
+  - id: vp-check-passes
+    type: command
+    command: vp check
+  - id: vp-test-passes
+    type: command
+    command: vp test
+  - id: no-scope-creep
+    type: rubric
+    description: git diff 未包含与任务无关的改动（重构、全量格式化、依赖升级）
