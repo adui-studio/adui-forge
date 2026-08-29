@@ -46,13 +46,21 @@ description: 一句话说明何时使用本 Skill
 
 ### 第三方安装
 
-通过 `skills-lock.json` 锁定来源（安装脚本 / Skill Registry 管理），不要直接修改其内容：
+通过 `skills-lock.json` 锁定来源（skills CLI 管理），不要直接修改其内容。
+经 skills CLI 为 ZCode 安装的 skill 位于 `.zcode/skills/`（Windows 无 symlink 权限时回退为 copy），其余位于本目录：
 
-| Skill                                                                     | 来源                                 | 用途                                 |
-| ------------------------------------------------------------------------- | ------------------------------------ | ------------------------------------ |
-| [prisma-\*](./prisma-database-setup/SKILL.md)（7 个）                     | prisma/skills                        | Prisma Schema / Client / Postgres 等 |
-| [tauri-v2](./tauri-v2/SKILL.md)                                           | nodnarbnitram/claude-code-extensions | Tauri 2 开发（配置 / Rust / IPC）    |
-| [vercel-composition-patterns](./vercel-composition-patterns/SKILL.md)     | vercel-labs/agent-skills             | React 组合模式与组件 API 设计        |
-| [vercel-react-best-practices](./vercel-react-best-practices/SKILL.md)     | vercel-labs/agent-skills             | React / Next.js 性能最佳实践         |
-| [vercel-react-view-transitions](./vercel-react-view-transitions/SKILL.md) | vercel-labs/agent-skills             | View Transition API 动画             |
-| [web-design-guidelines](./web-design-guidelines/SKILL.md)                 | vercel-labs/agent-skills             | UI 可用性与可访问性审查              |
+| Skill                                                                     | 位置              | 来源                                 | 用途                                 |
+| ------------------------------------------------------------------------- | ----------------- | ------------------------------------ | ------------------------------------ |
+| [prisma-\*](./prisma-database-setup/SKILL.md)（7 个）                     | `.agents/skills/` | prisma/skills                        | Prisma Schema / Client / Postgres 等 |
+| [tauri-v2](./tauri-v2/SKILL.md)                                           | `.agents/skills/` | nodnarbnitram/claude-code-extensions | Tauri 2 开发（配置 / Rust / IPC）    |
+| [nestjs-best-practices](./nestjs-best-practices/SKILL.md)                 | `.agents/skills/` | kadajett/agent-nestjs-skills         | NestJS 架构与最佳实践                |
+| [vite](./vite/SKILL.md)                                                   | `.agents/skills/` | antfu/skills                         | Vite 配置 / 插件 / Rolldown 迁移     |
+| [ui-ux-pro-max](./ui-ux-pro-max/SKILL.md)                                 | `.agents/skills/` | nextlevelbuilder/ui-ux-pro-max-skill | UI/UX 设计智能（风格 / 配色 / 字体） |
+| [vercel-composition-patterns](./vercel-composition-patterns/SKILL.md)     | `.agents/skills/` | vercel-labs/agent-skills             | React 组合模式与组件 API 设计        |
+| [vercel-react-best-practices](./vercel-react-best-practices/SKILL.md)     | `.agents/skills/` | vercel-labs/agent-skills             | React / Next.js 性能最佳实践         |
+| [vercel-react-view-transitions](./vercel-react-view-transitions/SKILL.md) | `.agents/skills/` | vercel-labs/agent-skills             | View Transition API 动画             |
+| [web-design-guidelines](./web-design-guidelines/SKILL.md)                 | `.agents/skills/` | vercel-labs/agent-skills             | UI 可用性与可访问性审查              |
+| security-review                                                           | `.zcode/skills/`  | github/awesome-copilot               | 代码变更安全审查                     |
+| mcp-security-audit                                                        | `.zcode/skills/`  | github/awesome-copilot               | MCP Server 安全审计                  |
+| playwright-generate-test                                                  | `.zcode/skills/`  | github/awesome-copilot               | Playwright E2E 测试生成              |
+| postgresql-optimization                                                   | `.zcode/skills/`  | github/awesome-copilot               | PostgreSQL 查询与索引优化            |
