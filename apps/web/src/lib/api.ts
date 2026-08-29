@@ -1,4 +1,5 @@
 import type { AgentEvent } from "@adui-forge/contracts";
+import { authHeader } from "./auth.ts";
 
 /** Run 记录（与 apps/api 的 RunRecord 对齐，经 contracts 事件协议关联）。 */
 export interface RunRecord {
@@ -15,7 +16,7 @@ export interface RunRecord {
 
 const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
   const response = await fetch(path, {
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...authHeader() },
     ...init,
   });
   if (!response.ok) {

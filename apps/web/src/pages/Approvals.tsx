@@ -1,9 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  fetchPendingApprovals,
-  submitApprovalDecision,
-  type PendingApproval,
-} from "../lib/approvals.ts";
+import { fetchPendingApprovals, submitApprovalDecision } from "../lib/approvals.ts";
 
 export function ApprovalsPage() {
   const queryClient = useQueryClient();

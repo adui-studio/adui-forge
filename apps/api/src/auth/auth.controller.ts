@@ -1,6 +1,6 @@
 import { Body, Controller, Inject, Post } from "@nestjs/common";
 import { z } from "zod";
-import { AuthService, USERS_STORE } from "./auth.service";
+import { AuthService } from "./auth.service";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 
 const credentialsSchema = z.object({

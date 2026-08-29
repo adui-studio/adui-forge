@@ -1,3 +1,5 @@
+import { authHeader } from "./auth.ts";
+
 export interface PendingApproval {
   id: string;
   runId: string;
@@ -8,7 +10,7 @@ export interface PendingApproval {
 }
 
 export const fetchPendingApprovals = async (): Promise<PendingApproval[]> => {
-  const response = await fetch("/api/v1/approvals/pending");
+  const response = await fetch("/api/v1/approvals/pending", { headers: authHeader() });
   if (!response.ok) {
     throw new Error(`request failed: ${response.status}`);
   }
@@ -21,7 +23,7 @@ export const submitApprovalDecision = async (
 ): Promise<void> => {
   const response = await fetch(`/api/v1/approvals/${id}/decision`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...authHeader() },
     body: JSON.stringify({ decision }),
   });
   if (!response.ok) {
