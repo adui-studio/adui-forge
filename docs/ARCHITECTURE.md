@@ -101,7 +101,7 @@ crates/     Rust：desktop-runtime
 infra/      docker / compose / scripts
 scripts/    工程脚本
 docs/       需求、架构、项目上下文、代码库地图、ADR
-skills/     仓库级 Agent Skill（指导 Agent 在本仓库工作）
+.agents/skills/  仓库级 Agent Skill（指导 Agent 在本仓库工作）
 evals/      Agent 行为评估用例与 Harness
 ```
 

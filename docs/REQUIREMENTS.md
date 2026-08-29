@@ -396,7 +396,7 @@ adui-forge/
 │  ├─ CODEBASE_MAP.md
 │  └─ decisions/
 │
-├─ skills/
+├─ .agents/skills/
 │
 ├─ evals/
 │

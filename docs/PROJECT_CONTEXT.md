@@ -33,7 +33,7 @@ Human Approval → Deliver
 
 **Phase 0 — 项目初始化已完成。**
 
-- 仓库结构与工程规范已确立（AGENTS.md / docs/ / skills/ / evals/）。
+- 仓库结构与工程规范已确立（AGENTS.md / docs/ / .agents/skills/ / evals/）。
 - 脚手架生成的 starter 代码（`apps/website`、`packages/utils`）已删除。
 - `apps/`、`packages/` 目前为空，等待按 REQUIREMENTS.md 第 7 节逐步搭建。
 
@@ -63,15 +63,15 @@ Human Approval → Deliver
 
 # 4. 关键文档索引
 
-| 文档                                 | 内容                                                     |
-| ------------------------------------ | -------------------------------------------------------- |
-| [AGENTS.md](../AGENTS.md)            | Agent 开发规范，**修改代码前必读**                       |
-| [REQUIREMENTS.md](./REQUIREMENTS.md) | 完整需求定义（产品定位 / 架构 / 各端 / 安全 / MVP 范围） |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | 总体架构与核心分层                                       |
-| [CODEBASE_MAP.md](./CODEBASE_MAP.md) | 代码库地图：现状与规划                                   |
-| [decisions/](./decisions/)           | 架构决策记录（ADR）                                      |
-| [../skills/](../skills/)             | 仓库级 Agent Skill                                       |
-| [../evals/](../evals/)               | Agent 行为评估                                           |
+| 文档                                     | 内容                                                     |
+| ---------------------------------------- | -------------------------------------------------------- |
+| [AGENTS.md](../AGENTS.md)                | Agent 开发规范，**修改代码前必读**                       |
+| [REQUIREMENTS.md](./REQUIREMENTS.md)     | 完整需求定义（产品定位 / 架构 / 各端 / 安全 / MVP 范围） |
+| [ARCHITECTURE.md](./ARCHITECTURE.md)     | 总体架构与核心分层                                       |
+| [CODEBASE_MAP.md](./CODEBASE_MAP.md)     | 代码库地图：现状与规划                                   |
+| [decisions/](./decisions/)               | 架构决策记录（ADR）                                      |
+| [../.agents/skills/](../.agents/skills/) | 仓库级 Agent Skill                                       |
+| [../evals/](../evals/)                   | Agent 行为评估                                           |
 
 ---
 

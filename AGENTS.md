@@ -258,11 +258,12 @@ crates/
 infra/
 scripts/
 docs/
-skills/
 evals/
 ```
 
 禁止随意新增新的顶级目录。
+
+仓库级 Agent Skill 统一存放在 `.agents/skills/`，不算业务顶级目录。
 
 ---
 

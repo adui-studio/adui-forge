@@ -32,8 +32,9 @@ adui-forge/
 │     ├─ ADR-001.md           # 工具链选型：Vite+ + pnpm Monorepo
 │     └─ ADR-002.md           # 文档系统选型：Rspress
 │
-├─ skills/                    # 仓库级 Agent Skill
-│  └─ <skill-name>/SKILL.md
+├─ .agents/
+│  └─ skills/                 # 仓库级 Agent Skill
+│     └─ <skill-name>/SKILL.md
 │
 └─ evals/                     # Agent 行为评估
    └─ cases/<case>/eval.yaml

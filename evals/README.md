@@ -4,7 +4,7 @@
 
 评估对象可以是：
 
-- 在本仓库工作的 Coding Agent（遵循 `skills/` 中定义的约定）
+- 在本仓库工作的 Coding Agent（遵循 `.agents/skills/` 中定义的约定）
 - ADui Forge 平台本身产出的 Agent Run（`packages/agent-runtime` 的执行结果）
 
 ## 目录约定

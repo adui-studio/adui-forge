@@ -18,7 +18,7 @@ Agent 负责理解、规划、检索、修改、测试、修复与交付，高�
 | [docs/CODEBASE_MAP.md](docs/CODEBASE_MAP.md)       | 代码库地图（现状 + 规划）        |
 | [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md) | 项目上下文快照                   |
 | [docs/decisions/](docs/decisions/)                 | 架构决策记录（ADR）              |
-| [skills/](skills/)                                 | 仓库级 Agent Skill               |
+| [.agents/skills/](.agents/skills/)                 | 仓库级 Agent Skill               |
 | [evals/](evals/)                                   | Agent 行为评估用例               |
 
 ## 技术栈

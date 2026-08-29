@@ -13,8 +13,8 @@ description: 在 ADui Forge 仓库中进行任何开发任务时使用，确保�
 Understand → Inspect → Plan → Implement → Test → Review Diff → Explain
 ```
 
-1. 先读 [AGENTS.md](../../AGENTS.md)，再读 [docs/REQUIREMENTS.md](../../docs/REQUIREMENTS.md) 与目标模块 README。
-2. 阅读现有实现后再设计；禁止看到需求立即写代码。
+1. 先读 [AGENTS.md](../../../AGENTS.md)，再读 [docs/REQUIREMENTS.md](../../../docs/REQUIREMENTS.md) 与目标模块 README。
+2. 阅读现有实现后再设计；先通过 [plan](../plan/SKILL.md) 完成规划，禁止看到需求立即写代码。
 3. 制定最小方案：最少修改文件、最少新增依赖、最少改变公共接口。
 4. 完成后运行验证命令（见下），并 `git diff` 检查无关改动。
 
