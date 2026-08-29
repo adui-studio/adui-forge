@@ -32,7 +32,7 @@ export interface Sandbox {
 
 const DEFAULT_MAX_OUTPUT_BYTES = 256 * 1024;
 
-const runProcess = (
+export const runProcess = (
   child: ChildProcessWithoutNullStreams,
   options: SandboxExecOptions,
 ): Promise<ExecResult> => {

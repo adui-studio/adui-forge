@@ -59,3 +59,4 @@ export {
   type SandboxExecOptions,
   type ExecResult,
 } from "./sandbox/sandbox.ts";
+export { DockerSandbox, type DockerSandboxOptions } from "./sandbox/docker-sandbox.ts";
