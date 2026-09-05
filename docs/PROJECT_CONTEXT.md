@@ -44,7 +44,7 @@ P0 目标：建立领域核心与最小可运行闭环的骨架，验收标准�
 - [x] `apps/web` — React 19 + React Router 8 + TanStack Query 最小骨架。
 - [x] `apps/docs` — Rspress 2 文档站。
 
-# 2.1 MVP 主开发阶段计划（✅ MVP-1 至 MVP-50 全部完成 —— v0.1.0）
+# 2.1 MVP 主开发阶段计划（✅ MVP-1 至 MVP-55 全部完成 —— v0.1.0）
 
 | 阶段    | 内容                                                                               | 状态    |
 | ------- | ---------------------------------------------------------------------------------- | ------- |
@@ -106,6 +106,12 @@ P0 目标：建立领域核心与最小可运行闭环的骨架，验收标准�
 | MVP-48 | Mobile:Flutter App(Riverpod/go_router/Dio,三屏 + 测试) | ✅ 完成 |
 | MVP-49 | CI 集成 Desktop cargo check 与 Mobile analyze/test | ✅ 完成 |
 | MVP-50 | 双端 README 与文档收尾 | ✅ 完成 |
+
+| MVP-51 | Desktop cargo build 产物验证；Web 外链走 PlatformAdapter | ✅ 完成 |
+| MVP-52 | Mobile 设置屏（baseUrl 持久化）与登录/注册屏 | ✅ 完成 |
+| MVP-53 | Mobile widget 测试 ×3（FakeClient 注入） | ✅ 完成 |
+| MVP-54 | Desktop/Mobile README 与 CHANGELOG 完善 | ✅ 完成 |
+| MVP-55 | 双端 0.1.0 收尾确认 | ✅ 完成 |
 
 ---
 
