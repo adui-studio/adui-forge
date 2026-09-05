@@ -1,10 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { createRun, fetchRuns } from "../lib/api.ts";
+import { getPlatformAdapter, type PlatformInfo } from "../platform/adapter.ts";
 
 export function HomePage() {
   const [task, setTask] = useState("");
+  const [platform, setPlatform] = useState<PlatformInfo>({ platform: "web" });
+  useEffect(() => {
+    getPlatformAdapter()
+      .getPlatformInfo()
+      .then(setPlatform)
+      .catch(() => {});
+  }, []);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: runs } = useQuery({
@@ -26,6 +34,9 @@ export function HomePage() {
     <main>
       <h1>ADui Forge</h1>
       <p>Agent-Driven Development Platform</p>
+      <p>
+        <small>运行环境:{platform.platform === "desktop" ? "桌面端（Tauri）" : "浏览器"}</small>
+      </p>
       <form
         onSubmit={(event) => {
           event.preventDefault();

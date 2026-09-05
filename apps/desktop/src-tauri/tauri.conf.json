@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "ADui Forge",
+  "version": "0.1.0",
+  "identifier": "com.aduistudio.forge",
+  "build": {
+    "devUrl": "http://localhost:5175",
+    "frontendDist": "../web/dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "ADui Forge",
+        "width": 1280,
+        "height": 800
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": ["icons/32x32.png", "icons/icon.ico"]
+  }
+}

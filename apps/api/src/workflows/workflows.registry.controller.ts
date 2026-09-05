@@ -39,7 +39,8 @@ export class WorkflowsRegistryController {
 
   @Post(":name/runs")
   async run(@Param("name") name: string) {
-    const definition = await this.registry.get(name);
+    // 注册表实现可能为同步（内存）或异步（Prisma），统一收敛为 Promise
+    const definition = await Promise.resolve(this.registry.get(name));
     return this.workflows.createWorkflowRun({ tasks: definition.tasks });
   }
 }
