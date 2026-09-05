@@ -6,6 +6,7 @@ import {
   LogIn,
   LogOut,
   Menu as MenuIcon,
+  Search,
   Settings,
   Users,
   Workflow,
@@ -16,6 +17,7 @@ import { Link, useLocation } from "react-router";
 import { App as AntApp, Badge, Button, Layout, Menu } from "antd";
 import { fetchHealth, fetchPendingApprovals } from "@/lib/approvals-metrics.ts";
 import { clearToken, getAccessToken } from "@/lib/auth.ts";
+import { CommandPalette } from "@/components/command-palette.tsx";
 
 const { Sider, Content, Header } = Layout;
 
@@ -130,7 +132,13 @@ function StatusFooter() {
   );
 }
 
-function SiderInner({ onNavigate }: { onNavigate?: () => void }) {
+function SiderInner({
+  onNavigate,
+  onOpenPalette,
+}: {
+  onNavigate?: () => void;
+  onOpenPalette?: () => void;
+}) {
   const location = useLocation();
   const { pending } = useSidebarStatus();
   return (
@@ -138,6 +146,20 @@ function SiderInner({ onNavigate }: { onNavigate?: () => void }) {
       <Link to="/" onClick={onNavigate} className="px-2 py-1">
         <Brand />
       </Link>
+      <button
+        type="button"
+        onClick={() => {
+          onNavigate?.();
+          onOpenPalette?.();
+        }}
+        className="flex items-center gap-2 rounded-md border border-[#20242C] bg-[#171A21] px-3 py-1.5 text-xs text-slate-500 transition-colors hover:border-[#3A4150] hover:text-slate-300"
+      >
+        <Search className="h-3.5 w-3.5" />
+        搜索…
+        <span className="ml-auto rounded border border-[#292E39] px-1 font-mono text-[10px]">
+          Ctrl K
+        </span>
+      </button>
       <Menu
         mode="inline"
         selectedKeys={[activeKey(location.pathname)]}
@@ -165,6 +187,18 @@ function SiderInner({ onNavigate }: { onNavigate?: () => void }) {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setPaletteOpen((open) => !open);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   return (
     <Layout className="min-h-screen">
@@ -174,7 +208,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         className="fixed inset-y-0 left-0 z-20 hidden lg:block"
         style={{ overflow: "auto" }}
       >
-        <SiderInner />
+        <SiderInner onOpenPalette={() => setPaletteOpen(true)} />
       </Sider>
       <Layout style={{ paddingLeft: 224 }}>
         {/* 移动端顶栏 */}
@@ -199,6 +233,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
         <Content className="mx-auto w-full max-w-5xl px-4 py-8 lg:px-8">{children}</Content>
       </Layout>
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </Layout>
   );
 }
