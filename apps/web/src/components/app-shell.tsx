@@ -1,5 +1,6 @@
 import {
   Bot,
+  Brain,
   ClipboardCheck,
   Gauge,
   LayoutList,
@@ -14,6 +15,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { cn } from "@/lib/utils.ts";
 import { fetchHealth, fetchPendingApprovals } from "@/lib/approvals-metrics.ts";
+import { appVersion } from "@/platform/adapter.ts";
 import { clearToken, getAccessToken } from "@/lib/auth.ts";
 
 const NAV_ITEMS = [
@@ -22,6 +24,7 @@ const NAV_ITEMS = [
   { to: "/agents", label: "Agents", icon: Users },
   { to: "/workflows", label: "Workflows", icon: Workflow },
   { to: "/approvals", label: "审批", icon: ClipboardCheck, badge: true as const },
+  { to: "/memory", label: "记忆", icon: Brain },
   { to: "/settings", label: "设置", icon: Settings },
 ];
 
@@ -116,6 +119,7 @@ function StatusFooter() {
         )}
       />
       API {health === "up" ? "在线" : health === "down" ? "离线" : "检测中"}
+      <span className="ml-auto font-mono text-[10px] text-slate-600">v{appVersion}</span>
     </div>
   );
 }

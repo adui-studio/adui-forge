@@ -86,3 +86,40 @@ export const fetchAgents = async (): Promise<AgentSummary[]> => {
   if (!response.ok) throw new Error(`request failed: ${response.status}`);
   return (await response.json()) as AgentSummary[];
 };
+
+export interface MemoryRecord {
+  agentName: string;
+  task: string;
+  status: string;
+  summary: string;
+  recordedAt: string;
+}
+
+export const fetchMemory = async (agent: string): Promise<MemoryRecord[]> => {
+  const response = await fetch(`/api/v1/memory?agent=${encodeURIComponent(agent)}`);
+  if (!response.ok) throw new Error(`request failed: ${response.status}`);
+  return (await response.json()) as MemoryRecord[];
+};
+
+export interface WorkflowDefinitionRecord {
+  name: string;
+  description: string;
+  tasks: string[];
+}
+
+export const registerWorkflow = async (input: {
+  name: string;
+  description: string;
+  tasks: string[];
+}): Promise<{ ok: boolean; name: string }> => {
+  const response = await fetch("/api/v1/workflows", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message ?? `request failed: ${response.status}`);
+  }
+  return (await response.json()) as { ok: boolean; name: string };
+};

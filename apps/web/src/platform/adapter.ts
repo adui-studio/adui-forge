@@ -70,3 +70,6 @@ export const getPlatformAdapter = (): PlatformAdapter =>
 
 // AgentTool 的引用仅为类型归属说明，避免误把适配器当工具暴露
 export type { AgentTool };
+
+declare const __APP_VERSION__: string;
+export const appVersion = typeof __APP_VERSION__ === "string" ? __APP_VERSION__ : "dev";

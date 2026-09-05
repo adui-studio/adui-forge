@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { cancelRun, fetchRun, retryRun, streamRunEvents } from "@/lib/api.ts";
 import { fetchArtifacts, type ArtifactRecord } from "@/lib/api-metrics.ts";
-import { fetchPendingApprovals } from "@/lib/approvals.ts";
-
+import { fetchPendingApprovals, submitApprovalDecision } from "@/lib/approvals.ts";
+import { cn } from "@/lib/utils.ts";
 import { statusLabel, statusTone } from "@/pages/Runs.tsx";
 
 const isTerminalStatus = (status: string): boolean =>
@@ -23,6 +23,8 @@ const EVENT_FILTERS = [
   { value: "workflow", label: "Workflow" },
   { value: "run", label: "Run" },
 ];
+
+type DetailTab = "output" | "events" | "artifacts";
 
 export function RunDetailPage() {
   const { id = "" } = useParams();
@@ -40,6 +42,7 @@ export function RunDetailPage() {
   // SSE 实时事件；事件列表用本地状态承接，避免整个 Run 查询频繁失效
   const [liveEvents, setLiveEvents] = useState<AgentEvent[]>([]);
   const [eventFilter, setEventFilter] = useState<string>("all");
+  const [tab, setTab] = useState<DetailTab>("events");
   const closeStream = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -57,6 +60,27 @@ export function RunDetailPage() {
       closeStream.current = null;
     };
   }, [run?.status, id, queryClient]);
+
+  const { data: artifacts } = useQuery<ArtifactRecord[], Error>({
+    queryKey: ["artifacts", id],
+    queryFn: () => fetchArtifacts(id),
+  });
+
+  const cancel = useMutation({
+    mutationFn: () => cancelRun(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["run", id] });
+      void queryClient.invalidateQueries({ queryKey: ["runs"] });
+    },
+  });
+
+  const retry = useMutation({
+    mutationFn: () => retryRun(id),
+    onSuccess: (created: { id: string }) => {
+      void queryClient.invalidateQueries({ queryKey: ["runs"] });
+      window.location.href = `/runs/${created.id}`;
+    },
+  });
 
   if (isLoading) {
     return <p className="text-sm text-slate-500">加载中…</p>;
@@ -88,26 +112,11 @@ export function RunDetailPage() {
     .map((event) => (event.payload as { text?: string } | undefined)?.text ?? "")
     .join("");
 
-  const { data: artifacts } = useQuery<ArtifactRecord[], Error>({
-    queryKey: ["artifacts", id],
-    queryFn: () => fetchArtifacts(id),
-  });
-
-  const cancel = useMutation({
-    mutationFn: () => cancelRun(id),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["run", id] });
-      void queryClient.invalidateQueries({ queryKey: ["runs"] });
-    },
-  });
-
-  const retry = useMutation({
-    mutationFn: () => retryRun(id),
-    onSuccess: (created: { id: string }) => {
-      void queryClient.invalidateQueries({ queryKey: ["runs"] });
-      window.location.href = `/runs/${created.id}`;
-    },
-  });
+  const TABS: Array<{ value: DetailTab; label: string; count?: number }> = [
+    { value: "output", label: "模型输出" },
+    { value: "events", label: "事件流", count: events.length },
+    { value: "artifacts", label: "产物", count: artifacts?.length ?? 0 },
+  ];
 
   return (
     <>
@@ -164,95 +173,129 @@ export function RunDetailPage() {
         </p>
       )}
 
-      {artifacts !== undefined && artifacts.length > 0 && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>执行产物</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            {artifacts.map((artifact) => (
-              <div key={artifact.id}>
-                <p className="mb-1 font-mono text-xs text-brand-300">
-                  {artifact.name} · {artifact.type}
-                </p>
-                <pre className="max-h-60 overflow-auto rounded-lg bg-black/50 p-3 font-mono text-xs text-slate-200">
-                  {artifact.content}
-                </pre>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {streamedText.length > 0 && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>模型输出（实时流式）</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre className="max-h-80 overflow-auto rounded-lg bg-black/50 p-4 font-mono text-xs leading-relaxed text-slate-100">
-              {streamedText}
-            </pre>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="mb-3 mt-6 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-slate-400">执行事件流</h2>
-        <div className="flex gap-1">
-          {EVENT_FILTERS.map((filter) => (
-            <button
-              key={filter.value}
-              type="button"
-              onClick={() => setEventFilter(filter.value)}
-              className={
-                eventFilter === filter.value
-                  ? "rounded-full bg-brand-400/15 px-2.5 py-1 text-xs font-medium text-brand-300 ring-1 ring-brand-400/30"
-                  : "rounded-full px-2.5 py-1 text-xs text-slate-400 hover:bg-white/10"
-              }
-            >
-              {filter.label}
-            </button>
-          ))}
-        </div>
+      {/* Tab 栏 */}
+      <div className="mt-6 flex gap-1 border-b border-white/10">
+        {TABS.map((entry) => (
+          <button
+            key={entry.value}
+            type="button"
+            onClick={() => setTab(entry.value)}
+            className={cn(
+              "-mb-px border-b-2 px-4 py-2 text-sm transition-colors",
+              tab === entry.value
+                ? "border-brand-400 font-medium text-brand-300"
+                : "border-transparent text-slate-400 hover:text-slate-200",
+            )}
+          >
+            {entry.label}
+            {entry.count !== undefined && (
+              <span className="ml-1.5 text-xs text-slate-500">{entry.count}</span>
+            )}
+          </button>
+        ))}
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <ol className="divide-y divide-white/5">
-            {events
-              .filter((event) => eventFilter === "all" || event.name.startsWith(eventFilter))
-              .map((event, index) => (
-                <li
-                  key={`${event.timestamp}-${index}`}
-                  className="flex items-baseline gap-3 px-4 py-2.5"
+      {/* 模型输出 */}
+      {tab === "output" &&
+        (streamedText.length > 0 ? (
+          <Card className="mt-4">
+            <CardContent className="p-4">
+              <pre className="overflow-auto font-mono text-xs leading-relaxed whitespace-pre-wrap text-slate-100">
+                {streamedText}
+              </pre>
+            </CardContent>
+          </Card>
+        ) : (
+          <p className="mt-4 rounded-lg border border-dashed border-white/15 p-6 text-center text-sm text-slate-500">
+            本次运行没有文本输出（可能只发生了工具调用）。
+          </p>
+        ))}
+
+      {/* 事件流 */}
+      {tab === "events" && (
+        <>
+          <div className="mb-3 mt-4 flex items-center justify-between">
+            <div className="flex gap-1">
+              {EVENT_FILTERS.map((filter) => (
+                <button
+                  key={filter.value}
+                  type="button"
+                  onClick={() => setEventFilter(filter.value)}
+                  className={
+                    eventFilter === filter.value
+                      ? "rounded-full bg-brand-400/15 px-2.5 py-1 text-xs font-medium text-brand-300 ring-1 ring-brand-400/30"
+                      : "rounded-full px-2.5 py-1 text-xs text-slate-400 hover:bg-white/10"
+                  }
                 >
-                  <span
-                    className={
-                      event.name.endsWith("failed")
-                        ? "font-mono text-xs font-semibold text-red-400"
-                        : "font-mono text-xs font-semibold text-slate-300"
-                    }
-                  >
-                    {event.name}
-                  </span>
-                  <span className="text-xs text-slate-500">
-                    {new Date(event.timestamp).toLocaleTimeString()}
-                  </span>
-                  {event.payload !== undefined && (
-                    <span className="ml-auto max-w-[50%] truncate font-mono text-xs text-slate-500">
-                      {JSON.stringify(event.payload)}
-                    </span>
-                  )}
-                </li>
+                  {filter.label}
+                </button>
               ))}
-            {events.filter((event) => eventFilter === "all" || event.name.startsWith(eventFilter))
-              .length === 0 && (
-              <li className="px-4 py-6 text-center text-sm text-slate-500">暂无匹配事件</li>
-            )}
-          </ol>
-        </CardContent>
-      </Card>
+            </div>
+          </div>
+          <Card>
+            <CardContent className="p-0">
+              <ol className="divide-y divide-white/5">
+                {events
+                  .filter((event) => eventFilter === "all" || event.name.startsWith(eventFilter))
+                  .map((event, index) => (
+                    <li
+                      key={`${event.timestamp}-${index}`}
+                      className="flex items-baseline gap-3 px-4 py-2.5"
+                    >
+                      <span
+                        className={
+                          event.name.endsWith("failed")
+                            ? "font-mono text-xs font-semibold text-red-400"
+                            : "font-mono text-xs font-semibold text-slate-300"
+                        }
+                      >
+                        {event.name}
+                      </span>
+                      <span className="text-xs text-slate-500">
+                        {new Date(event.timestamp).toLocaleTimeString()}
+                      </span>
+                      {event.payload !== undefined && (
+                        <span className="ml-auto max-w-[50%] truncate font-mono text-xs text-slate-500">
+                          {JSON.stringify(event.payload)}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                {events.filter(
+                  (event) => eventFilter === "all" || event.name.startsWith(eventFilter),
+                ).length === 0 && (
+                  <li className="px-4 py-6 text-center text-sm text-slate-500">暂无匹配事件</li>
+                )}
+              </ol>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      {/* 产物 */}
+      {tab === "artifacts" &&
+        (artifacts !== undefined && artifacts.length > 0 ? (
+          <div className="mt-4 flex flex-col gap-3">
+            {artifacts.map((artifact) => (
+              <Card key={artifact.id}>
+                <CardHeader>
+                  <CardTitle className="font-mono text-xs text-brand-300">
+                    {artifact.name} · {artifact.type}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <pre className="max-h-60 overflow-auto rounded-lg bg-black/50 p-3 font-mono text-xs text-slate-200">
+                    {artifact.content}
+                  </pre>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-4 rounded-lg border border-dashed border-white/15 p-6 text-center text-sm text-slate-500">
+            Run 完成后会在这里登记执行产物（摘要 / 报告）。
+          </p>
+        ))}
 
       {!isTerminalStatus(run.status) && run.status !== "waiting_approval" && (
         <p className="mt-3 flex items-center gap-2 text-sm text-slate-400">
@@ -274,11 +317,7 @@ function InlineApprovals({ runId }: { runId: string }) {
   const mine = (approvals ?? []).filter((item) => item.runId === runId);
   const decision = useMutation({
     mutationFn: (input: { id: string; decision: "approved" | "rejected" }) =>
-      fetchPendingApprovals.length >= 0
-        ? import("@/lib/approvals.ts").then((m) =>
-            m.submitApprovalDecision(input.id, input.decision),
-          )
-        : Promise.resolve(),
+      submitApprovalDecision(input.id, input.decision),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["approvals"] });
       void queryClient.invalidateQueries({ queryKey: ["run", runId] });
