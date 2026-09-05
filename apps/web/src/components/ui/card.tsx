@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils.ts";
 export const Card = ({ className, ...props }: HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "rounded-xl border border-white/10 bg-white/[0.03] shadow-lg shadow-black/30 backdrop-blur-md",
+      "rounded-xl border border-accent-600/25 bg-white/[0.03] shadow-lg shadow-accent-700/20 backdrop-blur-md transition-colors",
       className,
     )}
     {...props}

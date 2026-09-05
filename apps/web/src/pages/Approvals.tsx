@@ -60,7 +60,7 @@ export function ApprovalsPage() {
               <CardTitle className="font-mono text-sm">{item.toolName}</CardTitle>
               <CardDescription>
                 {item.reason} ·{" "}
-                <Link to={`/runs/${item.runId}`} className="text-brand-500 hover:underline">
+                <Link to={`/runs/${item.runId}`} className="text-brand-300 hover:underline">
                   查看 Run
                 </Link>
               </CardDescription>

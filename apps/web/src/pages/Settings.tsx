@@ -44,7 +44,7 @@ export function SettingsPage() {
                 <span
                   className={
                     health.status === "ok"
-                      ? "h-2 w-2 rounded-full bg-emerald-400"
+                      ? "h-2 w-2 rounded-full bg-brand-400"
                       : "h-2 w-2 rounded-full bg-red-400"
                   }
                 />

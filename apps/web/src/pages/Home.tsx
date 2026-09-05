@@ -57,13 +57,13 @@ export function HomePage() {
         <Card>
           <CardContent className="p-5">
             <p className="text-xs text-slate-400">执行中 / 排队</p>
-            <p className="mt-1 text-3xl font-bold text-cyan-300">{activeRuns}</p>
+            <p className="mt-1 text-3xl font-bold text-brand-300">{activeRuns}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-5">
             <p className="text-xs text-slate-400">已完成</p>
-            <p className="mt-1 text-3xl font-bold text-emerald-300">{byStatus.completed ?? 0}</p>
+            <p className="mt-1 text-3xl font-bold text-accent-300">{byStatus.completed ?? 0}</p>
           </CardContent>
         </Card>
         <Card>

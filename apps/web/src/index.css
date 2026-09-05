@@ -1,13 +1,23 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-50: #ecfeff;
-  --color-brand-100: #cffafe;
-  --color-brand-300: #67e8f9;
-  --color-brand-400: #22d3ee;
-  --color-brand-500: #06b6d4;
-  --color-brand-600: #0891b2;
-  --color-surface: #070b14;
+  /* 品牌电光绿（logo 主色） */
+  --color-brand-50: #f4ffe0;
+  --color-brand-100: #e6ffbd;
+  --color-brand-200: #cfff8a;
+  --color-brand-300: #a8f83d;
+  --color-brand-400: #6cff00;
+  --color-brand-500: #5ae000;
+  --color-brand-600: #46b800;
+  --color-brand-700: #3a9400;
+  /* 品牌深紫（logo 渐变端） */
+  --color-accent-200: #d8c2f0;
+  --color-accent-300: #b79aec;
+  --color-accent-400: #9a6ce0;
+  --color-accent-500: #7d3ed6;
+  --color-accent-600: #5b2b82;
+  --color-accent-700: #472064;
+  --color-surface: #060609;
 }
 
 html {
@@ -17,21 +27,52 @@ html {
 body {
   background-color: var(--color-surface);
   color: theme(colors.slate.200);
-  /* 深空底 + 顶部辉光 + 细网格 */
+  /* 沉浸式极光：左上深紫雾 + 右上电光绿辉 + 细网格 */
   background-image:
-    radial-gradient(1100px 520px at 50% -12%, rgba(34, 211, 238, 0.14), transparent 70%),
-    radial-gradient(900px 500px at 85% 0%, rgba(139, 92, 246, 0.1), transparent 70%),
-    linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+    radial-gradient(1000px 560px at 12% -8%, rgba(91, 43, 130, 0.4), transparent 62%),
+    radial-gradient(950px 520px at 88% -6%, rgba(108, 255, 0, 0.1), transparent 60%),
+    radial-gradient(700px 400px at 50% 110%, rgba(91, 43, 130, 0.18), transparent 65%),
+    linear-gradient(rgba(148, 163, 184, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.045) 1px, transparent 1px);
   background-size:
     100% 100%,
     100% 100%,
-    36px 36px,
-    36px 36px;
+    100% 100%,
+    40px 40px,
+    40px 40px;
   background-attachment: fixed;
 }
 
-/* 渐变描边卡片 */
+::selection {
+  background: rgba(108, 255, 0, 0.25);
+  color: #e6ffbd;
+}
+
+/* 细暗滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(108, 255, 0, 0.35);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 紫绿渐变文字 */
+.gradient-text {
+  background: linear-gradient(90deg, #b79aec 0%, #6cff00 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* 品牌渐变描边卡片（紫入绿出） */
 .glow-card {
   position: relative;
 }
@@ -43,9 +84,9 @@ body {
   padding: 1px;
   background: linear-gradient(
     135deg,
-    rgba(34, 211, 238, 0.35),
-    rgba(139, 92, 246, 0.2),
-    transparent 60%
+    rgba(125, 62, 214, 0.55),
+    rgba(108, 255, 0, 0.35),
+    transparent 65%
   );
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
@@ -53,12 +94,4 @@ body {
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
-}
-
-/* 渐变文字 */
-.gradient-text {
-  background: linear-gradient(90deg, #22d3ee, #a78bfa);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }

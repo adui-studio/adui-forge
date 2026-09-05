@@ -98,7 +98,7 @@ function StatusFooter() {
       <span
         className={cn(
           "h-2 w-2 rounded-full",
-          health === "up" && "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]",
+          health === "up" && "bg-brand-400 shadow-[0_0_8px_rgba(108,255,0,0.8)]",
           health === "down" && "bg-red-400",
           health === "unknown" && "animate-pulse bg-slate-500",
         )}

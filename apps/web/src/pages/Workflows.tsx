@@ -36,7 +36,7 @@ export function WorkflowsPage() {
   return (
     <>
       <div className="mb-6 flex items-center gap-2">
-        <WorkflowIcon className="h-5 w-5 text-brand-500" />
+        <WorkflowIcon className="h-5 w-5 text-brand-300" />
         <h1 className="text-xl font-bold text-slate-100">Workflows</h1>
       </div>
 
