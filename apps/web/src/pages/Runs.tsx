@@ -1,7 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router";
-import { fetchRuns } from "../lib/api.ts";
+import { AppShell } from "@/components/app-shell.tsx";
+import { Badge, type BadgeProps } from "@/components/ui/badge.tsx";
+import { Card, CardContent } from "@/components/ui/card.tsx";
+import { fetchRuns } from "@/lib/api.ts";
 
 const STATUS_LABEL: Record<string, string> = {
   queued: "排队中",
@@ -16,7 +19,21 @@ const STATUS_LABEL: Record<string, string> = {
   preparing: "准备中",
 };
 
+const STATUS_TONE: Record<string, BadgeProps["tone"]> = {
+  completed: "success",
+  failed: "danger",
+  running: "info",
+  waiting_approval: "warning",
+  waiting_input: "warning",
+  paused: "neutral",
+  cancelled: "neutral",
+  timeout: "danger",
+  preparing: "info",
+  queued: "neutral",
+};
+
 export const statusLabel = (status: string): string => STATUS_LABEL[status] ?? status;
+export const statusTone = (status: string): BadgeProps["tone"] => STATUS_TONE[status] ?? "neutral";
 
 export function RunsPage() {
   const [statusFilter, setStatusFilter] = useState("");
@@ -32,51 +49,61 @@ export function RunsPage() {
   });
 
   return (
-    <main>
-      <h1>Runs</h1>
-      <p>
-        <a href="/">← 发起新任务</a>
-      </p>
-      {isLoading && <p>加载中…</p>}
-      {isError && <p role="alert">{String(error)}</p>}
-      {runs !== undefined && runs.length === 0 && <p>还没有 Run，去发一个任务吧。</p>}
-      <label>
-        状态过滤:{" "}
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="">全部</option>
-          {Object.entries(STATUS_LABEL).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-      </label>
-      {runs !== undefined && runs.length > 0 && (
-        <table>
-          <thead>
-            <tr>
-              <th>Run</th>
-              <th>状态</th>
-              <th>任务</th>
-              <th>创建时间</th>
-            </tr>
-          </thead>
-          <tbody>
-            {runs
-              .filter((run) => statusFilter === "" || run.status === statusFilter)
-              .map((run) => (
-                <tr key={run.id}>
-                  <td>
-                    <Link to={`/runs/${run.id}`}>{run.id.slice(0, 16)}…</Link>
-                  </td>
-                  <td>{statusLabel(run.status)}</td>
-                  <td>{run.task.slice(0, 60)}</td>
-                  <td>{new Date(run.createdAt).toLocaleString()}</td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
+    <AppShell>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-xl font-bold text-slate-900">Runs</h1>
+        <label className="flex items-center gap-2 text-sm text-slate-600">
+          状态
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            className="h-8 rounded-lg border border-slate-300 bg-white px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          >
+            <option value="">全部</option>
+            {Object.entries(STATUS_LABEL).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      {isLoading && <p className="text-sm text-slate-500">加载中…</p>}
+      {isError && (
+        <p role="alert" className="text-sm text-red-600">
+          {String(error)}
+        </p>
       )}
-    </main>
+      {runs !== undefined && runs.length === 0 && (
+        <Card>
+          <CardContent className="p-8 text-center text-sm text-slate-500">
+            还没有 Run，去发一个任务吧。
+          </CardContent>
+        </Card>
+      )}
+      {runs !== undefined && runs.length > 0 && (
+        <div className="flex flex-col gap-2">
+          {runs
+            .filter((run) => statusFilter === "" || run.status === statusFilter)
+            .map((run) => (
+              <Card key={run.id} className="transition-colors hover:border-brand-500">
+                <CardContent className="flex items-center gap-3 p-4">
+                  <Badge tone={statusTone(run.status)}>{statusLabel(run.status)}</Badge>
+                  <Link
+                    to={`/runs/${run.id}`}
+                    className="flex-1 truncate text-sm font-medium text-slate-800 hover:text-brand-600"
+                  >
+                    {run.task}
+                  </Link>
+                  <span className="hidden text-xs text-slate-400 sm:block">
+                    {new Date(run.createdAt).toLocaleString()}
+                  </span>
+                </CardContent>
+              </Card>
+            ))}
+        </div>
+      )}
+    </AppShell>
   );
 }

@@ -22,6 +22,7 @@ catalog:
   "@node-rs/argon2": ^2.1.0
   "@prisma/client": ^7.10.0
   "@rspress/core": ^2.0.21
+  "@tailwindcss/vite": ^4.3.3
   "@tanstack/react-query": ^5.102.8
   "@tauri-apps/cli": ^2.11.4
   "@types/node": ^24.13.3
@@ -30,12 +31,17 @@ catalog:
   "@vitejs/plugin-react": ^6.1.1
   ai: ^7.0.83
   ajv: ^8.20.0
+  class-variance-authority: ^0.7.1
+  clsx: ^2.1.1
+  lucide-react: ^1.41.0
   prisma: 8.0.0-rc.12
   react: ^19.2.8
   react-dom: ^19.2.8
   react-router: ^8.3.0
   reflect-metadata: ^0.2.2
   rxjs: ^7.8.2
+  tailwind-merge: ^3.6.0
+  tailwindcss: ^4.3.3
   tsx: ^4.23.12
   typescript: ^7.0.2
   vite: npm:@voidzero-dev/vite-plus-core@0.2.9

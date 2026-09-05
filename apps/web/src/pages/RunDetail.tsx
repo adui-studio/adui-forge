@@ -1,12 +1,25 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AlertCircle, ChevronLeft, RotateCcw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import type { AgentEvent } from "@adui-forge/contracts";
-import { fetchRun, streamRunEvents } from "../lib/api.ts";
-import { statusLabel } from "./Runs.tsx";
+import { AppShell } from "@/components/app-shell.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { fetchRun, streamRunEvents } from "@/lib/api.ts";
+import { statusLabel, statusTone } from "@/pages/Runs.tsx";
 
 const isTerminalStatus = (status: string): boolean =>
   ["completed", "failed", "cancelled", "timeout"].includes(status);
+
+const EVENT_FILTERS = [
+  { value: "all", label: "全部" },
+  { value: "model", label: "模型" },
+  { value: "tool", label: "工具" },
+  { value: "approval", label: "审批" },
+  { value: "workflow", label: "Workflow" },
+  { value: "run", label: "Run" },
+];
 
 export function RunDetailPage() {
   const { id = "" } = useParams();
@@ -44,17 +57,21 @@ export function RunDetailPage() {
 
   if (isLoading) {
     return (
-      <main>
-        <p>加载中…</p>
-      </main>
+      <AppShell>
+        <p className="text-sm text-slate-500">加载中…</p>
+      </AppShell>
     );
   }
   if (isError) {
     return (
-      <main>
-        <p role="alert">{String(error)}</p>
-        <a href="/runs">← 返回列表</a>
-      </main>
+      <AppShell>
+        <p role="alert" className="flex items-center gap-2 text-sm text-red-600">
+          <AlertCircle className="h-4 w-4" /> {String(error)}
+        </p>
+        <Link to="/runs" className="mt-3 inline-block text-sm text-brand-500 hover:text-brand-600">
+          ← 返回列表
+        </Link>
+      </AppShell>
     );
   }
   if (run === undefined) {
@@ -73,51 +90,114 @@ export function RunDetailPage() {
     .join("");
 
   return (
-    <main>
-      <p>
-        <a href="/runs">← 返回列表</a>
+    <AppShell>
+      <Link
+        to="/runs"
+        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-500"
+      >
+        <ChevronLeft className="h-4 w-4" /> 返回列表
+      </Link>
+
+      <div className="mt-3 flex items-center gap-3">
+        <h1 className="text-xl font-bold text-slate-900">{run.task}</h1>
+        <Badge tone={statusTone(run.status)}>{statusLabel(run.status)}</Badge>
+      </div>
+      <p className="mt-1 text-sm text-slate-500">
+        {run.agentName} · {new Date(run.createdAt).toLocaleString()}
       </p>
-      <h1>
-        Run {run.id.slice(0, 16)}… — {statusLabel(run.status)}
-      </h1>
-      <p>Agent: {run.agentName}</p>
-      <p>任务：{run.task}</p>
-      {run.error !== undefined && <p role="alert">错误：{run.error}</p>}
-      {streamedText.length > 0 && (
-        <section>
-          <h2>模型输出（实时流式）</h2>
-          <pre>{streamedText}</pre>
-        </section>
-      )}
-      <h2>执行事件流</h2>
-      <label>
-        过滤:{" "}
-        <select value={eventFilter} onChange={(e) => setEventFilter(e.target.value)}>
-          <option value="all">全部</option>
-          <option value="model">模型</option>
-          <option value="tool">工具</option>
-          <option value="approval">审批</option>
-          <option value="workflow">Workflow</option>
-          <option value="run">Run</option>
-        </select>
-      </label>
-      <ol>
-        {events.map((event, index) => (
-          <li key={`${event.timestamp}-${index}`}>
-            <strong>{event.name}</strong>{" "}
-            <small>{new Date(event.timestamp).toLocaleTimeString()}</small>
-            {event.payload !== undefined && <pre>{JSON.stringify(event.payload, null, 2)}</pre>}
-          </li>
-        ))}
-      </ol>
-      {run.status === "waiting_approval" && (
-        <p role="alert">
-          该 Run 正在等待人工审批，去 <a href="/approvals">审批页</a> 处理。
+      {run.error !== undefined && (
+        <p
+          role="alert"
+          className="mt-3 flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
+          <AlertCircle className="h-4 w-4" /> {run.error}
         </p>
       )}
-      {!isTerminalStatus(run.status) && run.status !== "waiting_approval" && (
-        <p>订阅中，事件将实时推送…</p>
+      {run.status === "waiting_approval" && (
+        <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          该 Run 正在等待人工审批，去{" "}
+          <Link to="/approvals" className="font-medium underline">
+            审批页
+          </Link>{" "}
+          处理。
+        </p>
       )}
-    </main>
+
+      {streamedText.length > 0 && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>模型输出（实时流式）</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <pre className="max-h-80 overflow-auto rounded-lg bg-slate-900 p-4 font-mono text-xs leading-relaxed text-slate-100">
+              {streamedText}
+            </pre>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="mt-6 mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-slate-500">执行事件流</h2>
+        <div className="flex gap-1">
+          {EVENT_FILTERS.map((filter) => (
+            <button
+              key={filter.value}
+              type="button"
+              onClick={() => setEventFilter(filter.value)}
+              className={
+                eventFilter === filter.value
+                  ? "rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700"
+                  : "rounded-full px-2.5 py-1 text-xs text-slate-500 hover:bg-slate-100"
+              }
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          <ol className="divide-y divide-slate-100">
+            {events
+              .filter((event) => eventFilter === "all" || event.name.startsWith(eventFilter))
+              .map((event, index) => (
+                <li
+                  key={`${event.timestamp}-${index}`}
+                  className="flex items-baseline gap-3 px-4 py-2.5"
+                >
+                  <span
+                    className={
+                      event.name.endsWith("failed")
+                        ? "font-mono text-xs font-semibold text-red-600"
+                        : "font-mono text-xs font-semibold text-slate-700"
+                    }
+                  >
+                    {event.name}
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    {new Date(event.timestamp).toLocaleTimeString()}
+                  </span>
+                  {event.payload !== undefined && (
+                    <span className="ml-auto max-w-[50%] truncate font-mono text-xs text-slate-500">
+                      {JSON.stringify(event.payload)}
+                    </span>
+                  )}
+                </li>
+              ))}
+            {events.filter((event) => eventFilter === "all" || event.name.startsWith(eventFilter))
+              .length === 0 && (
+              <li className="px-4 py-6 text-center text-sm text-slate-400">暂无匹配事件</li>
+            )}
+          </ol>
+        </CardContent>
+      </Card>
+
+      {!isTerminalStatus(run.status) && run.status !== "waiting_approval" && (
+        <p className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+          <RotateCcw className="h-3.5 w-3.5 animate-spin" /> 订阅中，事件将实时推送…
+        </p>
+      )}
+    </AppShell>
   );
 }
