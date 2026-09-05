@@ -6,6 +6,7 @@ import { Segmented, Table, type TableColumnsType } from "antd";
 import { fetchRuns } from "@/lib/api.ts";
 import type { RunRecord } from "@/lib/api.ts";
 import { STATUS_LABEL } from "@/lib/status.ts";
+import { timeAgo } from "@/lib/relative-time.ts";
 
 export function RunsPage() {
   const navigate = useNavigate();
@@ -45,7 +46,7 @@ export function RunsPage() {
       width: 180,
       render: (_, record) => (
         <span title={new Date(record.createdAt).toLocaleString()} className="text-slate-500">
-          {new Date(record.createdAt).toLocaleString()}
+          {timeAgo(record.createdAt)}
         </span>
       ),
       sorter: (a, b) => a.createdAt.localeCompare(b.createdAt),
@@ -77,7 +78,16 @@ export function RunsPage() {
         loading={isLoading}
         pagination={{ pageSize: 20, showSizeChanger: false }}
         size="middle"
-        locale={{ emptyText: "还没有 Run，去控制台发起一个任务吧。" }}
+        locale={{
+          emptyText: (
+            <div className="py-6 text-center">
+              <p className="text-sm text-slate-500">还没有 Run。</p>
+              <a href="/" className="mt-2 inline-block text-sm text-[#B79AEC] hover:underline">
+                去控制台发起第一个任务 →
+              </a>
+            </div>
+          ),
+        }}
       />
     </>
   );

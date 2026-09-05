@@ -67,10 +67,17 @@ export function HomePage() {
             value={task}
             placeholder="描述你要完成的任务，例如：给用户列表增加搜索功能并补充测试"
             rows={3}
+            onKeyDown={(event) => {
+              if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+                event.preventDefault();
+                if (task.trim().length > 0) mutation.mutate();
+              }
+            }}
             className="w-full rounded-md border border-[#292E39] bg-[#111318] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-[#8B51A6] focus:outline-none"
             onChange={(event) => setTask(event.target.value)}
           />
           <Space>
+            <span className="text-xs text-slate-500">Ctrl + Enter 运行</span>
             <Button
               type="primary"
               htmlType="submit"

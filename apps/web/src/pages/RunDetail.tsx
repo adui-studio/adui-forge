@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, ChevronLeft, RotateCcw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
-import { Button, Card, Empty, Segmented, Tabs, Timeline } from "antd";
+import { Button, Card, Collapse, Empty, Segmented, Tabs, Timeline } from "antd";
 import type { AgentEvent } from "@adui-forge/contracts";
 import { StatusTag } from "@/components/status-tag.tsx";
 import { cancelRun, fetchRun, retryRun, streamRunEvents } from "@/lib/api.ts";
@@ -231,6 +231,28 @@ export function RunDetailPage() {
                           <span className="text-xs text-slate-500">
                             {new Date(event.timestamp).toLocaleTimeString()}
                           </span>
+                          {event.payload !== undefined && (
+                            <Collapse
+                              ghost
+                              size="small"
+                              className="ml-auto max-w-[55%]"
+                              items={[
+                                {
+                                  key: "payload",
+                                  label: (
+                                    <span className="forge-code text-xs text-slate-500">
+                                      payload
+                                    </span>
+                                  ),
+                                  children: (
+                                    <pre className="forge-code overflow-auto text-slate-400">
+                                      {JSON.stringify(event.payload, null, 2)}
+                                    </pre>
+                                  ),
+                                },
+                              ]}
+                            />
+                          )}
                         </div>
                       ),
                     }))}

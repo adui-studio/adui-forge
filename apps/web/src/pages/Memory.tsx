@@ -4,6 +4,7 @@ import { useState } from "react";
 import { StatusTag } from "@/components/status-tag.tsx";
 import { Card, Empty, Listy } from "antd";
 import { fetchMemory } from "@/lib/api.ts";
+import { timeAgo } from "@/lib/relative-time.ts";
 
 const AGENTS = ["forge-dev"];
 
@@ -51,8 +52,11 @@ export function MemoryPage() {
                 <span className="flex-1 truncate text-sm font-medium text-slate-200">
                   {record.task}
                 </span>
-                <span className="text-xs text-slate-500">
-                  {new Date(record.recordedAt).toLocaleString()}
+                <span
+                  title={new Date(record.recordedAt).toLocaleString()}
+                  className="text-xs text-slate-500"
+                >
+                  {timeAgo(record.recordedAt)}
                 </span>
               </div>
               {record.summary.length > 0 && (
