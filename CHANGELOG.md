@@ -25,6 +25,9 @@
 - `apps/docs`：Rspress 文档站（GitHub Pages 与 Void 双通道部署）
 - `infra`：PostgreSQL / Redis / MinIO 开发设施、api/web 镜像
 
+- :Tauri 2 桌面壳(复用 Web UI,PlatformAdapter 双实现)
+- `apps/mobile`:Flutter App(Runs / 详情 / 审批三屏,Riverpod + go_router + Dio)
+
 ### 工程
 
 - Vite+ / pnpm catalog 统一工具链；CI（GitHub Actions）全量验收
