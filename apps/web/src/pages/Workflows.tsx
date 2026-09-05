@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Play, Workflow as WorkflowIcon } from "lucide-react";
 import { useNavigate } from "react-router";
-import { AppShell } from "@/components/app-shell.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
@@ -35,7 +34,7 @@ export function WorkflowsPage() {
   });
 
   return (
-    <AppShell>
+    <>
       <div className="mb-6 flex items-center gap-2">
         <WorkflowIcon className="h-5 w-5 text-brand-500" />
         <h1 className="text-xl font-bold text-slate-100">Workflows</h1>
@@ -84,6 +83,6 @@ export function WorkflowsPage() {
           {String(run.error)}
         </p>
       )}
-    </AppShell>
+    </>
   );
 }

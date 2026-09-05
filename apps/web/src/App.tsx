@@ -6,6 +6,7 @@ import { LoginPage } from "./pages/Login.tsx";
 import { WorkflowsPage } from "./pages/Workflows.tsx";
 import { RunDetailPage } from "./pages/RunDetail.tsx";
 import { RunsPage } from "./pages/Runs.tsx";
+import { SettingsPage } from "./pages/Settings.tsx";
 
 export function App() {
   return (
@@ -13,6 +14,7 @@ export function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/workflows" element={<WorkflowsPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/approvals" element={<ApprovalsPage />} />
         <Route path="/runs" element={<RunsPage />} />

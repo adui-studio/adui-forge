@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, ShieldAlert, X } from "lucide-react";
 import { Link } from "react-router";
-import { AppShell } from "@/components/app-shell.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
@@ -35,7 +34,7 @@ export function ApprovalsPage() {
   });
 
   return (
-    <AppShell>
+    <>
       <div className="mb-6 flex items-center gap-2">
         <ShieldAlert className="h-5 w-5 text-amber-500" />
         <h1 className="text-xl font-bold text-slate-100">待审批</h1>
@@ -94,6 +93,6 @@ export function ApprovalsPage() {
           {String(decision.error)}
         </p>
       )}
-    </AppShell>
+    </>
   );
 }

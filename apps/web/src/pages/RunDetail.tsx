@@ -1,12 +1,12 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, ChevronLeft, RotateCcw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
 import type { AgentEvent } from "@adui-forge/contracts";
-import { AppShell } from "@/components/app-shell.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { fetchRun, streamRunEvents } from "@/lib/api.ts";
+import { fetchRun, retryRun, streamRunEvents } from "@/lib/api.ts";
 import { statusLabel, statusTone } from "@/pages/Runs.tsx";
 
 const isTerminalStatus = (status: string): boolean =>
@@ -56,22 +56,18 @@ export function RunDetailPage() {
   }, [run?.status, id, queryClient]);
 
   if (isLoading) {
-    return (
-      <AppShell>
-        <p className="text-sm text-slate-500">加载中…</p>
-      </AppShell>
-    );
+    return <p className="text-sm text-slate-500">加载中…</p>;
   }
   if (isError) {
     return (
-      <AppShell>
+      <>
         <p role="alert" className="flex items-center gap-2 text-sm text-red-600">
           <AlertCircle className="h-4 w-4" /> {String(error)}
         </p>
-        <Link to="/runs" className="mt-3 inline-block text-sm text-brand-500 hover:text-brand-300">
+        <Link to="/runs" className="mt-3 inline-block text-sm text-brand-300 hover:text-brand-200">
           ← 返回列表
         </Link>
-      </AppShell>
+      </>
     );
   }
   if (run === undefined) {
@@ -89,11 +85,19 @@ export function RunDetailPage() {
     .map((event) => (event.payload as { text?: string } | undefined)?.text ?? "")
     .join("");
 
+  const retry = useMutation({
+    mutationFn: () => retryRun(id),
+    onSuccess: (created: { id: string }) => {
+      void queryClient.invalidateQueries({ queryKey: ["runs"] });
+      window.location.href = `/runs/${created.id}`;
+    },
+  });
+
   return (
-    <AppShell>
+    <>
       <Link
         to="/runs"
-        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-300"
+        className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-brand-300"
       >
         <ChevronLeft className="h-4 w-4" /> 返回列表
       </Link>
@@ -102,9 +106,10 @@ export function RunDetailPage() {
         <h1 className="text-xl font-bold text-slate-100">{run.task}</h1>
         <Badge tone={statusTone(run.status)}>{statusLabel(run.status)}</Badge>
       </div>
-      <p className="mt-1 text-sm text-slate-500">
-        {run.agentName} · {new Date(run.createdAt).toLocaleString()}
+      <p className="mt-1 font-mono text-xs text-slate-500">
+        {run.id} · {run.agentName} · {new Date(run.createdAt).toLocaleString()}
       </p>
+
       {run.error !== undefined && (
         <p
           role="alert"
@@ -122,6 +127,16 @@ export function RunDetailPage() {
           处理。
         </p>
       )}
+      {isTerminalStatus(run.status) && (
+        <Button variant="outline" size="sm" className="mt-3" onClick={() => retry.mutate()}>
+          <RotateCcw className="h-3.5 w-3.5" /> 重试（创建新 Run）
+        </Button>
+      )}
+      {retry.isError && (
+        <p role="alert" className="mt-2 text-sm text-red-600">
+          {String(retry.error)}
+        </p>
+      )}
 
       {streamedText.length > 0 && (
         <Card className="mt-6">
@@ -129,15 +144,15 @@ export function RunDetailPage() {
             <CardTitle>模型输出（实时流式）</CardTitle>
           </CardHeader>
           <CardContent>
-            <pre className="max-h-80 overflow-auto rounded-lg bg-slate-900 p-4 font-mono text-xs leading-relaxed text-slate-100">
+            <pre className="max-h-80 overflow-auto rounded-lg bg-black/50 p-4 font-mono text-xs leading-relaxed text-slate-100">
               {streamedText}
             </pre>
           </CardContent>
         </Card>
       )}
 
-      <div className="mt-6 mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-slate-500">执行事件流</h2>
+      <div className="mb-3 mt-6 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-slate-400">执行事件流</h2>
         <div className="flex gap-1">
           {EVENT_FILTERS.map((filter) => (
             <button
@@ -146,8 +161,8 @@ export function RunDetailPage() {
               onClick={() => setEventFilter(filter.value)}
               className={
                 eventFilter === filter.value
-                  ? "rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-300"
-                  : "rounded-full px-2.5 py-1 text-xs text-slate-500 hover:bg-slate-100"
+                  ? "rounded-full bg-brand-400/15 px-2.5 py-1 text-xs font-medium text-brand-300 ring-1 ring-brand-400/30"
+                  : "rounded-full px-2.5 py-1 text-xs text-slate-400 hover:bg-white/10"
               }
             >
               {filter.label}
@@ -158,7 +173,7 @@ export function RunDetailPage() {
 
       <Card>
         <CardContent className="p-0">
-          <ol className="divide-y divide-slate-100">
+          <ol className="divide-y divide-white/5">
             {events
               .filter((event) => eventFilter === "all" || event.name.startsWith(eventFilter))
               .map((event, index) => (
@@ -169,7 +184,7 @@ export function RunDetailPage() {
                   <span
                     className={
                       event.name.endsWith("failed")
-                        ? "font-mono text-xs font-semibold text-red-600"
+                        ? "font-mono text-xs font-semibold text-red-400"
                         : "font-mono text-xs font-semibold text-slate-300"
                     }
                   >
@@ -194,10 +209,10 @@ export function RunDetailPage() {
       </Card>
 
       {!isTerminalStatus(run.status) && run.status !== "waiting_approval" && (
-        <p className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+        <p className="mt-3 flex items-center gap-2 text-sm text-slate-400">
           <RotateCcw className="h-3.5 w-3.5 animate-spin" /> 订阅中，事件将实时推送…
         </p>
       )}
-    </AppShell>
+    </>
   );
 }
