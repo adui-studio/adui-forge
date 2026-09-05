@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "主窗口默认能力：核心 IPC + 打开外部链接（Least Privilege）",
   "windows": ["main"],
-  "permissions": ["core:default", "opener:default"]
+  "permissions": ["core:default", "opener:default", "notification:default"]
 }

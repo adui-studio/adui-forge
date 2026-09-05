@@ -11,10 +11,17 @@ export interface PlatformInfo {
   platform: "web" | "desktop";
 }
 
+export interface NotificationInput {
+  title: string;
+  body: string;
+}
+
 export interface PlatformAdapter {
   getPlatformInfo(): Promise<PlatformInfo>;
   /** 打开外部链接（浏览器新窗口 / 系统默认浏览器）。 */
   openExternal(url: string): Promise<void>;
+  /** 系统通知（DesktopGuidelines §155：窗口后台时 Run 状态变化提醒）。 */
+  notify(input: NotificationInput): Promise<void>;
 }
 
 const isTauri = (): boolean =>
@@ -50,11 +57,27 @@ export const createWebPlatformAdapter = (): PlatformAdapter => ({
   async openExternal(url: string) {
     window.open(url, "_blank", "noopener");
   },
+  async notify({ title, body }) {
+    if (typeof Notification === "undefined") return;
+    if (Notification.permission === "default") {
+      await Notification.requestPermission();
+    }
+    if (Notification.permission === "granted") {
+      new Notification(title, { body });
+    }
+  },
 });
 
 export const createDesktopPlatformAdapter = (): PlatformAdapter => ({
   async getPlatformInfo() {
     return { platform: "desktop" };
+  },
+  // 经 tauri-plugin-notification(capability: notification:default)发系统通知
+  async notify({ title, body }) {
+    if (!hasTauriInvoke()) {
+      throw new Error("not running inside Tauri");
+    }
+    await tauriInvoke("plugin:notification|notify", { title, body });
   },
   // 经 tauri-plugin-opener（capability: opener:default）走系统默认浏览器
   async openExternal(url: string) {

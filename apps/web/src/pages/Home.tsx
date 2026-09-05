@@ -6,6 +6,7 @@ import { StatusTag } from "@/components/status-tag.tsx";
 import { Button, Card, Empty, Listy, Space } from "antd";
 import { createRun, fetchRuns } from "@/lib/api.ts";
 import { fetchPendingApprovals } from "@/lib/approvals.ts";
+import { useRunNotifications } from "@/hooks/use-run-notifications.ts";
 
 export function HomePage() {
   const [task, setTask] = useState("");
@@ -30,6 +31,8 @@ export function HomePage() {
       void navigate(`/runs/${record.id}`);
     },
   });
+
+  useRunNotifications(runs);
 
   const activeRuns = (runs ?? []).filter((run) =>
     ["running", "queued", "waiting_approval"].includes(run.status),
