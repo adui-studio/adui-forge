@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.5.0 — 2026-09-05
+
+### 平台能力
+
+- **Run 取消**：`POST /runs/:id/cancel`（AbortController 中止，收敛为 cancelled）
+- Run 详情增强：执行产物展示（Artifacts）、内联审批（等待时直接批准/拒绝）、
+  取消与重试按钮
+- Agents 页：Agent 清单与工具集（`GET /api/v1/agents`）
+- 设置页：API 健康（含数据库状态）、登录态管理
+- 侧边栏实时状态：API 健康呼吸灯 + 审批待办角标（轮询）
+
+### 品牌与体验
+
+- 页面结构参照 Dify / n8n / LangSmith 重构：侧边栏导航 + 控制台落地页
+- 沉浸式品牌主题：电光绿 × 深紫（取自 logo 渐变），极光背景 + 玻璃拟态 + 辉光交互
+- 品牌 logo 全端接入：Web favicon/页头/登录页、文档站、Desktop 启动图标、
+  Mobile 全套启动图标（Android/iOS）
+- Mobile 品牌化主题（Material 3 深色）与应用名
+
+### 发布工程
+
+- Release 流水线：tag 触发 Desktop 安装包（Windows）与 Mobile APK 上传 GitHub Release
+
+---
+
+## 0.1.0 — 2026-08-30
+
 ## 0.1.0 — 2026-08-30
 
 首个可用里程碑（MVP-1 至 MVP-45）。

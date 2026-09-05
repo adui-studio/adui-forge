@@ -1,7 +1,7 @@
 name: adui_forge
 description: "ADui Forge Mobile — 随时随地查看、控制、审批正在执行的 Agent"
 publish_to: "none"
-version: 0.1.0+1
+version: 0.5.0+1
 
 environment:
   sdk: ^3.11.5

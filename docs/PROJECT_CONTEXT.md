@@ -44,7 +44,7 @@ P0 目标：建立领域核心与最小可运行闭环的骨架，验收标准�
 - [x] `apps/web` — React 19 + React Router 8 + TanStack Query 最小骨架。
 - [x] `apps/docs` — Rspress 2 文档站。
 
-# 2.1 MVP 主开发阶段计划（✅ MVP-1 至 MVP-55 全部完成 —— v0.1.0）
+# 2.1 MVP 主开发阶段计划（✅ MVP-1 至 MVP-65 全部完成 —— v0.5.0）
 
 | 阶段    | 内容                                                                               | 状态    |
 | ------- | ---------------------------------------------------------------------------------- | ------- |
@@ -112,6 +112,13 @@ P0 目标：建立领域核心与最小可运行闭环的骨架，验收标准�
 | MVP-53 | Mobile widget 测试 ×3（FakeClient 注入） | ✅ 完成 |
 | MVP-54 | Desktop/Mobile README 与 CHANGELOG 完善 | ✅ 完成 |
 | MVP-55 | 双端 0.1.0 收尾确认 | ✅ 完成 |
+
+| MVP-56 | Run 取消（AbortController + cancel 端点） | ✅ 完成 |
+| MVP-57 | Run 详情：取消按钮 / 产物展示 / 内联审批 | ✅ 完成 |
+| MVP-58 | Mobile 品牌化主题（电光绿 × 深紫）与应用名 | ✅ 完成 |
+| MVP-59 | Agents 页 + 登录态侧栏区块 | ✅ 完成 |
+| MVP-60 | Release 流水线（Desktop 包 + Mobile APK → GitHub Release） | ✅ 完成 |
+| MVP-61 | v0.5.0：CHANGELOG / 版本号 / tag | ✅ 完成 |
 
 ---
 
