@@ -10,8 +10,8 @@ Agent 负责理解、规划、检索、修改、测试、修复与交付，高�
 
 ## 文档
 
-**文档站（在线）：<https://adui-forge.void.app>** — 由 [Void](https://void.cloud) 托管，
-push 到 main 且 `apps/docs/**` 有变更时经 [void-deploy.yml](.github/workflows/void-deploy.yml) 自动部署。
+**文档站（在线）：<https://adui-studio.github.io/adui-forge/>** — GitHub Pages 托管，
+push 到 main 且 `apps/docs/**` 有变更时经 [deploy-docs.yml](.github/workflows/deploy-docs.yml) 自动部署。
 
 | 文档                                               | 内容                             |
 | -------------------------------------------------- | -------------------------------- |

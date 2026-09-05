@@ -1,8 +1,7 @@
 {
-  "extends": ["../../tsconfig.json", "./.void/tsconfig.json"],
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "strict": true,
-    "types": ["void/env"]
+    "strict": true
   },
   "include": ["rspress.config.ts"]
 }

@@ -22,7 +22,7 @@
   Approvals、Tasks、Workflows、Memory、Metrics、OpenAPI、Rate limit
 - `apps/web`：任务发起、Runs 列表与详情（实时事件流/过滤）、审批页、
   Workflows 页、登录页
-- `apps/docs`：Rspress 文档站（GitHub Pages 与 Void 双通道部署）
+- `apps/docs`：Rspress 文档站（GitHub Pages 部署）
 - `infra`：PostgreSQL / Redis / MinIO 开发设施、api/web 镜像
 
 - `apps/desktop`：Tauri 2 桌面壳（复用 Web UI，PlatformAdapter 双实现，cargo build 产物验证）

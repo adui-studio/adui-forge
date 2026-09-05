@@ -15,7 +15,6 @@
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "^8.0.10",
-    "vite-plus": "catalog:",
-    "void": "catalog:"
+    "vite-plus": "catalog:"
   }
 }
