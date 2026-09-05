@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tauri dev",
-    "build": "tauri build",
-    "check": "vp check"
+    "check": "vp check",
+    "bundle": "tauri build"
   },
   "devDependencies": {
     "@tauri-apps/cli": "catalog:"
