@@ -3,14 +3,14 @@ import { WorkflowsRegistry } from "../src/workflows/workflow.registry";
 import { registerWorkflowSchema } from "../src/workflows/workflows.registry.controller";
 
 describe("WorkflowsRegistry", () => {
-  it("registers, lists and rejects duplicates / unknown", () => {
+  it("registers, lists and overwrites existing definitions (upsert)", () => {
     const registry = new WorkflowsRegistry();
     registry.register({ name: "pipeline", description: "d", tasks: ["a", "b"] });
     expect(registry.list()).toHaveLength(1);
     expect(registry.get("pipeline").tasks).toEqual(["a", "b"]);
-    expect(() => registry.register({ name: "pipeline", description: "", tasks: ["x"] })).toThrow(
-      "already registered",
-    );
+    // 编辑器保存已有定义 = 覆盖
+    registry.register({ name: "pipeline", description: "d2", tasks: ["c"] });
+    expect(registry.get("pipeline").tasks).toEqual(["c"]);
     expect(() => registry.get("nope")).toThrow('unknown workflow: "nope"');
   });
 

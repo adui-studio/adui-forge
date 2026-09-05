@@ -35,9 +35,18 @@ export function WorkflowsPage() {
         <h1 className="text-xl font-semibold text-slate-100">Workflows</h1>
       </div>
 
-      <RegisterCard
-        onRegistered={() => void queryClient.invalidateQueries({ queryKey: ["workflows"] })}
-      />
+      <div className="flex gap-2">
+        <RegisterCard
+          onRegistered={() => void queryClient.invalidateQueries({ queryKey: ["workflows"] })}
+        />
+        <Button
+          variant="outlined"
+          icon={<Plus className="h-3.5 w-3.5" />}
+          onClick={() => navigate("/workflows/new")}
+        >
+          可视化新建
+        </Button>
+      </div>
 
       {isLoading && <p className="mt-6 text-sm text-slate-500">加载中…</p>}
       {isError && (

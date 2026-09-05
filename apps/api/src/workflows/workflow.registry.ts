@@ -17,10 +17,8 @@ export interface WorkflowsRegistryContract {
 export class WorkflowsRegistry implements WorkflowsRegistryContract {
   readonly #definitions = new Map<string, WorkflowDefinitionRecord>();
 
+  /** upsert 语义：编辑器保存已有定义时覆盖（与 Prisma 实现一致）。 */
   register(definition: WorkflowDefinitionRecord): void {
-    if (this.#definitions.has(definition.name)) {
-      throw new Error(`workflow already registered: "${definition.name}"`);
-    }
     this.#definitions.set(definition.name, definition);
   }
 

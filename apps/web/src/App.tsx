@@ -5,6 +5,7 @@ import { ApprovalsPage } from "./pages/Approvals.tsx";
 import { HomePage } from "./pages/Home.tsx";
 import { LoginPage } from "./pages/Login.tsx";
 import { MemoryPage } from "./pages/Memory.tsx";
+import { WorkflowEditorPage } from "./pages/WorkflowEditor.tsx";
 import { WorkflowsPage } from "./pages/Workflows.tsx";
 import { RunDetailPage } from "./pages/RunDetail.tsx";
 import { RunsPage } from "./pages/Runs.tsx";
@@ -18,6 +19,8 @@ export function App() {
         <Route path="/agents" element={<AgentsPage />} />
         <Route path="/memory" element={<MemoryPage />} />
         <Route path="/workflows" element={<WorkflowsPage />} />
+        <Route path="/workflows/new" element={<WorkflowEditorPage isNew />} />
+        <Route path="/workflows/:name/edit" element={<WorkflowEditorPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/approvals" element={<ApprovalsPage />} />

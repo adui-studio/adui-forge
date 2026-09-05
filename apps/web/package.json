@@ -13,6 +13,7 @@
   "dependencies": {
     "@adui-forge/contracts": "workspace:*",
     "@tanstack/react-query": "catalog:",
+    "@xyflow/react": "catalog:",
     "antd": "catalog:",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
