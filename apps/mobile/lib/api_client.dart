@@ -47,13 +47,27 @@ class PendingApproval {
       );
 }
 
+class AuthResult {
+  AuthResult({required this.accessToken, required this.username});
+
+  final String accessToken;
+  final String username;
+
+  factory AuthResult.fromJson(Map<String, dynamic> json) => AuthResult(
+        accessToken: json['accessToken'] as String,
+        username: json['username'] as String,
+      );
+}
+
 /// ForgeApiClient：Dio 封装；baseUrl 可在设置页修改，令牌存安全存储。
+/// [dio] 仅测试注入使用。
 class ForgeApiClient {
-  ForgeApiClient({required String baseUrl})
-      : _dio = Dio(BaseOptions(
-          baseUrl: '$baseUrl/api/v1',
-          connectTimeout: const Duration(seconds: 10),
-        ));
+  ForgeApiClient({required String baseUrl, Dio? dio})
+      : _dio = dio ??
+            Dio(BaseOptions(
+              baseUrl: '$baseUrl/api/v1',
+              connectTimeout: const Duration(seconds: 10),
+            ));
 
   final Dio _dio;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
@@ -71,6 +85,26 @@ class ForgeApiClient {
     return Options(headers: {
       if (token != null && token.isNotEmpty) 'authorization': 'Bearer $token',
     });
+  }
+
+  Future<AuthResult> login(String username, String password) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/auth/login',
+      data: {'username': username, 'password': password},
+    );
+    final result = AuthResult.fromJson(response.data!);
+    await saveToken(result.accessToken);
+    return result;
+  }
+
+  Future<AuthResult> register(String username, String password) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/auth/register',
+      data: {'username': username, 'password': password},
+    );
+    final result = AuthResult.fromJson(response.data!);
+    await saveToken(result.accessToken);
+    return result;
   }
 
   Future<List<RunRecord>> listRuns() async {

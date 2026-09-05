@@ -18,6 +18,11 @@ class RunsScreen extends ConsumerWidget {
             tooltip: '审批',
             onPressed: () => context.push('/approvals'),
           ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: '设置',
+            onPressed: () => context.push('/settings'),
+          ),
         ],
       ),
       body: runs.when(

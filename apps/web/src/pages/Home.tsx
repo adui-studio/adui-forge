@@ -21,6 +21,10 @@ export function HomePage() {
     refetchInterval: 3_000,
   });
 
+  const openExternal = (url: string): void => {
+    void getPlatformAdapter().openExternal(url);
+  };
+
   const mutation = useMutation({
     mutationFn: () => createRun(task),
     onSuccess: (record) => {
@@ -67,6 +71,17 @@ export function HomePage() {
         >
           登出 →
         </a>
+      </p>
+      <p>
+        <button type="button" onClick={() => openExternal("https://adui-forge.void.app")}>
+          文档站 ↗
+        </button>{" "}
+        <button
+          type="button"
+          onClick={() => openExternal("https://github.com/adui-studio/adui-forge")}
+        >
+          GitHub ↗
+        </button>
       </p>
       {runs !== undefined && runs.length > 0 && (
         <section>

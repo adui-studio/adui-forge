@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'screens/approvals_screen.dart';
+import 'screens/login_screen.dart';
 import 'screens/run_detail_screen.dart';
 import 'screens/runs_screen.dart';
+import 'screens/settings_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -21,6 +23,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/approvals',
         builder: (context, state) => const ApprovalsScreen(),
+      ),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
   );
