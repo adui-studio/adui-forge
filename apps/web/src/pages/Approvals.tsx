@@ -1,14 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, ShieldAlert, X } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 import { Link } from "react-router";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Button, Card, Listy } from "antd";
 import { fetchPendingApprovals, submitApprovalDecision } from "@/lib/approvals.ts";
 
 export function ApprovalsPage() {
@@ -36,8 +29,8 @@ export function ApprovalsPage() {
   return (
     <>
       <div className="mb-6 flex items-center gap-2">
-        <ShieldAlert className="h-5 w-5 text-amber-500" />
-        <h1 className="text-xl font-bold text-slate-100">待审批</h1>
+        <ShieldAlert className="h-5 w-5 text-amber-400" />
+        <h1 className="text-xl font-semibold text-slate-100">待审批</h1>
       </div>
 
       {isLoading && <p className="text-sm text-slate-500">加载中…</p>}
@@ -48,46 +41,59 @@ export function ApprovalsPage() {
       )}
       {approvals !== undefined && approvals.length === 0 && (
         <Card>
-          <CardContent className="p-8 text-center text-sm text-slate-500">
+          <div className="p-8 text-center text-sm text-slate-500">
             当前没有待审批操作。高风险操作（Shell / Git 写入）执行前会在这里请求批准。
-          </CardContent>
+          </div>
         </Card>
       )}
-      <div className="flex flex-col gap-3">
-        {approvals?.map((item) => (
-          <Card key={item.id}>
-            <CardHeader>
-              <CardTitle className="font-mono text-sm">{item.toolName}</CardTitle>
-              <CardDescription>
-                {item.reason} ·{" "}
-                <Link to={`/runs/${item.runId}`} className="text-brand-300 hover:underline">
+
+      <Listy
+        items={approvals ?? []}
+        rowKey={(item) => item.id}
+        itemRender={(item) => (
+          <div className="rounded-lg border border-[#20242C] bg-[#111318] p-4">
+            <div className="w-full">
+              <div className="flex items-center gap-2">
+                <span className="forge-code text-sm font-semibold text-amber-300">
+                  ⚠ {item.toolName}
+                </span>
+                <Link
+                  to={`/runs/${item.runId}`}
+                  className="ml-auto text-xs text-[#B79AEC] hover:underline"
+                >
                   查看 Run
                 </Link>
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <pre className="overflow-auto rounded-lg bg-slate-900 p-3 font-mono text-xs text-slate-100">
+              </div>
+              <p className="mt-1 text-sm text-slate-400">{item.reason}</p>
+              {/* §87 Approval Card：展示 What / Impact */}
+              <pre className="forge-code mt-2 max-h-48 overflow-auto rounded-md border border-[#20242C] bg-[#0D0F13] p-3 text-slate-200">
                 {JSON.stringify(item.input, null, 2)}
               </pre>
-              <div className="mt-4 flex justify-end gap-2">
+              <div className="mt-3 flex justify-end gap-2">
+                {/* §88 拒绝用 Error 色；批准不获得默认焦点 */}
                 <Button
-                  variant="outline"
+                  danger
+                  variant="outlined"
+                  size="small"
                   disabled={decision.isPending}
                   onClick={() => decision.mutate({ id: item.id, decision: "rejected" })}
                 >
-                  <X className="h-4 w-4" /> 拒绝
+                  拒绝
                 </Button>
                 <Button
+                  color="primary"
+                  variant="solid"
+                  size="small"
                   disabled={decision.isPending}
                   onClick={() => decision.mutate({ id: item.id, decision: "approved" })}
                 >
-                  <Check className="h-4 w-4" /> 批准
+                  批准
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </div>
+          </div>
+        )}
+      />
       {decision.isError && (
         <p role="alert" className="mt-3 text-sm text-red-600">
           {String(decision.error)}

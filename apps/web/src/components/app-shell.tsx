@@ -1,11 +1,11 @@
 import {
-  Bot,
   Brain,
   ClipboardCheck,
   Gauge,
   LayoutList,
   LogIn,
   LogOut,
+  Menu as MenuIcon,
   Settings,
   Users,
   Workflow,
@@ -13,19 +13,20 @@ import {
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
-import { cn } from "@/lib/utils.ts";
+import { App as AntApp, Badge, Button, Layout, Menu } from "antd";
 import { fetchHealth, fetchPendingApprovals } from "@/lib/approvals-metrics.ts";
-import { appVersion } from "@/platform/adapter.ts";
 import { clearToken, getAccessToken } from "@/lib/auth.ts";
 
+const { Sider, Content, Header } = Layout;
+
 const NAV_ITEMS = [
-  { to: "/", label: "控制台", icon: Gauge, exact: true },
-  { to: "/runs", label: "Runs", icon: LayoutList },
-  { to: "/agents", label: "Agents", icon: Users },
-  { to: "/workflows", label: "Workflows", icon: Workflow },
-  { to: "/approvals", label: "审批", icon: ClipboardCheck, badge: true as const },
-  { to: "/memory", label: "记忆", icon: Brain },
-  { to: "/settings", label: "设置", icon: Settings },
+  { to: "/", label: "控制台", icon: Gauge, key: "dashboard", exact: true },
+  { to: "/runs", label: "Runs", icon: LayoutList, key: "runs" },
+  { to: "/agents", label: "Agents", icon: Users, key: "agents" },
+  { to: "/workflows", label: "Workflows", icon: Workflow, key: "workflows" },
+  { to: "/approvals", label: "审批", icon: ClipboardCheck, key: "approvals", badge: true as const },
+  { to: "/memory", label: "记忆", icon: Brain, key: "memory" },
+  { to: "/settings", label: "设置", icon: Settings, key: "settings" },
 ];
 
 /** 轻量健康/待审批轮询（侧边栏状态与角标用，5s 级别足够） */
@@ -58,75 +59,26 @@ function useSidebarStatus() {
   return { health, pending };
 }
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
-  const location = useLocation();
-  const { pending } = useSidebarStatus();
-  return (
-    <nav className="flex flex-col gap-1">
-      {NAV_ITEMS.map((item) => {
-        const active = item.exact
-          ? location.pathname === item.to
-          : location.pathname.startsWith(item.to);
-        return (
-          <Link
-            key={item.to}
-            to={item.to}
-            onClick={onNavigate}
-            className={cn(
-              "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all",
-              active
-                ? "bg-white/10 font-medium text-white ring-1 ring-white/10"
-                : "text-slate-400 hover:bg-white/5 hover:text-slate-200",
-            )}
-          >
-            <item.icon className={cn("h-4 w-4", active && "text-brand-300")} />
-            <span className="flex-1">{item.label}</span>
-            {item.badge && pending > 0 && (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-400/20 px-1.5 text-[11px] font-semibold text-amber-300 ring-1 ring-amber-400/40">
-                {pending}
-              </span>
-            )}
-          </Link>
-        );
-      })}
-    </nav>
-  );
+function activeKey(pathname: string): string {
+  const match = [...NAV_ITEMS]
+    .sort((a, b) => b.to.length - a.to.length)
+    .find((item) => (item.exact ? pathname === item.to : pathname.startsWith(item.to)));
+  return match?.key ?? "dashboard";
 }
 
 function Brand() {
   return (
     <Link to="/" className="flex items-center gap-2.5 px-2 py-1">
-      <img
-        src="/logo.svg"
-        alt="ADui Studio"
-        className="h-7 w-7 drop-shadow-[0_0_10px_rgba(108,255,0,0.35)]"
-      />
-      <span className="gradient-text font-semibold tracking-tight">ADui Forge</span>
+      <img src="/logo.svg" alt="ADui Studio" className="h-7 w-7" />
+      <span className="font-semibold tracking-tight text-slate-100">ADui Forge</span>
     </Link>
-  );
-}
-
-function StatusFooter() {
-  const { health } = useSidebarStatus();
-  return (
-    <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2 text-xs text-slate-400">
-      <span
-        className={cn(
-          "h-2 w-2 rounded-full",
-          health === "up" && "bg-brand-400 shadow-[0_0_8px_rgba(108,255,0,0.8)]",
-          health === "down" && "bg-red-400",
-          health === "unknown" && "animate-pulse bg-slate-500",
-        )}
-      />
-      API {health === "up" ? "在线" : health === "down" ? "离线" : "检测中"}
-      <span className="ml-auto font-mono text-[10px] text-slate-600">v{appVersion}</span>
-    </div>
   );
 }
 
 /** 登录态区块：有令牌显示退出，否则显示登录入口 */
 function AuthBlock() {
   const location = useLocation();
+  const { message } = AntApp.useApp();
   const [token, setToken] = useState<string | null>(null);
   useEffect(() => {
     setToken(getAccessToken());
@@ -134,68 +86,119 @@ function AuthBlock() {
 
   if (token !== null && token !== "") {
     return (
-      <button
-        type="button"
+      <Button
+        type="text"
+        block
+        icon={<LogOut className="h-4 w-4" />}
         onClick={() => {
           clearToken();
           setToken(null);
+          message.success("已退出登录");
           window.location.assign("/");
         }}
-        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-400 transition-all hover:bg-white/5 hover:text-slate-200"
       >
-        <LogOut className="h-4 w-4" /> 退出登录
-      </button>
+        退出登录
+      </Button>
     );
   }
   return (
-    <Link
-      to="/login"
-      className={cn(
-        "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all",
-        location.pathname.startsWith("/login")
-          ? "bg-white/10 text-white"
-          : "text-slate-400 hover:bg-white/5 hover:text-slate-200",
-      )}
-    >
-      <LogIn className="h-4 w-4" /> 登录 / 注册
+    <Link to="/login" className="block">
+      <Button type="text" block icon={<LogIn className="h-4 w-4" />}>
+        登录 / 注册
+      </Button>
     </Link>
   );
 }
 
-export function AppShell({ children }: { children: ReactNode }) {
+function StatusFooter() {
+  const { health } = useSidebarStatus();
+  return (
+    <div className="flex items-center gap-2 rounded-md border border-[#20242C] bg-[#171A21] px-3 py-2 text-xs text-slate-400">
+      {/* §69 Lime 仅表示 Agent/API 活动状态（占比 1~3%） */}
+      <span
+        className={
+          health === "up"
+            ? "h-2 w-2 rounded-full bg-[#6CFF00] shadow-[0_0_6px_rgba(108,255,0,0.7)]"
+            : health === "down"
+              ? "h-2 w-2 rounded-full bg-red-400"
+              : "h-2 w-2 animate-pulse rounded-full bg-slate-500"
+        }
+      />
+      API {health === "up" ? "在线" : health === "down" ? "离线" : "检测中"}
+      <span className="ml-auto font-mono text-[10px] text-slate-600">v0.5.0</span>
+    </div>
+  );
+}
+
+function SiderInner({ onNavigate }: { onNavigate?: () => void }) {
   const location = useLocation();
+  const { pending } = useSidebarStatus();
+  return (
+    <div className="flex h-full flex-col gap-3 p-3">
+      <Link to="/" onClick={onNavigate} className="px-2 py-1">
+        <Brand />
+      </Link>
+      <Menu
+        mode="inline"
+        selectedKeys={[activeKey(location.pathname)]}
+        style={{ borderInlineEnd: "none", background: "transparent", flex: 1 }}
+        items={NAV_ITEMS.map((item) => ({
+          key: item.key,
+          label: (
+            <span className="flex items-center justify-between">
+              <span className="flex items-center gap-2.5">
+                <item.icon className="h-4 w-4" />
+                {item.label}
+              </span>
+              {item.badge && pending > 0 && <Badge count={pending} size="small" />}
+            </span>
+          ),
+        }))}
+      />
+      <div className="flex flex-col gap-2">
+        <AuthBlock />
+        <StatusFooter />
+      </div>
+    </div>
+  );
+}
+
+export function AppShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen lg:pl-56">
-      {/* 移动端顶栏 */}
-      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-white/10 bg-[#070b14]/80 px-4 backdrop-blur-xl lg:hidden">
-        <Brand />
-        <button
-          type="button"
-          className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-300"
-          onClick={() => setMenuOpen((open) => !open)}
-        >
-          菜单
-        </button>
-      </header>
-      {menuOpen && (
-        <div className="sticky top-14 z-20 border-b border-white/10 bg-[#070b14]/95 px-4 py-3 backdrop-blur-xl lg:hidden">
-          <NavLinks onNavigate={() => setMenuOpen(false)} />
-        </div>
-      )}
-
+    <Layout className="min-h-screen">
       {/* 桌面侧边栏 */}
-      <aside className="fixed inset-y-0 left-0 z-20 hidden w-56 flex-col gap-4 border-r border-white/10 bg-black/30 p-3 backdrop-blur-xl lg:flex">
-        <Brand />
-        <NavLinks />
-        <div className="mt-auto flex flex-col gap-2">
-          <AuthBlock />
-          <StatusFooter />
-        </div>
-      </aside>
-
-      <main className="mx-auto max-w-5xl px-4 py-8 lg:px-8">{children}</main>
-    </div>
+      <Sider
+        width={224}
+        className="fixed inset-y-0 left-0 z-20 hidden lg:block"
+        style={{ overflow: "auto" }}
+      >
+        <SiderInner />
+      </Sider>
+      <Layout style={{ paddingLeft: 224 }}>
+        {/* 移动端顶栏 */}
+        <Header
+          className="sticky top-0 z-20 flex items-center justify-between lg:hidden"
+          style={{ paddingInline: 16 }}
+        >
+          <Link to="/">
+            <Brand />
+          </Link>
+          <Button
+            type="text"
+            icon={<MenuIcon className="h-4 w-4" />}
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-label="打开菜单"
+          />
+        </Header>
+        {menuOpen && (
+          <div className="sticky top-16 z-20 border-b border-[#20242C] bg-[#111318] lg:hidden">
+            <SiderInner onNavigate={() => setMenuOpen(false)} />
+          </div>
+        )}
+        <Content className="mx-auto w-full max-w-5xl px-4 py-8 lg:px-8">{children}</Content>
+      </Layout>
+    </Layout>
   );
 }

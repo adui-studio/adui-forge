@@ -1,14 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Database, LogOut, Server } from "lucide-react";
-import { AppShell } from "@/components/app-shell.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { Button, Card, Descriptions } from "antd";
 import { clearToken } from "@/lib/auth.ts";
 import { fetchHealth } from "@/lib/approvals-metrics.ts";
 
@@ -25,64 +17,59 @@ export function SettingsPage() {
   });
 
   return (
-    <AppShell>
-      <h1 className="mb-6 text-xl font-bold text-slate-100">设置</h1>
+    <>
+      <h1 className="mb-6 text-xl font-semibold text-slate-100">设置</h1>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Server className="h-4 w-4 text-brand-300" /> API 状态
-          </CardTitle>
-          <CardDescription>后端服务健康状态（每 10 秒刷新）</CardDescription>
-        </CardHeader>
-        <CardContent className="flex items-center gap-6 text-sm">
-          {isLoading && <span className="text-slate-400">检测中…</span>}
-          {isError && <span className="text-red-400">无法连接 API：{String(error)}</span>}
-          {health !== undefined && (
-            <>
-              <span className="flex items-center gap-2">
-                <span
-                  className={
-                    health.status === "ok"
-                      ? "h-2 w-2 rounded-full bg-brand-400"
-                      : "h-2 w-2 rounded-full bg-red-400"
-                  }
-                />
-                服务 {health.status}
-              </span>
-              <span className="flex items-center gap-2 text-slate-400">
-                <Database className="h-4 w-4" /> 数据库：
-                {health.db === "up"
-                  ? "已连接"
-                  : health.db === "down"
-                    ? "连接失败"
-                    : "未配置（内存模式）"}
-              </span>
-            </>
-          )}
-        </CardContent>
+      <Card title="API 状态">
+        {isLoading && <p className="text-sm text-slate-500">检测中…</p>}
+        {isError && <p className="text-sm text-red-600">无法连接 API：{String(error)}</p>}
+        {health !== undefined && (
+          <Descriptions
+            column={1}
+            items={[
+              {
+                key: "service",
+                label: (
+                  <span className="flex items-center gap-1.5">
+                    <Server className="h-3.5 w-3.5" /> 服务
+                  </span>
+                ),
+                children: health.status,
+              },
+              {
+                key: "db",
+                label: (
+                  <span className="flex items-center gap-1.5">
+                    <Database className="h-3.5 w-3.5" /> 数据库
+                  </span>
+                ),
+                children:
+                  health.db === "up"
+                    ? "已连接"
+                    : health.db === "down"
+                      ? "连接失败"
+                      : "未配置（内存模式）",
+              },
+            ]}
+          />
+        )}
       </Card>
 
-      <Card className="mt-4">
-        <CardHeader>
-          <CardTitle>登录态</CardTitle>
-          <CardDescription>未配置强制认证时可匿名使用；登录后请求携带 Bearer 令牌</CardDescription>
-        </CardHeader>
-        <CardContent className="flex gap-2">
-          <Button variant="outline" onClick={() => window.location.assign("/login")}>
-            前往登录 / 注册
-          </Button>
+      <Card title="登录态" className="mt-4">
+        <div className="flex gap-2">
+          <Button onClick={() => window.location.assign("/login")}>前往登录 / 注册</Button>
           <Button
-            variant="ghost"
+            type="text"
+            icon={<LogOut className="h-4 w-4" />}
             onClick={() => {
               clearToken();
               window.location.reload();
             }}
           >
-            <LogOut className="h-4 w-4" /> 清除本机令牌
+            清除本机令牌
           </Button>
-        </CardContent>
+        </div>
       </Card>
-    </AppShell>
+    </>
   );
 }

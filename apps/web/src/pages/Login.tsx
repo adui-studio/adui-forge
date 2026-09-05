@@ -1,29 +1,26 @@
+import { Lock } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
-import { Input, Label } from "@/components/ui/input.tsx";
+import { Button, Card, Form, Input } from "antd";
 import { login, register, saveToken } from "@/lib/auth.ts";
 
 export function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const [form] = Form.useForm<{ username: string; password: string }>();
+  const [error, setError] = useState<string | null>(null);
 
-  const submit = async (kind: "login" | "register"): Promise<void> => {
+  const submit = async (
+    kind: "login" | "register",
+    values: { username: string; password: string },
+  ): Promise<void> => {
     setBusy(true);
     setError(null);
     try {
       const result =
-        kind === "login" ? await login(username, password) : await register(username, password);
+        kind === "login"
+          ? await login(values.username, values.password)
+          : await register(values.username, values.password);
       saveToken(result.accessToken);
       void navigate("/");
     } catch (err) {
@@ -34,54 +31,61 @@ export function LoginPage() {
   };
 
   return (
-    <div className="mx-auto max-w-sm">
+    <div className="mx-auto max-w-sm pt-8">
       <Card>
-        <CardHeader className="items-center text-center">
-          <img src="/logo.svg" alt="ADui Studio" className="mx-auto mb-1 h-10 w-10" />
-          <CardTitle>登录 ADui Forge</CardTitle>
-          <CardDescription>使用平台账号访问你的 Agent 会话</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form
-            className="flex flex-col gap-3"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void submit("login");
-            }}
+        <div className="mb-4 flex flex-col items-center gap-2 text-center">
+          <Lock className="h-6 w-6 text-accent-300" />
+          <h1 className="text-lg font-semibold text-slate-100">登录 ADui Forge</h1>
+          <p className="text-sm text-slate-500">使用平台账号访问你的 Agent 会话</p>
+        </div>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={(values) => submit("login", values)}
+          requiredMark={false}
+        >
+          <Form.Item
+            name="username"
+            label="用户名"
+            rules={[{ required: true, message: "请输入用户名" }]}
           >
-            <Label htmlFor="username">用户名</Label>
-            <Input
-              id="username"
-              value={username}
-              placeholder="用户名"
-              onChange={(event) => setUsername(event.target.value)}
-            />
-            <Label htmlFor="password">密码</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              placeholder="至少 8 位"
-              onChange={(event) => setPassword(event.target.value)}
-            />
-            <Button type="submit" disabled={busy || username.length < 3 || password.length < 8}>
+            <Input placeholder="用户名" />
+          </Form.Item>
+          <Form.Item
+            name="password"
+            label="密码"
+            rules={[
+              { required: true, message: "请输入密码" },
+              { min: 8, message: "密码至少 8 位" },
+            ]}
+          >
+            <Input.Password placeholder="至少 8 位" />
+          </Form.Item>
+          {/* §46 字段错误带原因，由 rules 提供 */}
+          {error !== null && (
+            <p role="alert" className="mb-3 text-sm text-red-600">
+              {error}
+            </p>
+          )}
+          <div className="flex flex-col gap-2">
+            <Button type="primary" htmlType="submit" block loading={busy}>
               登录
             </Button>
             <Button
-              type="button"
-              variant="outline"
-              disabled={busy || username.length < 3 || password.length < 8}
-              onClick={() => void submit("register")}
+              block
+              loading={busy}
+              onClick={(event) => {
+                event.preventDefault();
+                form
+                  ?.validateFields()
+                  .then((values) => submit("register", values))
+                  .catch(() => {});
+              }}
             >
               注册并登录
             </Button>
-            {error !== null && (
-              <p role="alert" className="text-sm text-red-600">
-                {error}
-              </p>
-            )}
-          </form>
-        </CardContent>
+          </div>
+        </Form>
       </Card>
     </div>
   );

@@ -1,23 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  /* 品牌电光绿（logo 主色） */
-  --color-brand-50: #f4ffe0;
-  --color-brand-100: #e6ffbd;
-  --color-brand-200: #cfff8a;
-  --color-brand-300: #a8f83d;
-  --color-brand-400: #6cff00;
-  --color-brand-500: #5ae000;
-  --color-brand-600: #46b800;
-  --color-brand-700: #3a9400;
-  /* 品牌深紫（logo 渐变端） */
-  --color-accent-200: #d8c2f0;
-  --color-accent-300: #b79aec;
-  --color-accent-400: #9a6ce0;
-  --color-accent-500: #7d3ed6;
-  --color-accent-600: #5b2b82;
-  --color-accent-700: #472064;
-  --color-surface: #060609;
+  /* DesignGuidelines §20 Dark Theme（Neutral 工作空间） */
+  --color-surface: #0b0d10;
+  --color-surface-1: #111318;
+  --color-surface-2: #171a21;
+  --color-surface-3: #1c2028;
+  --color-surface-active: #222732;
+  --color-border-subtle: #20242c;
+  --color-border-default: #292e39;
+  --color-border-strong: #3a4150;
+  /* ADui Lime —— 仅 Agent/Runner 活动指示（§13，占比 1~3%） */
+  --color-agent: #6cff00;
 }
 
 html {
@@ -25,73 +19,34 @@ html {
 }
 
 body {
-  background-color: var(--color-surface);
-  color: theme(colors.slate.200);
-  /* 沉浸式极光：左上深紫雾 + 右上电光绿辉 + 细网格 */
-  background-image:
-    radial-gradient(1000px 560px at 12% -8%, rgba(91, 43, 130, 0.4), transparent 62%),
-    radial-gradient(950px 520px at 88% -6%, rgba(108, 255, 0, 0.1), transparent 60%),
-    radial-gradient(700px 400px at 50% 110%, rgba(91, 43, 130, 0.18), transparent 65%),
-    linear-gradient(rgba(148, 163, 184, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(148, 163, 184, 0.045) 1px, transparent 1px);
-  background-size:
-    100% 100%,
-    100% 100%,
-    100% 100%,
-    40px 40px,
-    40px 40px;
-  background-attachment: fixed;
+  background-color: #0b0d10;
+  color: #f4f4f5;
 }
 
 ::selection {
-  background: rgba(108, 255, 0, 0.25);
-  color: #e6ffbd;
+  background: rgba(139, 81, 166, 0.4); /* §45 选中/Focus 使用 Purple */
+  color: #f4f4f5;
 }
 
-/* 细暗滚动条 */
+/* 中性细滚动条（§29 Dark 优先 border+surface，不用发光） */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.2);
-  border-radius: 8px;
+  background: #292e39;
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(108, 255, 0, 0.35);
+  background: #3a4150;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 
-/* 紫绿渐变文字 */
-.gradient-text {
-  background: linear-gradient(90deg, #b79aec 0%, #6cff00 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-/* 品牌渐变描边卡片（紫入绿出） */
-.glow-card {
-  position: relative;
-}
-.glow-card::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(125, 62, 214, 0.55),
-    rgba(108, 255, 0, 0.35),
-    transparent 65%
-  );
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+/* 事件流 / 终端 / 代码块：Neutral Monospace Dense（§96） */
+.forge-code {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.6;
 }

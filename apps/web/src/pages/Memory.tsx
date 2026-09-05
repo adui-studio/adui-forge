@@ -1,11 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Brain } from "lucide-react";
 import { useState } from "react";
-import { AppShell } from "@/components/app-shell.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
+import { StatusTag } from "@/components/status-tag.tsx";
+import { Card, Empty, Listy } from "antd";
 import { fetchMemory } from "@/lib/api.ts";
-import { statusLabel, statusTone } from "@/pages/Runs.tsx";
 
 const AGENTS = ["forge-dev"];
 
@@ -23,10 +21,10 @@ export function MemoryPage() {
   });
 
   return (
-    <AppShell>
+    <>
       <div className="mb-6 flex items-center gap-2">
         <Brain className="h-5 w-5 text-accent-300" />
-        <h1 className="text-xl font-bold text-slate-100">Session Memory</h1>
+        <h1 className="text-xl font-semibold text-slate-100">Session Memory</h1>
       </div>
       <p className="mb-6 text-sm text-slate-400">
         Agent 每次运行的任务与结果摘要会记录在此，并注入后续任务的系统提示，形成会话连续性。
@@ -38,19 +36,18 @@ export function MemoryPage() {
           {String(error)}
         </p>
       )}
-      {records !== undefined && records.length === 0 && (
+      {records === undefined || records.length === 0 ? (
         <Card>
-          <CardContent className="p-8 text-center text-sm text-slate-500">
-            还没有记忆记录——完成一次 Run 后这里会出现任务摘要。
-          </CardContent>
+          <Empty description="还没有记忆记录——完成一次 Run 后这里会出现任务摘要" />
         </Card>
-      )}
-      <div className="flex flex-col gap-2">
-        {records?.map((record, index) => (
-          <Card key={`${record.recordedAt}-${index}`}>
-            <CardContent className="p-4">
+      ) : (
+        <Listy
+          items={records}
+          rowKey={(record) => `${record.recordedAt}-${record.task}`}
+          itemRender={(record) => (
+            <div className="rounded-lg border border-[#20242C] bg-[#111318] p-4">
               <div className="flex items-center gap-2">
-                <Badge tone={statusTone(record.status)}>{statusLabel(record.status)}</Badge>
+                <StatusTag status={record.status} />
                 <span className="flex-1 truncate text-sm font-medium text-slate-200">
                   {record.task}
                 </span>
@@ -61,10 +58,10 @@ export function MemoryPage() {
               {record.summary.length > 0 && (
                 <p className="mt-2 line-clamp-2 text-sm text-slate-400">{record.summary}</p>
               )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </AppShell>
+            </div>
+          )}
+        />
+      )}
+    </>
   );
 }

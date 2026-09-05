@@ -2,15 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, ChevronLeft, RotateCcw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
+import { Button, Card, Empty, Segmented, Tabs, Timeline } from "antd";
 import type { AgentEvent } from "@adui-forge/contracts";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { StatusTag } from "@/components/status-tag.tsx";
 import { cancelRun, fetchRun, retryRun, streamRunEvents } from "@/lib/api.ts";
 import { fetchArtifacts, type ArtifactRecord } from "@/lib/api-metrics.ts";
 import { fetchPendingApprovals, submitApprovalDecision } from "@/lib/approvals.ts";
-import { cn } from "@/lib/utils.ts";
-import { statusLabel, statusTone } from "@/pages/Runs.tsx";
 
 const isTerminalStatus = (status: string): boolean =>
   ["completed", "failed", "cancelled", "timeout"].includes(status);
@@ -24,7 +21,16 @@ const EVENT_FILTERS = [
   { value: "run", label: "Run" },
 ];
 
-type DetailTab = "output" | "events" | "artifacts";
+/** 事件 → Timeline 圆点色（§90/§77：运行 Lime、成功 Green、失败 Red） */
+const eventDot = (name: string): string | undefined => {
+  if (name.endsWith("failed")) return "#EF4444";
+  if (name === "run.completed") return "#22C55E";
+  if (name.startsWith("tool.") && name !== "tool.started") return "#22C55E";
+  if (name === "run.cancelled") return "#71717A";
+  if (name === "model.started" || name === "step.started" || name === "run.started")
+    return "#6CFF00";
+  return undefined;
+};
 
 export function RunDetailPage() {
   const { id = "" } = useParams();
@@ -39,10 +45,9 @@ export function RunDetailPage() {
     queryFn: () => fetchRun(id),
   });
 
-  // SSE 实时事件；事件列表用本地状态承接，避免整个 Run 查询频繁失效
+  // SSE 实时事件；本地状态承接增量，避免整个 Run 查询频繁失效
   const [liveEvents, setLiveEvents] = useState<AgentEvent[]>([]);
   const [eventFilter, setEventFilter] = useState<string>("all");
-  const [tab, setTab] = useState<DetailTab>("events");
   const closeStream = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -83,7 +88,11 @@ export function RunDetailPage() {
   });
 
   if (isLoading) {
-    return <p className="text-sm text-slate-500">加载中…</p>;
+    return (
+      <>
+        <p className="text-sm text-slate-500">加载中…</p>
+      </>
+    );
   }
   if (isError) {
     return (
@@ -91,7 +100,7 @@ export function RunDetailPage() {
         <p role="alert" className="flex items-center gap-2 text-sm text-red-600">
           <AlertCircle className="h-4 w-4" /> {String(error)}
         </p>
-        <Link to="/runs" className="mt-3 inline-block text-sm text-brand-300 hover:text-brand-200">
+        <Link to="/runs" className="mt-3 inline-block text-sm text-[#B79AEC] hover:underline">
           ← 返回列表
         </Link>
       </>
@@ -106,59 +115,61 @@ export function RunDetailPage() {
       ? run.events
       : [...run.events, ...liveEvents.slice(run.events.length)];
 
-  // token 级增量（model.delta）聚合为实时输出面板
+  // token 级增量（model.delta）聚合为流式输出
   const streamedText = events
     .filter((event) => event.name === "model.delta")
     .map((event) => (event.payload as { text?: string } | undefined)?.text ?? "")
     .join("");
 
-  const TABS: Array<{ value: DetailTab; label: string; count?: number }> = [
-    { value: "output", label: "模型输出" },
-    { value: "events", label: "事件流", count: events.length },
-    { value: "artifacts", label: "产物", count: artifacts?.length ?? 0 },
-  ];
+  const filteredEvents = events.filter(
+    (event) => eventFilter === "all" || event.name.startsWith(eventFilter),
+  );
 
   return (
     <>
       <Link
         to="/runs"
-        className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-brand-300"
+        className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-[#B79AEC]"
       >
         <ChevronLeft className="h-4 w-4" /> 返回列表
       </Link>
 
-      <div className="mt-3 flex items-center gap-3">
-        <h1 className="text-xl font-bold text-slate-100">{run.task}</h1>
-        <Badge tone={statusTone(run.status)}>{statusLabel(run.status)}</Badge>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <h1 className="text-xl font-semibold text-slate-100">{run.task}</h1>
+        <StatusTag status={run.status} />
       </div>
-      <p className="mt-1 font-mono text-xs text-slate-500">
+      <p className="forge-code mt-1 text-slate-500">
         {run.id} · {run.agentName} · {new Date(run.createdAt).toLocaleString()}
       </p>
 
+      {/* §94 错误 UX：发生了什么 + 可执行动作 */}
       {run.error !== undefined && (
-        <p
-          role="alert"
-          className="mt-3 flex items-center gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300"
-        >
-          <AlertCircle className="h-4 w-4" /> {run.error}
-        </p>
+        <Card className="mt-3" style={{ borderColor: "rgba(239,68,68,0.4)" }}>
+          <div className="flex items-start gap-3 p-4">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-red-300">运行失败</p>
+              <p className="forge-code mt-1 text-slate-300">{run.error}</p>
+            </div>
+          </div>
+        </Card>
       )}
       {run.status === "waiting_approval" && <InlineApprovals runId={run.id} />}
+
       <div className="mt-3 flex gap-2">
         {!isTerminalStatus(run.status) && run.status !== "waiting_approval" && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              cancel.mutate();
-            }}
-          >
+          <Button variant="outlined" size="small" onClick={() => cancel.mutate()}>
             取消执行
           </Button>
         )}
         {isTerminalStatus(run.status) && (
-          <Button variant="outline" size="sm" onClick={() => retry.mutate()}>
-            <RotateCcw className="h-3.5 w-3.5" /> 重试（创建新 Run）
+          <Button
+            variant="outlined"
+            size="small"
+            icon={<RotateCcw className="h-3.5 w-3.5" />}
+            onClick={() => retry.mutate()}
+          >
+            重试（创建新 Run）
           </Button>
         )}
       </div>
@@ -173,135 +184,89 @@ export function RunDetailPage() {
         </p>
       )}
 
-      {/* Tab 栏 */}
-      <div className="mt-6 flex gap-1 border-b border-white/10">
-        {TABS.map((entry) => (
-          <button
-            key={entry.value}
-            type="button"
-            onClick={() => setTab(entry.value)}
-            className={cn(
-              "-mb-px border-b-2 px-4 py-2 text-sm transition-colors",
-              tab === entry.value
-                ? "border-brand-400 font-medium text-brand-300"
-                : "border-transparent text-slate-400 hover:text-slate-200",
-            )}
-          >
-            {entry.label}
-            {entry.count !== undefined && (
-              <span className="ml-1.5 text-xs text-slate-500">{entry.count}</span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* 模型输出 */}
-      {tab === "output" &&
-        (streamedText.length > 0 ? (
-          <Card className="mt-4">
-            <CardContent className="p-4">
-              <pre className="overflow-auto font-mono text-xs leading-relaxed whitespace-pre-wrap text-slate-100">
+      <Tabs
+        className="mt-6"
+        defaultActiveKey="events"
+        items={[
+          {
+            key: "output",
+            label: "模型输出",
+            children: streamedText ? (
+              <pre className="forge-code max-h-96 overflow-auto rounded-md border border-[#20242C] bg-[#0D0F13] p-4 whitespace-pre-wrap text-slate-100">
                 {streamedText}
               </pre>
-            </CardContent>
-          </Card>
-        ) : (
-          <p className="mt-4 rounded-lg border border-dashed border-white/15 p-6 text-center text-sm text-slate-500">
-            本次运行没有文本输出（可能只发生了工具调用）。
-          </p>
-        ))}
-
-      {/* 事件流 */}
-      {tab === "events" && (
-        <>
-          <div className="mb-3 mt-4 flex items-center justify-between">
-            <div className="flex gap-1">
-              {EVENT_FILTERS.map((filter) => (
-                <button
-                  key={filter.value}
-                  type="button"
-                  onClick={() => setEventFilter(filter.value)}
-                  className={
-                    eventFilter === filter.value
-                      ? "rounded-full bg-brand-400/15 px-2.5 py-1 text-xs font-medium text-brand-300 ring-1 ring-brand-400/30"
-                      : "rounded-full px-2.5 py-1 text-xs text-slate-400 hover:bg-white/10"
-                  }
-                >
-                  {filter.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <Card>
-            <CardContent className="p-0">
-              <ol className="divide-y divide-white/5">
-                {events
-                  .filter((event) => eventFilter === "all" || event.name.startsWith(eventFilter))
-                  .map((event, index) => (
-                    <li
-                      key={`${event.timestamp}-${index}`}
-                      className="flex items-baseline gap-3 px-4 py-2.5"
-                    >
-                      <span
-                        className={
-                          event.name.endsWith("failed")
-                            ? "font-mono text-xs font-semibold text-red-400"
-                            : "font-mono text-xs font-semibold text-slate-300"
-                        }
-                      >
-                        {event.name}
-                      </span>
-                      <span className="text-xs text-slate-500">
-                        {new Date(event.timestamp).toLocaleTimeString()}
-                      </span>
-                      {event.payload !== undefined && (
-                        <span className="ml-auto max-w-[50%] truncate font-mono text-xs text-slate-500">
-                          {JSON.stringify(event.payload)}
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                {events.filter(
-                  (event) => eventFilter === "all" || event.name.startsWith(eventFilter),
-                ).length === 0 && (
-                  <li className="px-4 py-6 text-center text-sm text-slate-500">暂无匹配事件</li>
+            ) : (
+              <Empty description="本次运行没有文本输出（可能只发生了工具调用）" />
+            ),
+          },
+          {
+            key: "events",
+            label: `事件流 (${events.length})`,
+            children: (
+              <>
+                <Segmented
+                  className="mb-4"
+                  value={eventFilter}
+                  onChange={(value) => setEventFilter(value as string)}
+                  options={EVENT_FILTERS}
+                />
+                {filteredEvents.length === 0 ? (
+                  <Empty description="暂无匹配事件" />
+                ) : (
+                  /* §90 Run Timeline */
+                  <Timeline
+                    items={filteredEvents.map((event) => ({
+                      color: eventDot(event.name),
+                      children: (
+                        <div className="flex items-baseline gap-3">
+                          <span
+                            className={
+                              event.name.endsWith("failed")
+                                ? "forge-code font-semibold text-red-400"
+                                : "forge-code font-semibold text-slate-300"
+                            }
+                          >
+                            {event.name}
+                          </span>
+                          <span className="text-xs text-slate-500">
+                            {new Date(event.timestamp).toLocaleTimeString()}
+                          </span>
+                        </div>
+                      ),
+                    }))}
+                  />
                 )}
-              </ol>
-            </CardContent>
-          </Card>
-        </>
-      )}
-
-      {/* 产物 */}
-      {tab === "artifacts" &&
-        (artifacts !== undefined && artifacts.length > 0 ? (
-          <div className="mt-4 flex flex-col gap-3">
-            {artifacts.map((artifact) => (
-              <Card key={artifact.id}>
-                <CardHeader>
-                  <CardTitle className="font-mono text-xs text-brand-300">
-                    {artifact.name} · {artifact.type}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <pre className="max-h-60 overflow-auto rounded-lg bg-black/50 p-3 font-mono text-xs text-slate-200">
-                    {artifact.content}
-                  </pre>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <p className="mt-4 rounded-lg border border-dashed border-white/15 p-6 text-center text-sm text-slate-500">
-            Run 完成后会在这里登记执行产物（摘要 / 报告）。
-          </p>
-        ))}
-
-      {!isTerminalStatus(run.status) && run.status !== "waiting_approval" && (
-        <p className="mt-3 flex items-center gap-2 text-sm text-slate-400">
-          <RotateCcw className="h-3.5 w-3.5 animate-spin" /> 订阅中，事件将实时推送…
-        </p>
-      )}
+              </>
+            ),
+          },
+          {
+            key: "artifacts",
+            label: `产物 (${artifacts?.length ?? 0})`,
+            children:
+              artifacts !== undefined && artifacts.length > 0 ? (
+                <div className="flex flex-col gap-3">
+                  {artifacts.map((artifact) => (
+                    <Card
+                      key={artifact.id}
+                      size="small"
+                      title={
+                        <span className="forge-code text-xs text-brand-300">
+                          {artifact.name} · {artifact.type}
+                        </span>
+                      }
+                    >
+                      <pre className="forge-code max-h-60 overflow-auto whitespace-pre-wrap text-slate-200">
+                        {artifact.content}
+                      </pre>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Empty description="Run 完成后会在这里登记执行产物（摘要 / 报告）" />
+              ),
+          },
+        ]}
+      />
     </>
   );
 }
@@ -336,28 +301,29 @@ function InlineApprovals({ runId }: { runId: string }) {
     );
   }
   return (
-    <Card className="mt-3">
-      <CardHeader>
-        <CardTitle className="text-sm text-amber-300">等待你的审批</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3">
+    <Card className="mt-3" style={{ borderColor: "rgba(245,158,11,0.4)" }}>
+      <div className="flex flex-col gap-3 p-4">
         {mine.map((item) => (
           <div key={item.id}>
-            <p className="font-mono text-xs text-slate-300">{item.toolName}</p>
-            <pre className="mt-1 overflow-auto rounded-lg bg-black/50 p-3 font-mono text-xs text-slate-200">
+            <p className="forge-code text-xs text-amber-300">⚠ {item.toolName}</p>
+            <pre className="forge-code mt-1 overflow-auto rounded-md border border-[#20242C] bg-[#0D0F13] p-3 text-slate-200">
               {JSON.stringify(item.input, null, 2)}
             </pre>
             <div className="mt-2 flex justify-end gap-2">
+              {/* §88 危险方向：Reject 用 Error 色，Approve 不获得默认焦点 */}
               <Button
-                variant="outline"
-                size="sm"
+                danger
+                variant="outlined"
+                size="small"
                 disabled={decision.isPending}
                 onClick={() => decision.mutate({ id: item.id, decision: "rejected" })}
               >
                 拒绝
               </Button>
               <Button
-                size="sm"
+                color="primary"
+                variant="solid"
+                size="small"
                 disabled={decision.isPending}
                 onClick={() => decision.mutate({ id: item.id, decision: "approved" })}
               >
@@ -366,7 +332,7 @@ function InlineApprovals({ runId }: { runId: string }) {
             </div>
           </div>
         ))}
-      </CardContent>
+      </div>
     </Card>
   );
 }
