@@ -5,6 +5,7 @@ import { WorkflowRunner, type WorkflowStep } from "@adui-forge/workflow";
 import { DEFAULT_AGENT_NAME } from "../agents/agent.factory";
 import type { RunRecord, RunStore } from "../runs/run.types";
 import { RUN_STORE } from "../runs/run.tokens";
+import { RunService } from "../runs/run.service";
 
 export interface CreateWorkflowRunInput {
   /** 顺序执行的子任务列表；每个任务一个 agent 节点。 */
@@ -22,7 +23,8 @@ export class WorkflowService {
   constructor(
     @Inject(RUN_STORE) private readonly store: RunStore,
     @Inject(AgentRegistry) private readonly agents: AgentRegistry,
-    private readonly emitEvent: (runId: string, event: AgentEvent) => void,
+    // 事件推送复用 RunService 的订阅总线（SSE 通道）
+    @Inject(RunService) private readonly runs: RunService,
   ) {}
 
   async createWorkflowRun(input: CreateWorkflowRunInput): Promise<RunRecord> {
@@ -64,7 +66,7 @@ export class WorkflowService {
         onEvent: async (event: AgentEvent) => {
           events.push(event);
           await this.store.update(runId, { events: [...events] });
-          this.emitEvent(runId, event);
+          this.runs.emitEvent(runId, event);
         },
       },
     );

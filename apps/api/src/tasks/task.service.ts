@@ -36,7 +36,7 @@ export class InMemoryTaskStore implements TaskStore {
 export class TaskService {
   constructor(
     @Inject(TASK_STORE) private readonly store: TaskStore,
-    private readonly runs: RunService,
+    @Inject(RunService) private readonly runs: RunService,
   ) {}
 
   async createTask(input: {

@@ -27,11 +27,13 @@ describe("WorkflowService", () => {
     );
     const store = new InMemoryRunStore();
     const runService = new RunService(store, registry);
-    const workflowService = new WorkflowService(store, registry, (runId, event) => {
-      // 经 RunService 的订阅通道推送（此处仅验证不抛错）
-      void runId;
-      void event;
-    });
+    const workflowService = new WorkflowService(store, registry, {
+      emitEvent: (runId: unknown, event: unknown) => {
+        // 经 RunService 的订阅通道推送（此处仅验证不抛错）
+        void runId;
+        void event;
+      },
+    } as unknown as RunService);
 
     const record = await workflowService.createWorkflowRun({ tasks: ["first", "second"] });
     await new Promise((resolve) => setTimeout(resolve, 60));
@@ -44,11 +46,9 @@ describe("WorkflowService", () => {
   }, 10_000);
 
   it("默认 Agent 未注册时显式 404", async () => {
-    const workflowService = new WorkflowService(
-      new InMemoryRunStore(),
-      new AgentRegistry(),
-      () => {},
-    );
+    const workflowService = new WorkflowService(new InMemoryRunStore(), new AgentRegistry(), {
+      emitEvent: () => {},
+    } as unknown as RunService);
     await expect(workflowService.createWorkflowRun({ tasks: ["x"] })).rejects.toThrow(
       'unknown agent: "forge-dev"',
     );

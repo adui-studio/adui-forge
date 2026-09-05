@@ -17,7 +17,8 @@ const PROTECTED_PREFIXES = ["/api/v1/auth/login", "/api/v1/runs", "/api/v1/tasks
 export class RateLimitGuard implements CanActivate {
   readonly #buckets = new Map<string, number[]>();
 
-  constructor(private readonly options: RateLimitOptions) {}
+  // 全局 APP_GUARD 由 Nest 无参实例化：必须给默认限流参数
+  constructor(private readonly options: RateLimitOptions = { limit: 60, windowMs: 60_000 }) {}
 
   canActivate(context: ExecutionContext): boolean {
     const http = context.switchToHttp();

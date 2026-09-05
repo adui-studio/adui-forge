@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { RunsModule } from "../runs/runs.module";
+import { AgentsModule } from "../agents/agents.module";
 import { WorkflowsController } from "./workflows.controller";
 import { WorkflowService } from "./workflow.service";
 import { WorkflowsRegistry } from "./workflow.registry";
@@ -8,7 +9,7 @@ import { PrismaClient } from "@prisma/client";
 import { WorkflowsRegistryController } from "./workflows.registry.controller";
 
 @Module({
-  imports: [RunsModule],
+  imports: [RunsModule, AgentsModule],
   controllers: [WorkflowsController, WorkflowsRegistryController],
   providers: [
     WorkflowService,

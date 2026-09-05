@@ -21,7 +21,7 @@ import { ApprovalsModule } from "../approvals/approvals.module";
 @Module({
   imports: [AgentsModule, ApprovalsModule],
   controllers: [RunsController, ArtifactsController, MemoryController],
-  exports: [RunService],
+  exports: [RunService, RUN_STORE, MemoryService],
   providers: [
     ArtifactService,
     MemoryService,

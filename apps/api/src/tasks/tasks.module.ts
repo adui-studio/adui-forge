@@ -3,12 +3,14 @@ import { PrismaClient } from "@prisma/client";
 import { InMemoryTaskStore, TASK_STORE, TaskService } from "./task.service";
 import { PrismaTaskStore } from "./prisma-task.store";
 import { TasksController } from "./tasks.controller";
+import { RunsModule } from "../runs/runs.module";
 
 /**
  * 配置了 DATABASE_URL 时使用 PostgreSQL 持久化（Prisma，需先 migrate deploy），
  * 否则退回进程内存实现——显式降级，不静默。
  */
 @Module({
+  imports: [RunsModule],
   controllers: [TasksController],
   providers: [
     {
