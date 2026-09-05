@@ -1,13 +1,25 @@
-import { ClipboardCheck, Gauge, LayoutList, LogIn, Settings, Workflow } from "lucide-react";
+import {
+  Bot,
+  ClipboardCheck,
+  Gauge,
+  LayoutList,
+  LogIn,
+  LogOut,
+  Settings,
+  Users,
+  Workflow,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { cn } from "@/lib/utils.ts";
 import { fetchHealth, fetchPendingApprovals } from "@/lib/approvals-metrics.ts";
+import { clearToken, getAccessToken } from "@/lib/auth.ts";
 
 const NAV_ITEMS = [
   { to: "/", label: "控制台", icon: Gauge, exact: true },
   { to: "/runs", label: "Runs", icon: LayoutList },
+  { to: "/agents", label: "Agents", icon: Users },
   { to: "/workflows", label: "Workflows", icon: Workflow },
   { to: "/approvals", label: "审批", icon: ClipboardCheck, badge: true as const },
   { to: "/settings", label: "设置", icon: Settings },
@@ -108,6 +120,44 @@ function StatusFooter() {
   );
 }
 
+/** 登录态区块：有令牌显示退出，否则显示登录入口 */
+function AuthBlock() {
+  const location = useLocation();
+  const [token, setToken] = useState<string | null>(null);
+  useEffect(() => {
+    setToken(getAccessToken());
+  }, [location.pathname]);
+
+  if (token !== null && token !== "") {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          clearToken();
+          setToken(null);
+          window.location.assign("/");
+        }}
+        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-400 transition-all hover:bg-white/5 hover:text-slate-200"
+      >
+        <LogOut className="h-4 w-4" /> 退出登录
+      </button>
+    );
+  }
+  return (
+    <Link
+      to="/login"
+      className={cn(
+        "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all",
+        location.pathname.startsWith("/login")
+          ? "bg-white/10 text-white"
+          : "text-slate-400 hover:bg-white/5 hover:text-slate-200",
+      )}
+    >
+      <LogIn className="h-4 w-4" /> 登录 / 注册
+    </Link>
+  );
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -136,17 +186,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Brand />
         <NavLinks />
         <div className="mt-auto flex flex-col gap-2">
-          <Link
-            to="/login"
-            className={cn(
-              "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all",
-              location.pathname.startsWith("/login")
-                ? "bg-white/10 text-white"
-                : "text-slate-400 hover:bg-white/5 hover:text-slate-200",
-            )}
-          >
-            <LogIn className="h-4 w-4" /> 登录 / 注册
-          </Link>
+          <AuthBlock />
           <StatusFooter />
         </div>
       </aside>

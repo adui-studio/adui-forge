@@ -74,3 +74,15 @@ export const streamRunEvents = (
   };
   return () => source.close();
 };
+
+export interface AgentSummary {
+  name: string;
+  description: string;
+  tools: string[];
+}
+
+export const fetchAgents = async (): Promise<AgentSummary[]> => {
+  const response = await fetch("/api/v1/agents");
+  if (!response.ok) throw new Error(`request failed: ${response.status}`);
+  return (await response.json()) as AgentSummary[];
+};

@@ -1,5 +1,6 @@
 import { AppShell } from "./components/app-shell.tsx";
 import { Route, Routes } from "react-router";
+import { AgentsPage } from "./pages/Agents.tsx";
 import { ApprovalsPage } from "./pages/Approvals.tsx";
 import { HomePage } from "./pages/Home.tsx";
 import { LoginPage } from "./pages/Login.tsx";
@@ -13,6 +14,7 @@ export function App() {
     <AppShell>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/agents" element={<AgentsPage />} />
         <Route path="/workflows" element={<WorkflowsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/login" element={<LoginPage />} />
