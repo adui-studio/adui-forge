@@ -1,31 +1,55 @@
 # Changelog
 
+> 版本与里程碑提交对齐：v0.2.0 → 063fb01，v0.3.0 → 6ec475b，v0.4.0 → 43b5043，v0.5.0 → efc6faf。
+
 ## 0.5.0 — 2026-09-05
+
+### 发布工程
+
+- Release 流水线：tag 触发 Desktop 安装包（Windows NSIS/MSI）与 Mobile APK 上传 GitHub Release
+- 全端版本号统一 0.5.0（web / desktop / tauri / mobile）
+
+---
+
+## 0.4.0 — 2026-09-05
+
+### 平台能力
+
+- Agents 页：Agent 清单与工具集（`GET /api/v1/agents`）
+- 侧边栏登录态区块（有令牌显示退出，否则登录入口）
+
+### 品牌与体验
+
+- Mobile 品牌化主题：Material 3 深色（电光绿 × 深紫，与 Web 一致）；Android 应用名改为 ADui Forge
+
+---
+
+## 0.3.0 — 2026-09-05
 
 ### 平台能力
 
 - **Run 取消**：`POST /runs/:id/cancel`（AbortController 中止，收敛为 cancelled）
 - Run 详情增强：执行产物展示（Artifacts）、内联审批（等待时直接批准/拒绝）、
   取消与重试按钮
-- Agents 页：Agent 清单与工具集（`GET /api/v1/agents`）
-- 设置页：API 健康（含数据库状态）、登录态管理
-- 侧边栏实时状态：API 健康呼吸灯 + 审批待办角标（轮询）
+
+---
+
+## 0.2.0 — 2026-09-05
 
 ### 品牌与体验
 
 - 页面结构参照 Dify / n8n / LangSmith 重构：侧边栏导航 + 控制台落地页
+  （指标卡 / 快速发起 / 最近 Runs）
 - 沉浸式品牌主题：电光绿 × 深紫（取自 logo 渐变），极光背景 + 玻璃拟态 + 辉光交互
-- 品牌 logo 全端接入：Web favicon/页头/登录页、文档站、Desktop 启动图标、
-  Mobile 全套启动图标（Android/iOS）
-- Mobile 品牌化主题（Material 3 深色）与应用名
+- 设置页：API 健康（含数据库状态）、登录态管理
+- 侧边栏实时状态：API 健康呼吸灯 + 审批待办角标（轮询）
 
-### 发布工程
+### 品牌
 
-- Release 流水线：tag 触发 Desktop 安装包（Windows）与 Mobile APK 上传 GitHub Release
+- logo 全端接入：Web favicon/页头/登录页、文档站页头、Desktop 启动图标（BMP ICO）、
+  Mobile 全套启动图标（flutter_launcher_icons）；scripts/generate-icons.cjs 一键再生成
 
 ---
-
-## 0.1.0 — 2026-08-30
 
 ## 0.1.0 — 2026-08-30
 
