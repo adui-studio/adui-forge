@@ -10,7 +10,13 @@ title: ADui Forge
 
 ## 文档
 
+- [核心概念](/guide/concepts.html)
 - [快速开始](/guide/getting-started.html)
 - [架构总览](/guide/architecture.html)
+- [API 参考](/guide/api-reference.html)
+- [配置参考](/guide/configuration.html)
+- [安全模型](/guide/security.html)
+- [部署](/guide/deployment.html)
+- [Desktop 与 Mobile](/guide/desktop-mobile.html)
 
 > 完整需求见仓库 `docs/REQUIREMENTS.md`，本项目文档站随 MVP 逐步补全。
