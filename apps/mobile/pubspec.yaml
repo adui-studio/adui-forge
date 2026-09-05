@@ -1,5 +1,5 @@
 name: adui_forge
-description: "A new Flutter project."
+description: "ADui Forge Mobile — 随时随地查看、控制、审批正在执行的 Agent"
 publish_to: "none"
 version: 0.1.0+1
 
@@ -9,6 +9,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_riverpod: ^3.0.3
+  go_router: ^16.2.4
+  dio: ^5.9.0
+  flutter_secure_storage: ^10.0.0
 
 dev_dependencies:
   flutter_test:

@@ -38,3 +38,43 @@ jobs:
       # Docker / PostgreSQL 依赖的测试在本环境自动跳过（skipIf），不阻塞 CI。
       - name: 全量验收（check / test / build）
         run: pnpm run ready
+
+  desktop-mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: 安装依赖（desktop cli）
+        run: pnpm install --frozen-lockfile
+
+      - name: Rust 工具链
+        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+
+      - name: Rust 缓存
+        uses: swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2
+
+      - name: Desktop cargo check
+        run: cargo check --locked
+        working-directory: apps/desktop/src-tauri
+
+      - name: 安装 Flutter
+        uses: subosito/flutter-action@4cab68ce0f1c7c924f688bff4792e044f1aeb30c # main
+
+      - name: Mobile analyze + test
+        working-directory: apps/mobile
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
