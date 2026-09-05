@@ -56,6 +56,8 @@ export class RunService {
       limit?: number,
     ): Array<{ task: string; status: string; summary: string }>;
   };
+  /** 运行中 Run 的取消句柄；终态后清理。 */
+  readonly #controllers = new Map<string, AbortController>();
   private artifactRegistrar?: (input: {
     runId: string;
     name: string;
@@ -183,12 +185,16 @@ export class RunService {
         : agent.systemPrompt;
 
     // AGENTS.md §30：API 请求不阻塞等待 Agent Run，创建即返回，执行在后台推进
-    void this.#execute(record.id, agent, input.task, systemPrompt).catch((error: unknown) => {
-      this.logger.error(
-        `run ${record.id} crashed`,
-        error instanceof Error ? error.stack : String(error),
-      );
-    });
+    const controller = new AbortController();
+    this.#controllers.set(record.id, controller);
+    void this.#execute(record.id, agent, input.task, systemPrompt, controller).catch(
+      (error: unknown) => {
+        this.logger.error(
+          `run ${record.id} crashed`,
+          error instanceof Error ? error.stack : String(error),
+        );
+      },
+    );
 
     return record;
   }
@@ -199,6 +205,17 @@ export class RunService {
       throw new NotFoundException(`unknown run: "${id}"`);
     }
     return record;
+  }
+
+  /** 取消：中止执行中的 Run（Loop 将以 aborted 收敛为 cancelled）。 */
+  async cancelRun(id: string): Promise<RunRecord> {
+    const record = await this.getRun(id);
+    if (TERMINAL_STATUSES.has(record.status)) {
+      return record;
+    }
+    this.#controllers.get(id)?.abort();
+    this.#controllers.delete(id);
+    return { ...record, status: "cancelled" };
   }
 
   /** 重试：以原 Run 的 agent 与任务创建一个新 Run（REQUIREMENTS §54 Recoverable）。 */
@@ -225,12 +242,19 @@ export class RunService {
     return runs;
   }
 
-  async #execute(runId: string, agent: Agent, task: string, systemPrompt?: string): Promise<void> {
+  async #execute(
+    runId: string,
+    agent: Agent,
+    task: string,
+    systemPrompt: string | undefined,
+    controller: AbortController,
+  ): Promise<void> {
     await this.store.update(runId, { status: "running", startedAt: new Date().toISOString() });
     const events: AgentEvent[] = [];
 
     const result = await agent.run(task, {
       runId,
+      signal: controller.signal,
       systemPrompt: systemPrompt ?? agent.systemPrompt,
       onEvent: async (event: AgentEvent) => {
         events.push(event);
@@ -256,6 +280,7 @@ export class RunService {
     if (status === "failed" && result.error !== undefined) {
       this.logger.warn(`run ${runId} failed: ${result.error}`);
     }
+    this.#controllers.delete(runId);
 
     if (this.memory !== undefined) {
       this.memory.record({

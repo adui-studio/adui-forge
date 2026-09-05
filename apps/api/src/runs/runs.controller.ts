@@ -36,6 +36,11 @@ export class RunsController {
     return this.runs.getRun(id);
   }
 
+  @Post(":id/cancel")
+  cancel(@Param("id") id: string) {
+    return this.runs.cancelRun(id);
+  }
+
   @Post(":id/retry")
   retry(@Param("id") id: string) {
     return this.runs.retryRun(id);

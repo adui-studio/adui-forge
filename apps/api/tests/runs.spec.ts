@@ -192,3 +192,46 @@ describe("listRuns 过滤", () => {
     expect(await service.listRuns({ agentName: "other" })).toHaveLength(0);
   });
 });
+
+describe("cancelRun", () => {
+  it("aborts a hung run and converges to cancelled", async () => {
+    const registry = new AgentRegistry();
+    registry.register(
+      defineAgent({
+        name: "forge-dev",
+        description: "t",
+        systemPrompt: "sys",
+        model: {
+          generate: (_messages, _tools, context) =>
+            new Promise<ModelTurnResult>((_resolve, reject) => {
+              context.signal.addEventListener("abort", () => reject(context.signal.reason));
+            }),
+        },
+        tools: [],
+        loop: { maxSteps: 2, timeoutMs: 30_000 },
+      }),
+    );
+    const service = new RunService(new InMemoryRunStore(), registry);
+
+    const record = await service.createRun({ agentName: "forge-dev", task: "hang" });
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(record.status === "running" || record.status === "queued").toBe(true);
+
+    const cancelled = await service.cancelRun(record.id);
+    expect(cancelled.status).toBe("cancelled");
+
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    const finished = await service.getRun(record.id);
+    expect(finished.status).toBe("cancelled");
+    expect(finished.finishedAt).toBeDefined();
+  });
+
+  it("cancel on terminal run is a no-op returning current state", async () => {
+    const { registry } = buildRegistry();
+    const service = new RunService(new InMemoryRunStore(), registry);
+    const record = await service.createRun({ agentName: "forge-dev", task: "done" });
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    const result = await service.cancelRun(record.id);
+    expect(result.status).toBe("completed");
+  });
+});
