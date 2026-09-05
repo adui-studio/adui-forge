@@ -9,6 +9,8 @@
     "smoke": "node scripts/smoke.mjs"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "catalog:",
+    "pngjs": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:"
   },

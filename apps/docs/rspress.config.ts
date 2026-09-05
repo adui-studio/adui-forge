@@ -10,4 +10,5 @@ export default defineConfig({
   description: "Agent-Driven Development Platform",
   lang: "zh-CN",
   base,
+  logo: "/logo.svg",
 });

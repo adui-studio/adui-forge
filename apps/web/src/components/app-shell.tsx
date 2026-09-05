@@ -1,4 +1,4 @@
-import { Bot, ClipboardCheck, Gauge, LayoutList, LogIn, Settings, Workflow } from "lucide-react";
+import { ClipboardCheck, Gauge, LayoutList, LogIn, Settings, Workflow } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
@@ -81,9 +81,11 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 function Brand() {
   return (
     <Link to="/" className="flex items-center gap-2.5 px-2 py-1">
-      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-brand-400 to-violet-500 shadow-lg shadow-brand-500/30">
-        <Bot className="h-4 w-4 text-white" />
-      </span>
+      <img
+        src="/logo.svg"
+        alt="ADui Studio"
+        className="h-7 w-7 drop-shadow-[0_0_10px_rgba(108,255,0,0.35)]"
+      />
       <span className="gradient-text font-semibold tracking-tight">ADui Forge</span>
     </Link>
   );

@@ -1,4 +1,3 @@
-import { Bot } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button.tsx";
@@ -38,9 +37,7 @@ export function LoginPage() {
     <div className="mx-auto max-w-sm">
       <Card>
         <CardHeader className="items-center text-center">
-          <span className="mx-auto mb-1 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 text-white">
-            <Bot className="h-5 w-5" />
-          </span>
+          <img src="/logo.svg" alt="ADui Studio" className="mx-auto mb-1 h-10 w-10" />
           <CardTitle>登录 ADui Forge</CardTitle>
           <CardDescription>使用平台账号访问你的 Agent 会话</CardDescription>
         </CardHeader>
