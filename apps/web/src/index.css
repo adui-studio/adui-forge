@@ -1,17 +1,64 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-50: #eef5ff;
-  --color-brand-100: #d9e8ff;
-  --color-brand-500: #1464dc;
-  --color-brand-600: #0f51b5;
-  --color-brand-700: #0d4194;
+  --color-brand-50: #ecfeff;
+  --color-brand-100: #cffafe;
+  --color-brand-300: #67e8f9;
+  --color-brand-400: #22d3ee;
+  --color-brand-500: #06b6d4;
+  --color-brand-600: #0891b2;
+  --color-surface: #070b14;
 }
 
-:root {
-  color-scheme: light;
+html {
+  color-scheme: dark;
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  background-color: var(--color-surface);
+  color: theme(colors.slate.200);
+  /* 深空底 + 顶部辉光 + 细网格 */
+  background-image:
+    radial-gradient(1100px 520px at 50% -12%, rgba(34, 211, 238, 0.14), transparent 70%),
+    radial-gradient(900px 500px at 85% 0%, rgba(139, 92, 246, 0.1), transparent 70%),
+    linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    36px 36px,
+    36px 36px;
+  background-attachment: fixed;
+}
+
+/* 渐变描边卡片 */
+.glow-card {
+  position: relative;
+}
+.glow-card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(34, 211, 238, 0.35),
+    rgba(139, 92, 246, 0.2),
+    transparent 60%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* 渐变文字 */
+.gradient-text {
+  background: linear-gradient(90deg, #22d3ee, #a78bfa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }

@@ -40,7 +40,7 @@ export function LoginPage() {
       <div className="mx-auto max-w-sm">
         <Card>
           <CardHeader className="items-center text-center">
-            <span className="mx-auto mb-1 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500 text-white">
+            <span className="mx-auto mb-1 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-brand-500 to-violet-500 text-white">
               <Bot className="h-5 w-5" />
             </span>
             <CardTitle>登录 ADui Forge</CardTitle>

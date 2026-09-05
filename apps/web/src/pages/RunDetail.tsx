@@ -68,7 +68,7 @@ export function RunDetailPage() {
         <p role="alert" className="flex items-center gap-2 text-sm text-red-600">
           <AlertCircle className="h-4 w-4" /> {String(error)}
         </p>
-        <Link to="/runs" className="mt-3 inline-block text-sm text-brand-500 hover:text-brand-600">
+        <Link to="/runs" className="mt-3 inline-block text-sm text-brand-500 hover:text-brand-300">
           ← 返回列表
         </Link>
       </AppShell>
@@ -93,13 +93,13 @@ export function RunDetailPage() {
     <AppShell>
       <Link
         to="/runs"
-        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-500"
+        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-300"
       >
         <ChevronLeft className="h-4 w-4" /> 返回列表
       </Link>
 
       <div className="mt-3 flex items-center gap-3">
-        <h1 className="text-xl font-bold text-slate-900">{run.task}</h1>
+        <h1 className="text-xl font-bold text-slate-100">{run.task}</h1>
         <Badge tone={statusTone(run.status)}>{statusLabel(run.status)}</Badge>
       </div>
       <p className="mt-1 text-sm text-slate-500">
@@ -108,13 +108,13 @@ export function RunDetailPage() {
       {run.error !== undefined && (
         <p
           role="alert"
-          className="mt-3 flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+          className="mt-3 flex items-center gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300"
         >
           <AlertCircle className="h-4 w-4" /> {run.error}
         </p>
       )}
       {run.status === "waiting_approval" && (
-        <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+        <p className="mt-3 rounded-lg bg-amber-400/10 px-3 py-2 text-sm text-amber-300">
           该 Run 正在等待人工审批，去{" "}
           <Link to="/approvals" className="font-medium underline">
             审批页
@@ -146,7 +146,7 @@ export function RunDetailPage() {
               onClick={() => setEventFilter(filter.value)}
               className={
                 eventFilter === filter.value
-                  ? "rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700"
+                  ? "rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-300"
                   : "rounded-full px-2.5 py-1 text-xs text-slate-500 hover:bg-slate-100"
               }
             >
@@ -170,12 +170,12 @@ export function RunDetailPage() {
                     className={
                       event.name.endsWith("failed")
                         ? "font-mono text-xs font-semibold text-red-600"
-                        : "font-mono text-xs font-semibold text-slate-700"
+                        : "font-mono text-xs font-semibold text-slate-300"
                     }
                   >
                     {event.name}
                   </span>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-slate-500">
                     {new Date(event.timestamp).toLocaleTimeString()}
                   </span>
                   {event.payload !== undefined && (
@@ -187,7 +187,7 @@ export function RunDetailPage() {
               ))}
             {events.filter((event) => eventFilter === "all" || event.name.startsWith(eventFilter))
               .length === 0 && (
-              <li className="px-4 py-6 text-center text-sm text-slate-400">暂无匹配事件</li>
+              <li className="px-4 py-6 text-center text-sm text-slate-500">暂无匹配事件</li>
             )}
           </ol>
         </CardContent>

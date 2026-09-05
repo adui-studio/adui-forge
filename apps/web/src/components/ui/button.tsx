@@ -3,20 +3,22 @@ import type { ButtonHTMLAttributes } from "react";
 import { cn } from "@/lib/utils.ts";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60 disabled:pointer-events-none disabled:opacity-40",
   {
     variants: {
       variant: {
-        default: "bg-brand-500 text-white hover:bg-brand-600",
-        destructive: "bg-red-600 text-white hover:bg-red-700",
-        outline: "border border-slate-300 bg-white text-slate-900 hover:bg-slate-100",
-        secondary: "bg-slate-900 text-white hover:bg-slate-700",
-        ghost: "text-slate-700 hover:bg-slate-100",
+        default:
+          "bg-gradient-to-r from-brand-500 to-violet-500 text-white shadow-lg shadow-brand-500/25 hover:shadow-brand-400/40 hover:brightness-110",
+        destructive: "bg-red-500/90 text-white hover:bg-red-500",
+        outline:
+          "border border-white/15 bg-white/5 text-slate-200 hover:border-white/30 hover:bg-white/10",
+        secondary: "bg-slate-100 text-slate-900 hover:bg-white",
+        ghost: "text-slate-300 hover:bg-white/10 hover:text-white",
       },
       size: {
         default: "h-9 px-4",
         sm: "h-8 px-3 text-xs",
-        lg: "h-10 px-6",
+        lg: "h-11 px-6",
       },
     },
     defaultVariants: { variant: "default", size: "default" },

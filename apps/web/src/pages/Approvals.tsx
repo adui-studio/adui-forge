@@ -38,7 +38,7 @@ export function ApprovalsPage() {
     <AppShell>
       <div className="mb-6 flex items-center gap-2">
         <ShieldAlert className="h-5 w-5 text-amber-500" />
-        <h1 className="text-xl font-bold text-slate-900">待审批</h1>
+        <h1 className="text-xl font-bold text-slate-100">待审批</h1>
       </div>
 
       {isLoading && <p className="text-sm text-slate-500">加载中…</p>}

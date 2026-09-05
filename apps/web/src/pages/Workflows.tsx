@@ -38,7 +38,7 @@ export function WorkflowsPage() {
     <AppShell>
       <div className="mb-6 flex items-center gap-2">
         <WorkflowIcon className="h-5 w-5 text-brand-500" />
-        <h1 className="text-xl font-bold text-slate-900">Workflows</h1>
+        <h1 className="text-xl font-bold text-slate-100">Workflows</h1>
       </div>
 
       {isLoading && <p className="text-sm text-slate-500">加载中…</p>}
@@ -64,8 +64,8 @@ export function WorkflowsPage() {
             <CardContent>
               <ol className="mb-4 flex flex-col gap-1.5">
                 {workflow.tasks.map((task, index) => (
-                  <li key={index} className="flex items-start gap-2 text-sm text-slate-600">
-                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-semibold text-brand-700">
+                  <li key={index} className="flex items-start gap-2 text-sm text-slate-500">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-semibold text-brand-300">
                       {index + 1}
                     </span>
                     <span className="line-clamp-2">{task}</span>

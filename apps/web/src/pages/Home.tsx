@@ -52,13 +52,13 @@ export function HomePage() {
     <AppShell>
       <div className="mx-auto max-w-2xl">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">把任务交给 Agent</h1>
+          <h1 className="gradient-text text-3xl font-bold tracking-tight">把任务交给 Agent</h1>
           <p className="mt-1 text-sm text-slate-500">
             描述目标与边界，Agent 负责理解、规划、执行与验证。
           </p>
         </div>
 
-        <Card>
+        <Card className="glow-card">
           <CardHeader>
             <CardTitle>新建任务</CardTitle>
             <CardDescription>例如：给用户列表增加搜索功能并补充测试</CardDescription>
@@ -104,13 +104,16 @@ export function HomePage() {
             <h2 className="mb-3 text-sm font-semibold text-slate-500">最近会话</h2>
             <div className="flex flex-col gap-2">
               {runs.slice(0, 5).map((run) => (
-                <Card key={run.id} className="transition-colors hover:border-brand-500">
+                <Card
+                  key={run.id}
+                  className="transition-colors hover:border-brand-400/50 hover:bg-white/[0.06]"
+                >
                   <CardContent className="flex items-center gap-3 p-4">
                     <Badge tone={statusTone(run.status)}>{statusLabel(run.status)}</Badge>
-                    <span className="flex-1 truncate text-sm text-slate-700">{run.task}</span>
+                    <span className="flex-1 truncate text-sm text-slate-300">{run.task}</span>
                     <button
                       type="button"
-                      className="text-slate-400 transition-colors hover:text-brand-500"
+                      className="text-slate-500 transition-colors hover:text-brand-300"
                       aria-label="查看详情"
                       onClick={() => navigate(`/runs/${run.id}`)}
                     >
@@ -121,19 +124,19 @@ export function HomePage() {
               ))}
             </div>
             <div className="mt-3 text-right">
-              <a href="/runs" className="text-sm text-brand-500 hover:text-brand-600">
+              <a href="/runs" className="text-sm text-brand-500 hover:text-brand-300">
                 查看全部 Runs →
               </a>
             </div>
           </section>
         )}
 
-        <footer className="mt-12 flex items-center justify-center gap-2 text-xs text-slate-400">
+        <footer className="mt-12 flex items-center justify-center gap-2 text-xs text-slate-500">
           <span>运行环境:{platform.platform === "desktop" ? "桌面端（Tauri）" : "浏览器"}</span>
           <span>·</span>
           <button
             type="button"
-            className="inline-flex items-center gap-1 hover:text-slate-600"
+            className="inline-flex items-center gap-1 hover:text-slate-500"
             onClick={() => openExternal("https://adui-forge.void.app")}
           >
             <ExternalLink className="h-3 w-3" /> Void
@@ -141,7 +144,7 @@ export function HomePage() {
           <span>·</span>
           <button
             type="button"
-            className="inline-flex items-center gap-1 hover:text-slate-600"
+            className="inline-flex items-center gap-1 hover:text-slate-500"
             onClick={() => openExternal("https://adui-studio.github.io/adui-forge/")}
           >
             <ExternalLink className="h-3 w-3" /> 文档
@@ -149,7 +152,7 @@ export function HomePage() {
           <span>·</span>
           <button
             type="button"
-            className="inline-flex items-center gap-1 hover:text-slate-600"
+            className="inline-flex items-center gap-1 hover:text-slate-500"
             onClick={() => openExternal("https://github.com/adui-studio/adui-forge")}
           >
             <GitBranch className="h-3 w-3" /> GitHub

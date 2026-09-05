@@ -51,13 +51,13 @@ export function RunsPage() {
   return (
     <AppShell>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-slate-900">Runs</h1>
-        <label className="flex items-center gap-2 text-sm text-slate-600">
+        <h1 className="text-xl font-bold text-slate-100">Runs</h1>
+        <label className="flex items-center gap-2 text-sm text-slate-500">
           状态
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
-            className="h-8 rounded-lg border border-slate-300 bg-white px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            className="h-8 rounded-lg border border-white/15 bg-white/5 px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
           >
             <option value="">全部</option>
             {Object.entries(STATUS_LABEL).map(([value, label]) => (
@@ -87,16 +87,19 @@ export function RunsPage() {
           {runs
             .filter((run) => statusFilter === "" || run.status === statusFilter)
             .map((run) => (
-              <Card key={run.id} className="transition-colors hover:border-brand-500">
+              <Card
+                key={run.id}
+                className="transition-colors hover:border-brand-400/50 hover:bg-white/[0.06]"
+              >
                 <CardContent className="flex items-center gap-3 p-4">
                   <Badge tone={statusTone(run.status)}>{statusLabel(run.status)}</Badge>
                   <Link
                     to={`/runs/${run.id}`}
-                    className="flex-1 truncate text-sm font-medium text-slate-800 hover:text-brand-600"
+                    className="flex-1 truncate text-sm font-medium text-slate-200 hover:text-brand-300"
                   >
                     {run.task}
                   </Link>
-                  <span className="hidden text-xs text-slate-400 sm:block">
+                  <span className="hidden text-xs text-slate-500 sm:block">
                     {new Date(run.createdAt).toLocaleString()}
                   </span>
                 </CardContent>
