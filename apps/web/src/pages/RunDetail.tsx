@@ -6,7 +6,10 @@ import type { AgentEvent } from "@adui-forge/contracts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { fetchRun, retryRun, streamRunEvents } from "@/lib/api.ts";
+import { cancelRun, fetchRun, retryRun, streamRunEvents } from "@/lib/api.ts";
+import { fetchArtifacts, type ArtifactRecord } from "@/lib/api-metrics.ts";
+import { fetchPendingApprovals } from "@/lib/approvals.ts";
+
 import { statusLabel, statusTone } from "@/pages/Runs.tsx";
 
 const isTerminalStatus = (status: string): boolean =>
@@ -85,6 +88,19 @@ export function RunDetailPage() {
     .map((event) => (event.payload as { text?: string } | undefined)?.text ?? "")
     .join("");
 
+  const { data: artifacts } = useQuery<ArtifactRecord[], Error>({
+    queryKey: ["artifacts", id],
+    queryFn: () => fetchArtifacts(id),
+  });
+
+  const cancel = useMutation({
+    mutationFn: () => cancelRun(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["run", id] });
+      void queryClient.invalidateQueries({ queryKey: ["runs"] });
+    },
+  });
+
   const retry = useMutation({
     mutationFn: () => retryRun(id),
     onSuccess: (created: { id: string }) => {
@@ -118,24 +134,54 @@ export function RunDetailPage() {
           <AlertCircle className="h-4 w-4" /> {run.error}
         </p>
       )}
-      {run.status === "waiting_approval" && (
-        <p className="mt-3 rounded-lg bg-amber-400/10 px-3 py-2 text-sm text-amber-300">
-          该 Run 正在等待人工审批，去{" "}
-          <Link to="/approvals" className="font-medium underline">
-            审批页
-          </Link>{" "}
-          处理。
+      {run.status === "waiting_approval" && <InlineApprovals runId={run.id} />}
+      <div className="mt-3 flex gap-2">
+        {!isTerminalStatus(run.status) && run.status !== "waiting_approval" && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              cancel.mutate();
+            }}
+          >
+            取消执行
+          </Button>
+        )}
+        {isTerminalStatus(run.status) && (
+          <Button variant="outline" size="sm" onClick={() => retry.mutate()}>
+            <RotateCcw className="h-3.5 w-3.5" /> 重试（创建新 Run）
+          </Button>
+        )}
+      </div>
+      {cancel.isError && (
+        <p role="alert" className="mt-2 text-sm text-red-600">
+          {String(cancel.error)}
         </p>
-      )}
-      {isTerminalStatus(run.status) && (
-        <Button variant="outline" size="sm" className="mt-3" onClick={() => retry.mutate()}>
-          <RotateCcw className="h-3.5 w-3.5" /> 重试（创建新 Run）
-        </Button>
       )}
       {retry.isError && (
         <p role="alert" className="mt-2 text-sm text-red-600">
           {String(retry.error)}
         </p>
+      )}
+
+      {artifacts !== undefined && artifacts.length > 0 && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>执行产物</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            {artifacts.map((artifact) => (
+              <div key={artifact.id}>
+                <p className="mb-1 font-mono text-xs text-brand-300">
+                  {artifact.name} · {artifact.type}
+                </p>
+                <pre className="max-h-60 overflow-auto rounded-lg bg-black/50 p-3 font-mono text-xs text-slate-200">
+                  {artifact.content}
+                </pre>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       )}
 
       {streamedText.length > 0 && (
@@ -214,5 +260,74 @@ export function RunDetailPage() {
         </p>
       )}
     </>
+  );
+}
+
+/** 运行内联审批：等待审批时在详情页直接批准/拒绝（队列之外的快捷路径）。 */
+function InlineApprovals({ runId }: { runId: string }) {
+  const queryClient = useQueryClient();
+  const { data: approvals } = useQuery({
+    queryKey: ["approvals"],
+    queryFn: fetchPendingApprovals,
+    refetchInterval: 2_000,
+  });
+  const mine = (approvals ?? []).filter((item) => item.runId === runId);
+  const decision = useMutation({
+    mutationFn: (input: { id: string; decision: "approved" | "rejected" }) =>
+      fetchPendingApprovals.length >= 0
+        ? import("@/lib/approvals.ts").then((m) =>
+            m.submitApprovalDecision(input.id, input.decision),
+          )
+        : Promise.resolve(),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["approvals"] });
+      void queryClient.invalidateQueries({ queryKey: ["run", runId] });
+      void queryClient.invalidateQueries({ queryKey: ["runs"] });
+    },
+  });
+
+  if (mine.length === 0) {
+    return (
+      <p className="mt-3 rounded-lg bg-amber-400/10 px-3 py-2 text-sm text-amber-300">
+        该 Run 正在等待人工审批。
+        <Link to="/approvals" className="ml-1 font-medium underline">
+          前往审批页
+        </Link>
+      </p>
+    );
+  }
+  return (
+    <Card className="mt-3">
+      <CardHeader>
+        <CardTitle className="text-sm text-amber-300">等待你的审批</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        {mine.map((item) => (
+          <div key={item.id}>
+            <p className="font-mono text-xs text-slate-300">{item.toolName}</p>
+            <pre className="mt-1 overflow-auto rounded-lg bg-black/50 p-3 font-mono text-xs text-slate-200">
+              {JSON.stringify(item.input, null, 2)}
+            </pre>
+            <div className="mt-2 flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={decision.isPending}
+                onClick={() => decision.mutate({ id: item.id, decision: "rejected" })}
+              >
+                拒绝
+              </Button>
+              <Button
+                size="sm"
+                disabled={decision.isPending}
+                onClick={() => decision.mutate({ id: item.id, decision: "approved" })}
+              >
+                批准
+              </Button>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }

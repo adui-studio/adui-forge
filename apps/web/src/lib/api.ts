@@ -36,6 +36,9 @@ export const fetchRuns = (): Promise<RunRecord[]> => request<RunRecord[]>("/api/
 export const fetchRun = (id: string): Promise<RunRecord> =>
   request<RunRecord>(`/api/v1/runs/${id}`);
 
+export const cancelRun = (id: string): Promise<RunRecord> =>
+  request<RunRecord>(`/api/v1/runs/${id}/cancel`, { method: "POST" });
+
 export const retryRun = (id: string): Promise<RunRecord> =>
   request<RunRecord>(`/api/v1/runs/${id}/retry`, { method: "POST" });
 
