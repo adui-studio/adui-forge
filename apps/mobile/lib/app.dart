@@ -44,8 +44,49 @@ class ForgeApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
     return MaterialApp.router(
       title: 'ADui Forge',
-      theme: ThemeData(colorSchemeSeed: const Color(0xFF1464DC), useMaterial3: true),
+      theme: _forgeTheme(),
       routerConfig: router,
     );
   }
+}
+
+
+/// 沉浸式品牌主题：深空底 + logo 电光绿/深紫双色系（与 Web 端一致）。
+ThemeData _forgeTheme() {
+  const surface = Color(0xFF060609);
+  const brand = Color(0xFF6CFF00);
+  const accent = Color(0xFFB79AEC);
+  return ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    scaffoldBackgroundColor: surface,
+    colorScheme: ColorScheme.dark(
+      primary: brand,
+      onPrimary: Colors.black,
+      secondary: accent,
+      onSecondary: Colors.black,
+      surface: surface,
+      onSurface: const Color(0xFFE2E8F0),
+      error: const Color(0xFFF87171),
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+    ),
+    cardTheme: CardThemeData(
+      color: Colors.white.withValues(alpha: 0.04),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: brand,
+        foregroundColor: Colors.black,
+        textStyle: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+    ),
+    dividerTheme: DividerThemeData(color: Colors.white.withValues(alpha: 0.08)),
+  );
 }
