@@ -1,0 +1,16 @@
+# 统一行尾:仓库与检出一律 LF(Oxfmt 期望 LF;修复 CI 全新检出 CRLF 导致 vp check 失败)
+* text=auto eol=lf
+
+# 二进制豁免
+*.png -text
+*.ico -text
+*.jpg -text
+*.jpeg -text
+*.gif -text
+*.webp -text
+*.woff -text
+*.woff2 -text
+*.ttf -text
+*.otf -text
+*.apk -text
+*.exe -text
