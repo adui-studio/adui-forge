@@ -91,7 +91,7 @@ export function WorkflowEditorPage({ isNew: isNewProp = false }: { isNew?: boole
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ["workflows"] });
       if (workflowName.trim() !== name) {
-        navigate(`/workflows/${result.name}/edit`, { replace: true });
+        void navigate(`/workflows/${result.name}/edit`, { replace: true });
       }
     },
   });

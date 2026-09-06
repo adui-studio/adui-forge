@@ -1,4 +1,4 @@
-import { PrismaClient, type Prisma } from "@prisma/client";
+import { PrismaClient, type Prisma } from "../../generated/prisma-client";
 import type { AgentEvent, RunStatus } from "@adui-forge/contracts";
 import type { RunRecord, RunStore } from "./run.types";
 

@@ -1,5 +1,5 @@
 import { NotFoundException } from "@nestjs/common";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../../generated/prisma-client";
 import type { WorkflowDefinitionRecord, WorkflowsRegistryContract } from "./workflow.registry";
 
 /** PostgreSQL Workflow 定义存储（Prisma）。需先 `prisma migrate deploy`。 */

@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../../generated/prisma-client";
 import { AuthService, InMemoryUsersStore, USERS_STORE } from "./auth.service";
 import { PrismaUsersStore } from "./prisma-users.store";
 import { AuthController } from "./auth.controller";

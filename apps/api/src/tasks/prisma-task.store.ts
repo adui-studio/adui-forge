@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../../generated/prisma-client";
 import type { TaskRecord, TaskStore } from "./task.service";
 
 /** PostgreSQL 任务存储（Prisma）。需先 `prisma migrate deploy`。 */

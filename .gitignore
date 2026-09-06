@@ -38,3 +38,4 @@ dist-ssr
 # Rspress docs build output
 doc_build
 .rspress
+apps/api/generated/

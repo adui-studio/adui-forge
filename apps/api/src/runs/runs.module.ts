@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../../generated/prisma-client";
 import { AgentRegistry } from "@adui-forge/agent";
 import { InMemoryRunStore } from "./in-memory-run.store";
 import { PrismaRunStore } from "./prisma-run.store";

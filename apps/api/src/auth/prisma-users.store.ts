@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../../generated/prisma-client";
 import type { UserRecord, UsersStore } from "./auth.service";
 
 const toRecord = (row: { id: string; username: string; passwordHash: string }): UserRecord => ({

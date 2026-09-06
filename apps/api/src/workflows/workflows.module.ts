@@ -5,7 +5,7 @@ import { WorkflowsController } from "./workflows.controller";
 import { WorkflowService } from "./workflow.service";
 import { WorkflowsRegistry } from "./workflow.registry";
 import { PrismaWorkflowsRegistry } from "./prisma-workflow.registry";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../../generated/prisma-client";
 import { WorkflowsRegistryController } from "./workflows.registry.controller";
 
 @Module({
