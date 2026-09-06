@@ -66,7 +66,7 @@ jobs:
         uses: swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2
 
       - name: Desktop cargo check
-        run: cargo check --locked
+        run: cargo check
         working-directory: apps/desktop/src-tauri
 
       - name: 安装 Flutter
