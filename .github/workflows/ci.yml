@@ -69,10 +69,11 @@ jobs:
         run: cargo check
         working-directory: apps/desktop/src-tauri
 
-      - name: 安装 Flutter
-        uses: subosito/flutter-action@1508160852fb97248640997f7cfb38da241df0ba # v2.9.1
-        with:
-          flutter-version: 3.41.7
+      # flutter-action(Rust 实现)在 CI 上 panic(exit 101),改用 git 克隆 stable
+      - name: 安装 Flutter(git clone stable)
+        run: |
+          git clone --depth 1 -b 3.41.7 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter-sdk"
+          echo "$RUNNER_TEMP/flutter-sdk/bin" >> "$GITHUB_PATH"
 
       - name: Mobile analyze + test
         working-directory: apps/mobile
