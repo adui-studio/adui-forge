@@ -2,8 +2,6 @@ import { useEffect, useRef } from "react";
 import type { RunRecord } from "@/lib/api.ts";
 import { getPlatformAdapter } from "@/platform/adapter.ts";
 
-const TERMINAL = new Set(["completed", "failed", "cancelled", "timeout"]);
-
 /**
  * Run 状态系统通知（DesignGuidelines §155）：
  * 仅当窗口不在前台(document.hidden)时提醒,避免前台打扰。

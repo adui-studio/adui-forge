@@ -8,7 +8,7 @@
     "start": "tsx src/main.ts",
     "build": "prisma generate && tsc -p tsconfig.build.json",
     "test": "prisma generate && vp test",
-    "check": "vp check",
+    "check": "prisma generate && vp check",
     "db:migrate": "prisma migrate deploy"
   },
   "dependencies": {
