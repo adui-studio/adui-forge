@@ -89,7 +89,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
 
   const commands = useMemo<CommandItem[]>(() => {
     const goto = (to: string) => () => {
-      navigate(to);
+      void navigate(to);
       onClose();
     };
     const runPageCommands: CommandItem[] = PAGES.map((page) => ({
@@ -105,7 +105,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       run: () => {
         void runWorkflow(workflow.name)
           .then((record) => {
-            navigate(`/runs/${record.id}`);
+            void navigate(`/runs/${record.id}`);
             onClose();
           })
           .catch(() => {});
@@ -118,7 +118,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       hint: run.status,
       keywords: `${run.id} ${run.task}`,
       run: () => {
-        navigate(`/runs/${run.id}`);
+        void navigate(`/runs/${run.id}`);
         onClose();
       },
     }));
