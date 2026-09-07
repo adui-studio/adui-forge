@@ -70,14 +70,22 @@ jobs:
         working-directory: apps/desktop/src-tauri
 
       # flutter-action(Rust 实现)在 CI 上 panic(exit 101),改用 git 克隆 stable
-      - name: 安装 Flutter(git clone stable)
+      - name: 克隆 Flutter 3.41.7
         run: |
           git clone --depth 1 -b 3.41.7 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter-sdk"
           echo "$RUNNER_TEMP/flutter-sdk/bin" >> "$GITHUB_PATH"
 
-      - name: Mobile analyze + test
+      - name: Flutter bootstrap
+        run: flutter --version
+
+      - name: Mobile pub get
         working-directory: apps/mobile
-        run: |
-          flutter pub get
-          flutter analyze
-          flutter test
+        run: flutter pub get
+
+      - name: Mobile analyze
+        working-directory: apps/mobile
+        run: flutter analyze
+
+      - name: Mobile test
+        working-directory: apps/mobile
+        run: flutter test
