@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ShieldAlert } from "lucide-react";
 import { Link } from "react-router";
-import { Button, Card, Listy } from "antd";
+import { Button, Card, Listy, Spin } from "antd";
 import { fetchPendingApprovals, submitApprovalDecision } from "@/lib/approvals.ts";
 
 export function ApprovalsPage() {
@@ -33,7 +33,11 @@ export function ApprovalsPage() {
         <h1 className="text-xl font-semibold text-slate-100">待审批</h1>
       </div>
 
-      {isLoading && <p className="text-sm text-slate-500">加载中…</p>}
+      {isLoading && (
+        <div className="flex justify-center py-12">
+          <Spin />
+        </div>
+      )}
       {isError && (
         <p role="alert" className="text-sm text-red-600">
           {String(error)}

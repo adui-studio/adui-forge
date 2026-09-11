@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Bot, Wrench } from "lucide-react";
-import { Tag, Card, Empty } from "antd";
+import { Tag, Card, Empty, Spin } from "antd";
 import { fetchAgents } from "@/lib/api.ts";
 
 export function AgentsPage() {
@@ -21,7 +21,11 @@ export function AgentsPage() {
         <h1 className="text-xl font-semibold text-slate-100">Agents</h1>
       </div>
 
-      {isLoading && <p className="text-sm text-slate-500">加载中…</p>}
+      {isLoading && (
+        <div className="flex justify-center py-12">
+          <Spin />
+        </div>
+      )}
       {isError && (
         <p role="alert" className="text-sm text-red-600">
           {String(error)}

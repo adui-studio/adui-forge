@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, ChevronLeft, RotateCcw } from "lucide-react";
-import { Button, Card, Collapse, Empty, Segmented, Tabs, Timeline } from "antd";
+import { Button, Card, Collapse, Empty, Popconfirm, Segmented, Spin, Tabs, Timeline } from "antd";
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import type { AgentEvent } from "@adui-forge/contracts";
 import { cancelRun, fetchRun, retryRun, streamRunEvents } from "@/lib/api.ts";
 import { fetchArtifacts, type ArtifactRecord } from "@/lib/api-metrics.ts";
@@ -108,6 +108,7 @@ export const groupEvents = (events: AgentEvent[]): EventGroup[] => {
 
 export function RunDetailPage() {
   const { id = "" } = useParams();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const {
     data: run,
@@ -157,12 +158,16 @@ export function RunDetailPage() {
     mutationFn: () => retryRun(id),
     onSuccess: (created: { id: string }) => {
       void queryClient.invalidateQueries({ queryKey: ["runs"] });
-      window.location.href = `/runs/${created.id}`;
+      void navigate(`/runs/${created.id}`);
     },
   });
 
   if (isLoading) {
-    return <p className="text-sm text-slate-500">加载中…</p>;
+    return (
+      <div className="flex justify-center py-12">
+        <Spin />
+      </div>
+    );
   }
   if (isError) {
     return (
@@ -239,9 +244,17 @@ export function RunDetailPage() {
 
       <div className="mt-3 flex gap-2">
         {!isTerminalStatus(run.status) && run.status !== "waiting_approval" && (
-          <Button variant="outlined" size="small" onClick={() => cancel.mutate()}>
-            取消执行
-          </Button>
+          <Popconfirm
+            title="取消这次执行？"
+            description="Agent 将在当前步骤结束后停止，已产生的结果保留。"
+            okText="取消执行"
+            cancelText="继续运行"
+            onConfirm={() => cancel.mutate()}
+          >
+            <Button variant="outlined" size="small">
+              取消执行
+            </Button>
+          </Popconfirm>
         )}
         {isTerminalStatus(run.status) && (
           <Button

@@ -1,10 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Database, LogOut, Server } from "lucide-react";
-import { Button, Card, Descriptions } from "antd";
+import { Link, useNavigate } from "react-router";
+import { App as AntApp, Button, Card, Descriptions, Popconfirm, Spin } from "antd";
 import { clearToken } from "@/lib/auth.ts";
 import { fetchHealth } from "@/lib/approvals-metrics.ts";
 
 export function SettingsPage() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { message } = AntApp.useApp();
   const {
     data: health,
     isLoading,
@@ -21,7 +25,11 @@ export function SettingsPage() {
       <h1 className="mb-6 text-xl font-semibold text-slate-100">设置</h1>
 
       <Card title="API 状态">
-        {isLoading && <p className="text-sm text-slate-500">检测中…</p>}
+        {isLoading && (
+          <div className="flex justify-center py-12">
+            <Spin />
+          </div>
+        )}
         {isError && <p className="text-sm text-red-600">无法连接 API：{String(error)}</p>}
         {health !== undefined && (
           <Descriptions
@@ -57,17 +65,26 @@ export function SettingsPage() {
 
       <Card title="登录态" className="mt-4">
         <div className="flex gap-2">
-          <Button onClick={() => window.location.assign("/login")}>前往登录 / 注册</Button>
-          <Button
-            type="text"
-            icon={<LogOut className="h-4 w-4" />}
-            onClick={() => {
+          <Link to="/login">
+            <Button>前往登录 / 注册</Button>
+          </Link>
+          {/* 破坏性操作先确认 */}
+          <Popconfirm
+            title="清除本机令牌？"
+            description="清除后需要重新登录才能访问 API。"
+            okText="清除"
+            cancelText="取消"
+            onConfirm={() => {
               clearToken();
-              window.location.reload();
+              queryClient.clear();
+              void message.success("已清除本机令牌");
+              void navigate("/");
             }}
           >
-            清除本机令牌
-          </Button>
+            <Button type="text" icon={<LogOut className="h-4 w-4" />}>
+              清除本机令牌
+            </Button>
+          </Popconfirm>
         </div>
       </Card>
     </>

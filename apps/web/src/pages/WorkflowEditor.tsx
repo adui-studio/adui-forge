@@ -8,10 +8,10 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Loader2, Plus, Save, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Plus, Save, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { Button, Card, Empty, Input } from "antd";
+import { Button, Card, Empty, Input, Popconfirm } from "antd";
 import { fetchWorkflows } from "@/lib/workflows.ts";
 import { registerWorkflow } from "@/lib/api.ts";
 import { tasksToGraph } from "@/lib/workflow-editor.ts";
@@ -148,13 +148,8 @@ export function WorkflowEditorPage({ isNew: isNewProp = false }: { isNew?: boole
           />
           <Button
             type="primary"
-            icon={
-              save.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )
-            }
+            icon={<Save className="h-4 w-4" />}
+            loading={save.isPending}
             disabled={!canSave}
             onClick={() => save.mutate()}
           >
@@ -227,9 +222,16 @@ export function WorkflowEditorPage({ isNew: isNewProp = false }: { isNew?: boole
                 >
                   <ArrowDown className="h-3.5 w-3.5" /> 下移
                 </Button>
-                <Button danger size="small" onClick={() => removeTask(selected)}>
-                  <Trash2 className="h-3.5 w-3.5" /> 删除
-                </Button>
+                <Popconfirm
+                  title="删除该节点？"
+                  okText="删除"
+                  cancelText="取消"
+                  onConfirm={() => removeTask(selected)}
+                >
+                  <Button danger size="small">
+                    <Trash2 className="h-3.5 w-3.5" /> 删除
+                  </Button>
+                </Popconfirm>
               </div>
               <Button
                 size="small"

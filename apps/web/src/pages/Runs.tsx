@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { StatusTag } from "@/components/status-tag.tsx";
 import { Segmented, Table, type TableColumnsType } from "antd";
 import { fetchRuns } from "@/lib/api.ts";
@@ -9,8 +8,8 @@ import { STATUS_LABEL } from "@/lib/status.ts";
 import { timeAgo } from "@/lib/relative-time.ts";
 
 export function RunsPage() {
-  const navigate = useNavigate();
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const statusFilter = searchParams.get("status") ?? "all";
   const { data: runs, isLoading } = useQuery({
     queryKey: ["runs"],
     queryFn: fetchRuns,
@@ -30,12 +29,9 @@ export function RunsPage() {
       dataIndex: "task",
       key: "task",
       render: (_, record) => (
-        <a
-          onClick={() => navigate(`/runs/${record.id}`)}
-          className="cursor-pointer text-sm text-slate-200 hover:text-[#B79AEC]"
-        >
+        <Link to={`/runs/${record.id}`} className="text-sm text-slate-200 hover:text-[#B79AEC]">
           {record.task}
-        </a>
+        </Link>
       ),
     },
     { title: "Agent", dataIndex: "agentName", key: "agentName", width: 180 },
@@ -64,7 +60,12 @@ export function RunsPage() {
         <h1 className="text-xl font-semibold text-slate-100">Runs</h1>
         <Segmented
           value={statusFilter}
-          onChange={(value) => setStatusFilter(value as string)}
+          onChange={(value) => {
+            const next = new URLSearchParams(searchParams);
+            if (value === "all") next.delete("status");
+            else next.set("status", value);
+            setSearchParams(next, { replace: true });
+          }}
           options={[
             { value: "all", label: "全部" },
             ...Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })),
@@ -82,9 +83,9 @@ export function RunsPage() {
           emptyText: (
             <div className="py-6 text-center">
               <p className="text-sm text-slate-500">还没有 Run。</p>
-              <a href="/" className="mt-2 inline-block text-sm text-[#B79AEC] hover:underline">
+              <Link to="/" className="mt-2 inline-block text-sm text-[#B79AEC] hover:underline">
                 去控制台发起第一个任务 →
-              </a>
+              </Link>
             </div>
           ),
         }}

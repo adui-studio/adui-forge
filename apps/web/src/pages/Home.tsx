@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Send } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { StatusTag } from "@/components/status-tag.tsx";
 import { Button, Card, Empty, Listy, Space } from "antd";
 import { createRun, fetchRuns } from "@/lib/api.ts";
@@ -47,9 +47,9 @@ export function HomePage() {
             title={<span className="text-amber-300">有 {pending.length} 个操作等待审批</span>}
             description="任务因等待批准而暂停，处理后 Agent 将继续执行。"
           />
-          <a href="/approvals" className="text-sm text-[#B79AEC] hover:underline">
+          <Link to="/approvals" className="text-sm text-[#B79AEC] hover:underline">
             前往审批 →
-          </a>
+          </Link>
         </Card>
       )}
 
@@ -68,6 +68,7 @@ export function HomePage() {
         >
           <textarea
             value={task}
+            aria-label="任务描述"
             placeholder="描述你要完成的任务，例如：给用户列表增加搜索功能并补充测试"
             rows={3}
             onKeyDown={(event) => {
@@ -107,9 +108,9 @@ export function HomePage() {
       {/* Active Runs（§124 主区域） */}
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-medium text-slate-400">执行中的 Runs</h2>
-        <a href="/runs" className="text-sm text-[#B79AEC] hover:underline">
+        <Link to="/runs" className="text-sm text-[#B79AEC] hover:underline">
           全部 →
-        </a>
+        </Link>
       </div>
       {activeRuns.length === 0 ? (
         <Empty
@@ -127,15 +128,15 @@ export function HomePage() {
           items={activeRuns}
           rowKey={(run) => run.id}
           itemRender={(run) => (
-            <div
-              className="cursor-pointer rounded-md border border-[#20242C] bg-[#111318] px-4 py-3 transition-colors hover:border-brand-400/40"
-              onClick={() => navigate(`/runs/${run.id}`)}
+            <Link
+              to={`/runs/${run.id}`}
+              className="block rounded-md border border-[#20242C] bg-[#111318] px-4 py-3 transition-colors hover:border-brand-400/40"
             >
               <Space>
                 <StatusTag status={run.status} />
                 <span className="text-sm text-slate-200">{run.task}</span>
               </Space>
-            </div>
+            </Link>
           )}
         />
       )}
@@ -151,15 +152,15 @@ export function HomePage() {
           items={(runs ?? []).slice(0, 6)}
           rowKey={(run) => run.id}
           itemRender={(run) => (
-            <div
-              className="cursor-pointer rounded-md border border-[#20242C] bg-[#111318] px-4 py-3 transition-colors hover:border-brand-400/40"
-              onClick={() => navigate(`/runs/${run.id}`)}
+            <Link
+              to={`/runs/${run.id}`}
+              className="block rounded-md border border-[#20242C] bg-[#111318] px-4 py-3 transition-colors hover:border-brand-400/40"
             >
               <Space>
                 <StatusTag status={run.status} />
                 <span className="max-w-md truncate text-sm text-slate-300">{run.task}</span>
               </Space>
-            </div>
+            </Link>
           )}
         />
       )}

@@ -13,8 +13,9 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { App as AntApp, Badge, Button, Layout, Menu } from "antd";
+import { useQueryClient } from "@tanstack/react-query";
 import { fetchHealth, fetchPendingApprovals } from "@/lib/approvals-metrics.ts";
 import { clearToken, getAccessToken } from "@/lib/auth.ts";
 import { CommandPalette } from "@/components/command-palette.tsx";
@@ -80,6 +81,8 @@ function Brand() {
 /** 登录态区块：有令牌显示退出，否则显示登录入口 */
 function AuthBlock() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { message } = AntApp.useApp();
   const [token, setToken] = useState<string | null>(null);
   useEffect(() => {
@@ -95,8 +98,9 @@ function AuthBlock() {
         onClick={() => {
           clearToken();
           setToken(null);
-          message.success("已退出登录");
-          window.location.assign("/");
+          queryClient.clear();
+          void message.success("已退出登录");
+          void navigate("/");
         }}
       >
         退出登录
@@ -140,6 +144,7 @@ function SiderInner({
   onOpenPalette?: () => void;
 }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { pending } = useSidebarStatus();
   return (
     <div className="flex h-full flex-col gap-3 p-3">
@@ -163,6 +168,12 @@ function SiderInner({
       <Menu
         mode="inline"
         selectedKeys={[activeKey(location.pathname)]}
+        onClick={(info) => {
+          const target = NAV_ITEMS.find((item) => item.key === info.key);
+          if (target === undefined) return;
+          onNavigate?.();
+          void navigate(target.to);
+        }}
         style={{ borderInlineEnd: "none", background: "transparent", flex: 1 }}
         items={NAV_ITEMS.map((item) => ({
           key: item.key,

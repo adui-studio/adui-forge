@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Play, Plus, Workflow as WorkflowIcon } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Button, Card, Empty, Form, Input, Steps } from "antd";
+import { Button, Card, Empty, Form, Input, Spin, Steps } from "antd";
 import { fetchWorkflows, runWorkflow } from "@/lib/workflows.ts";
 import type { WorkflowDefinitionRecord } from "@/lib/workflows.ts";
 import { registerWorkflow } from "@/lib/api.ts";
@@ -48,7 +48,11 @@ export function WorkflowsPage() {
         </Button>
       </div>
 
-      {isLoading && <p className="mt-6 text-sm text-slate-500">加载中…</p>}
+      {isLoading && (
+        <div className="flex justify-center py-12">
+          <Spin />
+        </div>
+      )}
       {isError && (
         <p role="alert" className="mt-6 text-sm text-red-600">
           {String(error)}

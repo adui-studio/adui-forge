@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Brain } from "lucide-react";
 import { useState } from "react";
 import { StatusTag } from "@/components/status-tag.tsx";
-import { Card, Empty, Listy } from "antd";
+import { Card, Empty, Listy, Spin } from "antd";
 import { fetchMemory } from "@/lib/api.ts";
 import { timeAgo } from "@/lib/relative-time.ts";
 
@@ -31,7 +31,11 @@ export function MemoryPage() {
         Agent 每次运行的任务与结果摘要会记录在此，并注入后续任务的系统提示，形成会话连续性。
       </p>
 
-      {isLoading && <p className="text-sm text-slate-500">加载中…</p>}
+      {isLoading && (
+        <div className="flex justify-center py-12">
+          <Spin />
+        </div>
+      )}
       {isError && (
         <p role="alert" className="text-sm text-red-600">
           {String(error)}
