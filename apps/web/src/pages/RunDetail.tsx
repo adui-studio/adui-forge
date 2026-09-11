@@ -1,13 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, ChevronLeft, RotateCcw } from "lucide-react";
+import { Button, Card, Collapse, Empty, Segmented, Tabs, Timeline } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
-import { Button, Card, Collapse, Empty, Segmented, Tabs, Timeline } from "antd";
 import type { AgentEvent } from "@adui-forge/contracts";
-import { StatusTag } from "@/components/status-tag.tsx";
 import { cancelRun, fetchRun, retryRun, streamRunEvents } from "@/lib/api.ts";
 import { fetchArtifacts, type ArtifactRecord } from "@/lib/api-metrics.ts";
 import { fetchPendingApprovals, submitApprovalDecision } from "@/lib/approvals.ts";
+import { cn } from "@/lib/utils.ts";
+import { statusLabel } from "@/lib/status.ts";
 
 const isTerminalStatus = (status: string): boolean =>
   ["completed", "failed", "cancelled", "timeout"].includes(status);
@@ -21,15 +22,88 @@ const EVENT_FILTERS = [
   { value: "run", label: "Run" },
 ];
 
-/** 事件 → Timeline 圆点色（§90/§77：运行 Lime、成功 Green、失败 Red） */
-const eventDot = (name: string): string | undefined => {
-  if (name.endsWith("failed")) return "#EF4444";
-  if (name === "run.completed") return "#22C55E";
-  if (name.startsWith("tool.") && name !== "tool.started") return "#22C55E";
-  if (name === "run.cancelled") return "#71717A";
-  if (name === "model.started" || name === "step.started" || name === "run.started")
-    return "#6CFF00";
-  return undefined;
+interface EventGroup {
+  /** step_1 / null(run 级) */
+  stepId: string | null;
+  /** 组内事件(已做 §192 连续工具聚合) */
+  events: Array<AgentEvent & { aggregate?: { tool: string; count: number } }>;
+  failed: boolean;
+}
+
+/** §191/§192:事件按 step 分组;组内连续同工具的 completed 聚合为一行 */
+export const groupEvents = (events: AgentEvent[]): EventGroup[] => {
+  const groups: EventGroup[] = [];
+  let current: EventGroup | null = null;
+
+  const pushAggregate = (tool: string, count: number): void => {
+    if (current === null) return;
+    current.events.push({
+      name: "tool.completed",
+      runId: "",
+      timestamp: "",
+      aggregate: { tool, count },
+    });
+  };
+
+  let pendingTool = "";
+  let pendingCount = 0;
+
+  const flushTool = (): void => {
+    if (pendingCount > 0) pushAggregate(pendingTool, pendingCount);
+    pendingTool = "";
+    pendingCount = 0;
+  };
+
+  for (const event of events) {
+    if (event.name === "tool.completed" || event.name === "tool.failed") {
+      const tool = (event.payload as { tool?: string } | undefined)?.tool ?? "unknown";
+      if (event.name === "tool.completed" && tool === pendingTool) {
+        pendingCount += 1;
+        continue;
+      }
+      flushTool();
+      if (event.name === "tool.completed") {
+        pendingTool = tool;
+        pendingCount = 1;
+        continue;
+      }
+      // tool.failed 单独成行(不聚合)
+      if (current === null) {
+        current = { stepId: null, events: [], failed: false };
+        groups.push(current);
+      }
+      current.events.push(event);
+      continue;
+    }
+    flushTool();
+
+    if (event.name === "step.started") {
+      current = {
+        stepId: event.stepId ?? null,
+        events: [],
+        failed: false,
+      };
+      groups.push(current);
+      current.events.push(event);
+      continue;
+    }
+    if (event.name === "step.completed" || event.name === "step.failed") {
+      if (current !== null && current.stepId !== null) {
+        current.events.push(event);
+        if (event.name === "step.failed") current.failed = true;
+        current = null;
+        continue;
+      }
+    }
+    // run 级与其他事件
+    if (current === null) {
+      current = { stepId: null, events: [], failed: false };
+      groups.push(current);
+    }
+    current.events.push(event);
+  }
+  flushTool();
+  return groups;
 };
 
 export function RunDetailPage() {
@@ -88,11 +162,7 @@ export function RunDetailPage() {
   });
 
   if (isLoading) {
-    return (
-      <>
-        <p className="text-sm text-slate-500">加载中…</p>
-      </>
-    );
+    return <p className="text-sm text-slate-500">加载中…</p>;
   }
   if (isError) {
     return (
@@ -100,7 +170,7 @@ export function RunDetailPage() {
         <p role="alert" className="flex items-center gap-2 text-sm text-red-600">
           <AlertCircle className="h-4 w-4" /> {String(error)}
         </p>
-        <Link to="/runs" className="mt-3 inline-block text-sm text-[#B79AEC] hover:underline">
+        <Link to="/runs" className="mt-3 inline-block text-sm text-brand-300 hover:text-brand-200">
           ← 返回列表
         </Link>
       </>
@@ -124,19 +194,30 @@ export function RunDetailPage() {
   const filteredEvents = events.filter(
     (event) => eventFilter === "all" || event.name.startsWith(eventFilter),
   );
+  const groups = groupEvents(filteredEvents);
 
   return (
     <>
       <Link
         to="/runs"
-        className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-[#B79AEC]"
+        className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-brand-300"
       >
         <ChevronLeft className="h-4 w-4" /> 返回列表
       </Link>
 
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <h1 className="text-xl font-semibold text-slate-100">{run.task}</h1>
-        <StatusTag status={run.status} />
+        <span
+          className={
+            run.status === "failed"
+              ? "text-sm text-red-400"
+              : run.status === "running"
+                ? "forge-code text-brand-400"
+                : "text-sm text-slate-300"
+          }
+        >
+          {statusLabel(run.status)}
+        </span>
       </div>
       <p className="forge-code mt-1 text-slate-500">
         {run.id} · {run.agentName} · {new Date(run.createdAt).toLocaleString()}
@@ -210,53 +291,80 @@ export function RunDetailPage() {
                   onChange={(value) => setEventFilter(value as string)}
                   options={EVENT_FILTERS}
                 />
-                {filteredEvents.length === 0 ? (
+                {groups.length === 0 ? (
                   <Empty description="暂无匹配事件" />
                 ) : (
-                  /* §90 Run Timeline */
-                  <Timeline
-                    items={filteredEvents.map((event) => ({
-                      color: eventDot(event.name),
-                      children: (
-                        <div className="flex items-baseline gap-3">
-                          <span
-                            className={
-                              event.name.endsWith("failed")
-                                ? "forge-code font-semibold text-red-400"
-                                : "forge-code font-semibold text-slate-300"
-                            }
-                          >
-                            {event.name}
+                  /* §191 按 Step 分组渲染 */
+                  <div className="flex flex-col gap-4">
+                    {groups.map((group, groupIndex) => (
+                      <Card
+                        key={group.stepId ?? `run-${groupIndex}`}
+                        size="small"
+                        className={cn(
+                          group.failed && "border-red-400/40",
+                          group.stepId === null && "border-dashed",
+                        )}
+                      >
+                        <div className="flex items-center gap-2 border-b border-[#20242C] px-3 py-1.5">
+                          <span className="forge-code text-xs text-slate-400">
+                            {group.stepId ?? "Run"}
                           </span>
-                          <span className="text-xs text-slate-500">
-                            {new Date(event.timestamp).toLocaleTimeString()}
-                          </span>
-                          {event.payload !== undefined && (
-                            <Collapse
-                              ghost
-                              size="small"
-                              className="ml-auto max-w-[55%]"
-                              items={[
-                                {
-                                  key: "payload",
-                                  label: (
-                                    <span className="forge-code text-xs text-slate-500">
-                                      payload
-                                    </span>
-                                  ),
-                                  children: (
-                                    <pre className="forge-code overflow-auto text-slate-400">
-                                      {JSON.stringify(event.payload, null, 2)}
-                                    </pre>
-                                  ),
-                                },
-                              ]}
-                            />
-                          )}
+                          {group.failed && <span className="text-xs text-red-400">✕ 失败</span>}
                         </div>
-                      ),
-                    }))}
-                  />
+                        <Timeline
+                          className="px-4 py-3"
+                          items={group.events.map((event, index) => ({
+                            color: eventDot(event.name),
+                            children: (
+                              <div
+                                key={`${event.timestamp ?? ""}-${index}`}
+                                className="flex items-baseline gap-3"
+                              >
+                                <span
+                                  className={
+                                    event.name.endsWith("failed")
+                                      ? "forge-code text-xs font-semibold text-red-400"
+                                      : "forge-code text-xs text-slate-300"
+                                  }
+                                >
+                                  {event.aggregate !== undefined
+                                    ? `✓ ${event.aggregate.tool} × ${event.aggregate.count}`
+                                    : event.name}
+                                </span>
+                                {event.timestamp !== "" && (
+                                  <span className="text-xs text-slate-500">
+                                    {new Date(event.timestamp).toLocaleTimeString()}
+                                  </span>
+                                )}
+                                {event.payload !== undefined && (
+                                  <Collapse
+                                    ghost
+                                    size="small"
+                                    className="ml-auto max-w-[55%]"
+                                    items={[
+                                      {
+                                        key: "payload",
+                                        label: (
+                                          <span className="forge-code text-xs text-slate-500">
+                                            payload
+                                          </span>
+                                        ),
+                                        children: (
+                                          <pre className="forge-code overflow-auto text-slate-400">
+                                            {JSON.stringify(event.payload, null, 2)}
+                                          </pre>
+                                        ),
+                                      },
+                                    ]}
+                                  />
+                                )}
+                              </div>
+                            ),
+                          }))}
+                        />
+                      </Card>
+                    ))}
+                  </div>
                 )}
               </>
             ),
@@ -292,6 +400,17 @@ export function RunDetailPage() {
     </>
   );
 }
+
+/** 事件 → Timeline 圆点色（§90/§77：运行 Lime、成功 Green、失败 Red） */
+const eventDot = (name: string): string | undefined => {
+  if (name.endsWith("failed")) return "#EF4444";
+  if (name === "run.completed") return "#22C55E";
+  if (name === "tool.completed") return "#22C55E";
+  if (name === "run.cancelled") return "#71717A";
+  if (name === "model.started" || name === "step.started" || name === "run.started")
+    return "#6CFF00";
+  return undefined;
+};
 
 /** 运行内联审批：等待审批时在详情页直接批准/拒绝（队列之外的快捷路径）。 */
 function InlineApprovals({ runId }: { runId: string }) {
