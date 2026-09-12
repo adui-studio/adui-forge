@@ -35,6 +35,14 @@ const PAGES: Array<CommandItem & { to: string }> = [
     run: () => {},
   },
   {
+    id: "page-chat",
+    to: "/chat",
+    category: "页面",
+    label: "Chat",
+    keywords: "chat 对话 聊天 agent",
+    run: () => {},
+  },
+  {
     id: "page-agents",
     to: "/agents",
     category: "页面",
