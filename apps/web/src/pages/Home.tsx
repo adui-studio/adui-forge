@@ -3,19 +3,25 @@ import { Loader2, Send } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { StatusTag } from "@/components/status-tag.tsx";
-import { Button, Card, Empty, Listy, Space } from "antd";
-import { createRun, fetchRuns } from "@/lib/api.ts";
+import { Button, Card, Empty, Listy, Select, Space } from "antd";
+import { createRun, fetchAgents, fetchRuns } from "@/lib/api.ts";
 import { fetchPendingApprovals } from "@/lib/approvals.ts";
 import { useRunNotifications } from "@/hooks/use-run-notifications.ts";
 
 export function HomePage() {
   const [task, setTask] = useState("");
+  const [agentName, setAgentName] = useState<string | undefined>(undefined);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: runs } = useQuery({
     queryKey: ["runs"],
     queryFn: fetchRuns,
     refetchInterval: 3_000,
+  });
+  const { data: agents } = useQuery({
+    queryKey: ["agents"],
+    queryFn: fetchAgents,
+    staleTime: 60_000,
   });
   const { data: pending } = useQuery({
     queryKey: ["approvals"],
@@ -24,7 +30,7 @@ export function HomePage() {
   });
 
   const mutation = useMutation({
-    mutationFn: () => createRun(task),
+    mutationFn: () => createRun(task, agentName),
     onSuccess: (record) => {
       setTask("");
       void queryClient.invalidateQueries({ queryKey: ["runs"] });
@@ -80,8 +86,23 @@ export function HomePage() {
             className="w-full rounded-md border border-[#292E39] bg-[#111318] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-[#8B51A6] focus:outline-none"
             onChange={(event) => setTask(event.target.value)}
           />
-          <Space>
+          <Space wrap>
             <span className="text-xs text-slate-500">Ctrl + Enter 运行</span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-xs text-slate-500">Agent</span>
+              <Select
+                aria-label="选择执行此次任务的 Agent"
+                value={agentName ?? agents?.[0]?.name}
+                onChange={setAgentName}
+                loading={agents === undefined}
+                options={(agents ?? []).map((agent) => ({
+                  value: agent.name,
+                  label: agent.description ? `${agent.name} · ${agent.description}` : agent.name,
+                }))}
+                notFoundContent="暂无可用 Agent"
+                className="w-52"
+              />
+            </span>
             <Button
               type="primary"
               htmlType="submit"
