@@ -1,6 +1,12 @@
 import { NotFoundException } from "@nestjs/common";
 import { PrismaClient } from "../../generated/prisma-client";
-import type { WorkflowDefinitionRecord, WorkflowsRegistryContract } from "./workflow.registry";
+import {
+  fromStored,
+  toStored,
+  type StoredWorkflowDefinition,
+  type WorkflowsRegistryContract,
+  type WorkflowDefinitionRecord,
+} from "./workflow.registry";
 
 /** PostgreSQL Workflow 定义存储（Prisma）。需先 `prisma migrate deploy`。 */
 export class PrismaWorkflowsRegistry implements WorkflowsRegistryContract {
@@ -11,14 +17,15 @@ export class PrismaWorkflowsRegistry implements WorkflowsRegistryContract {
   }
 
   async register(definition: WorkflowDefinitionRecord): Promise<void> {
+    const stored: StoredWorkflowDefinition = toStored(definition);
     await this.#prisma.workflow.upsert({
       where: { name: definition.name },
       create: {
         name: definition.name,
         description: definition.description,
-        tasks: definition.tasks,
+        definition: stored,
       },
-      update: { description: definition.description, tasks: definition.tasks },
+      update: { description: definition.description, definition: stored },
     });
   }
 
@@ -27,15 +34,11 @@ export class PrismaWorkflowsRegistry implements WorkflowsRegistryContract {
     if (row === null) {
       throw new NotFoundException(`unknown workflow: "${name}"`);
     }
-    return { name: row.name, description: row.description, tasks: row.tasks as string[] };
+    return fromStored(row.name, row.description, row.definition);
   }
 
   async list(): Promise<WorkflowDefinitionRecord[]> {
     const rows = await this.#prisma.workflow.findMany({ orderBy: { name: "asc" } });
-    return rows.map((row) => ({
-      name: row.name,
-      description: row.description,
-      tasks: row.tasks as string[],
-    }));
+    return rows.map((row) => fromStored(row.name, row.description, row.definition));
   }
 }

@@ -46,11 +46,11 @@ model Task {
   @@map("tasks")
 }
 
-/// Workflow 定义（tasks 序列）
+/// Workflow 定义（{tasks: []} 线性 或 {graph: {nodes, edges}} 含条件分支）
 model Workflow {
   name        String   @id
   description String   @default("")
-  tasks       Json
+  definition  Json
   createdAt   DateTime @default(now())
 
   @@map("workflows")

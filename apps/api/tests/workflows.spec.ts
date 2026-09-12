@@ -53,4 +53,48 @@ describe("WorkflowService", () => {
       'unknown agent: "forge-dev"',
     );
   });
+
+  it("图定义按条件分支执行并写入 Run 记录", async () => {
+    const registry = new AgentRegistry();
+    registry.register(
+      defineAgent({
+        name: "forge-dev",
+        description: "t",
+        systemPrompt: "sys",
+        model: {
+          async generate(): Promise<ModelTurnResult> {
+            return { content: "workflow-node-output", toolCalls: [] };
+          },
+        } satisfies ModelAdapter,
+        tools: [],
+        loop: { maxSteps: 2, timeoutMs: 2000 },
+      }),
+    );
+    const store = new InMemoryRunStore();
+    const runService = new RunService(store, registry);
+    const workflowService = new WorkflowService(store, registry, {
+      emitEvent: () => {},
+    } as unknown as RunService);
+
+    const record = await workflowService.createWorkflowRunFromGraph({
+      nodes: [
+        { id: "n1", type: "agent", task: "first" },
+        { id: "gate", type: "condition", when: { node: "n1", op: "contains", value: "never" } },
+        { id: "n2", type: "agent", task: "second" },
+      ],
+      edges: [
+        { source: "n1", target: "gate" },
+        { source: "gate", target: "n2", branch: "then" },
+      ],
+    });
+    expect(record.agentName).toBe("workflow(3 nodes)");
+    await new Promise((resolve) => setTimeout(resolve, 60));
+
+    const finished = await runService.getRun(record.id);
+    expect(finished.status).toBe("completed");
+    const stepIds = finished.events
+      .filter((event) => event.name === "workflow.step.started")
+      .map((event) => event.stepId);
+    expect(stepIds).toEqual(["n1", "gate"]);
+  }, 10_000);
 });

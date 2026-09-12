@@ -1,7 +1,12 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import type { AgentEvent } from "@adui-forge/contracts";
 import { AgentRegistry } from "@adui-forge/agent";
-import { WorkflowRunner, type WorkflowStep } from "@adui-forge/workflow";
+import {
+  WorkflowRunner,
+  graphToSteps,
+  type WorkflowGraph,
+  type WorkflowStep,
+} from "@adui-forge/workflow";
 import { DEFAULT_AGENT_NAME } from "../agents/agent.factory";
 import type { RunRecord, RunStore } from "../runs/run.types";
 import { RUN_STORE } from "../runs/run.tokens";
@@ -39,25 +44,40 @@ export class WorkflowService {
       task: input.tasks.join(" → "),
     });
 
-    void this.#execute(record.id, agent, input.tasks).catch(() => {});
-
-    return record;
-  }
-
-  async #execute(
-    runId: string,
-    agent: NonNullable<ReturnType<AgentRegistry["get"]>>,
-    tasks: string[],
-  ): Promise<void> {
-    await this.store.update(runId, { status: "running", startedAt: new Date().toISOString() });
-    const events: AgentEvent[] = [];
-
-    const steps: WorkflowStep[] = tasks.map((task, index) => ({
+    const steps: WorkflowStep[] = input.tasks.map((task, index) => ({
       id: `step_${index + 1}`,
       type: "agent",
       agent,
       task,
     }));
+
+    void this.#execute(record.id, steps).catch(() => {});
+
+    return record;
+  }
+
+  /** 图定义（含条件分支）执行入口：编译为 WorkflowStep[] 后走同一执行通道。 */
+  async createWorkflowRunFromGraph(graph: WorkflowGraph): Promise<RunRecord> {
+    const agent = this.agents.get(DEFAULT_AGENT_NAME);
+    if (agent === undefined) {
+      throw new NotFoundException(`unknown agent: "${DEFAULT_AGENT_NAME}"`);
+    }
+
+    const agentTasks = graph.nodes.filter((node) => node.type === "agent").map((node) => node.task);
+    const record = await this.store.create({
+      id: `workflow_${globalThis.crypto.randomUUID()}`,
+      agentName: `workflow(${graph.nodes.length} nodes)`,
+      task: agentTasks.join(" → "),
+    });
+
+    void this.#execute(record.id, graphToSteps(graph, agent)).catch(() => {});
+
+    return record;
+  }
+
+  async #execute(runId: string, steps: WorkflowStep[]): Promise<void> {
+    await this.store.update(runId, { status: "running", startedAt: new Date().toISOString() });
+    const events: AgentEvent[] = [];
 
     const result = await this.#runner.run(
       { name: "api-workflow", steps },
