@@ -57,6 +57,18 @@ export class TaskService {
   }
 
   async list(): Promise<TaskRecord[]> {
-    return this.store.list();
+    const records = await this.store.list();
+    // 台账里的 status 是创建时快照；列表展示时回填派生 Run 的实时状态
+    return Promise.all(
+      records.map(async (task) => {
+        try {
+          const run = await this.runs.getRun(task.runId);
+          return run.status === task.status ? task : { ...task, status: run.status };
+        } catch {
+          // Run 记录不可达（被清理等）时保留台账快照
+          return task;
+        }
+      }),
+    );
   }
 }

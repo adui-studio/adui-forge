@@ -27,6 +27,14 @@ const PAGES: Array<CommandItem & { to: string }> = [
     run: () => {},
   },
   {
+    id: "page-tasks",
+    to: "/tasks",
+    category: "页面",
+    label: "任务",
+    keywords: "tasks 任务 台账 工作单元",
+    run: () => {},
+  },
+  {
     id: "page-agents",
     to: "/agents",
     category: "页面",

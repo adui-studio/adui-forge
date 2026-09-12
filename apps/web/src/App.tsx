@@ -25,6 +25,7 @@ const RunDetailPage = lazy(() =>
   import("./pages/RunDetail.tsx").then((m) => ({ default: m.RunDetailPage })),
 );
 const RunsPage = lazy(() => import("./pages/Runs.tsx").then((m) => ({ default: m.RunsPage })));
+const TasksPage = lazy(() => import("./pages/Tasks.tsx").then((m) => ({ default: m.TasksPage })));
 const SettingsPage = lazy(() =>
   import("./pages/Settings.tsx").then((m) => ({ default: m.SettingsPage })),
 );
@@ -51,6 +52,7 @@ export function App() {
           <Route path="/approvals" element={<ApprovalsPage />} />
           <Route path="/runs" element={<RunsPage />} />
           <Route path="/runs/:id" element={<RunDetailPage />} />
+          <Route path="/tasks" element={<TasksPage />} />
         </Routes>
       </Suspense>
     </AppShell>

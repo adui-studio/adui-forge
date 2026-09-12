@@ -87,6 +87,26 @@ export const fetchAgents = async (): Promise<AgentSummary[]> => {
   return (await response.json()) as AgentSummary[];
 };
 
+export interface TaskRecord {
+  id: string;
+  title: string;
+  runId: string;
+  status: string;
+  createdAt: string;
+}
+
+export const fetchTasks = (): Promise<TaskRecord[]> => request<TaskRecord[]>("/api/v1/tasks");
+
+export const createTask = (input: {
+  title: string;
+  task: string;
+  agentName?: string;
+}): Promise<TaskRecord> =>
+  request<TaskRecord>("/api/v1/tasks", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+
 export interface MemoryRecord {
   agentName: string;
   task: string;

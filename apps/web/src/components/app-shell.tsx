@@ -3,6 +3,7 @@ import {
   ClipboardCheck,
   Gauge,
   LayoutList,
+  ListTodo,
   LogIn,
   LogOut,
   Menu as MenuIcon,
@@ -25,6 +26,7 @@ const { Sider, Content, Header } = Layout;
 const NAV_ITEMS = [
   { to: "/", label: "控制台", icon: Gauge, key: "dashboard", exact: true },
   { to: "/runs", label: "Runs", icon: LayoutList, key: "runs" },
+  { to: "/tasks", label: "任务", icon: ListTodo, key: "tasks" },
   { to: "/agents", label: "Agents", icon: Users, key: "agents" },
   { to: "/workflows", label: "Workflows", icon: Workflow, key: "workflows" },
   { to: "/approvals", label: "审批", icon: ClipboardCheck, key: "approvals", badge: true as const },

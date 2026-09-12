@@ -38,3 +38,34 @@ describe("TaskService", () => {
     expect(() => createTaskSchema.parse({ title: "", task: "x" })).toThrow();
   });
 });
+
+describe("TaskService 状态回填", () => {
+  it("list 回填派生 Run 的实时状态", async () => {
+    const registry = new AgentRegistry();
+    registry.register(
+      defineAgent({
+        name: "forge-dev",
+        description: "t",
+        systemPrompt: "sys",
+        model: {
+          async generate() {
+            return { content: "done", toolCalls: [] };
+          },
+        },
+        tools: [] as AgentTool[],
+        loop: { maxSteps: 2, timeoutMs: 2000 },
+      }),
+    );
+    const runStore = new InMemoryRunStore();
+    const service = new TaskService(new InMemoryTaskStore(), new RunService(runStore, registry));
+    const task = await service.createTask({ title: "t", task: "do it" });
+    expect(task.status).toBe("queued");
+    // Run 推进到 completed 后，台账列表应反映最新状态
+    await runStore.update(task.runId, {
+      status: "completed",
+      finishedAt: new Date().toISOString(),
+    });
+    const listed = await service.list();
+    expect(listed[0]?.status).toBe("completed");
+  });
+});
