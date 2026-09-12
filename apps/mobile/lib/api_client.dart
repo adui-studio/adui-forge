@@ -8,19 +8,33 @@ class RunRecord {
     required this.task,
     required this.status,
     required this.createdAt,
+    this.error,
+    this.events = const [],
   });
 
   final String id;
   final String task;
   final String status;
   final String createdAt;
+  final String? error;
+  final List<dynamic> events;
 
   factory RunRecord.fromJson(Map<String, dynamic> json) => RunRecord(
         id: json['id'] as String,
         task: json['task'] as String,
         status: json['status'] as String,
         createdAt: json['createdAt'] as String,
+        error: json['error'] as String?,
+        events: (json['events'] as List<dynamic>?) ?? const [],
       );
+
+  /// 从事件流提取最终模型输出（model.delta 文本按序拼接）。
+  String get output => events
+      .whereType<Map<String, dynamic>>()
+      .where((event) => event['name'] == 'model.delta')
+      .map((event) =>
+          ((event['payload'] as Map<String, dynamic>?)?['text'] as String?) ?? '')
+      .join();
 
   bool get isTerminal =>
       const {'completed', 'failed', 'cancelled', 'timeout'}.contains(status);
@@ -105,6 +119,13 @@ class ForgeApiClient {
     final result = AuthResult.fromJson(response.data!);
     await saveToken(result.accessToken);
     return result;
+  }
+
+  Future<RunRecord> createRun(String task, {String? agentName}) async {
+    final response = await _dio.post<Map<String, dynamic>>('/runs',
+        data: agentName == null ? {'task': task} : {'task': task, 'agentName': agentName},
+        options: await _auth());
+    return RunRecord.fromJson(response.data!);
   }
 
   Future<List<RunRecord>> listRuns() async {

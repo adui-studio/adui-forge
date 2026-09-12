@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'screens/approvals_screen.dart';
+import 'screens/chat_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/run_detail_screen.dart';
 import 'screens/runs_screen.dart';
@@ -9,8 +10,12 @@ import 'screens/settings_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/runs',
+    initialLocation: '/chat',
     routes: [
+      GoRoute(
+        path: '/chat',
+        builder: (context, state) => const ChatScreen(),
+      ),
       GoRoute(
         path: '/runs',
         builder: (context, state) => const RunsScreen(),
