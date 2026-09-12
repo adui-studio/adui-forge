@@ -3,7 +3,14 @@ import { Play, Split } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Card, Empty, Input, Select, Space, Spin, Tag, Tooltip } from "antd";
-import { createRun, fetchAgents, streamRunEvents } from "@/lib/api.ts";
+import {
+  createComparison,
+  createRun,
+  fetchAgents,
+  fetchComparison,
+  fetchComparisons,
+  streamRunEvents,
+} from "@/lib/api.ts";
 import {
   applyCompareEvent,
   compareDurationSeconds,
@@ -25,11 +32,17 @@ export function ComparePage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [columns, setColumns] = useState<CompareColumn[] | null>(null);
   const closeFns = useRef<Array<() => void>>([]);
+  const columnsRef = useRef<CompareColumn[] | null>(null);
+  columnsRef.current = columns;
 
   const { data: agents, isLoading: agentsLoading } = useQuery({
     queryKey: ["agents"],
     queryFn: fetchAgents,
     staleTime: 60_000,
+  });
+  const { data: history } = useQuery({
+    queryKey: ["comparisons"],
+    queryFn: fetchComparisons,
   });
 
   useRunNotifications(undefined);
@@ -78,10 +91,48 @@ export function ComparePage() {
         }),
       );
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       void queryClient.invalidateQueries({ queryKey: ["runs"] });
+      // 批次入库：columns 顺序与 selectedAgents 一致
+      const current = columnsRef.current;
+      if (current !== null) {
+        await createComparison({
+          task: task.trim(),
+          items: current.map((column) => ({
+            agentName: column.agentName,
+            runId: column.state.runId ?? "",
+          })),
+        });
+        void queryClient.invalidateQueries({ queryKey: ["comparisons"] });
+      }
     },
   });
+
+  const loadHistory = async (id: string): Promise<void> => {
+    if (anyRunning) return;
+    const detail = await fetchComparison(id);
+    setColumns(
+      detail.results.map((result) => ({
+        agentName: result.agentName,
+        state: {
+          runId: result.runId,
+          status:
+            result.status === "completed"
+              ? ("completed" as const)
+              : result.status === "failed"
+                ? ("failed" as const)
+                : result.status === "cancelled"
+                  ? ("cancelled" as const)
+                  : ("running" as const),
+          text: result.text,
+          tools: result.tools,
+          error: result.error,
+          startedAt: undefined,
+          finishedAt: undefined,
+        },
+      })),
+    );
+  };
 
   const canStart =
     task.trim().length > 0 && selected.length >= 2 && selected.length <= 4 && !start.isPending;
@@ -96,6 +147,22 @@ export function ComparePage() {
         <h1 className="text-xl font-semibold text-slate-100">{t("compare.title")}</h1>
       </div>
       <p className="mb-4 text-sm text-slate-400">{t("compare.subtitle")}</p>
+
+      {history !== undefined && history.length > 0 && (
+        <div className="mb-4 flex items-center gap-2">
+          <span className="text-sm text-slate-500">{t("compare.historyLabel")}</span>
+          <Select
+            aria-label={t("compare.historyLabel")}
+            placeholder={t("compare.historyPlaceholder")}
+            options={history.slice(0, 15).map((item) => ({
+              value: item.id,
+              label: `${item.task.slice(0, 40)} · ${new Date(item.createdAt).toLocaleString()}`,
+            }))}
+            className="min-w-96"
+            onChange={(value) => void loadHistory(value)}
+          />
+        </div>
+      )}
 
       <Card className="mb-6" title={t("compare.setup")}>
         <div className="flex flex-col gap-3">

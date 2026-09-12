@@ -280,6 +280,8 @@ export const zhCN = {
     taskPlaceholder: "要对比的任务，例如：审查 runs 模块并给出改进建议",
     agentsLabel: "选择要对比的 Agent（2~4 个）",
     agentsPlaceholder: "选择 2~4 个 Agent",
+    historyLabel: "历史对比",
+    historyPlaceholder: "选择一个历史对比回看结果",
     startHint: "至少选择 2 个 Agent 并填写任务",
     start: "开始对比",
     starting: "启动中…",

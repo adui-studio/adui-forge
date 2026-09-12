@@ -72,6 +72,17 @@ model AgentConfig {
   @@map("agent_configs")
 }
 
+/// 对比批次：task + {agentName, runId} 列表；结果详情从 Run 实时派生
+model Comparison {
+  id        String   @id
+  task      String
+  items     Json
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("comparisons")
+}
+
 /// 可复用 Agent 能力（REQUIREMENTS §35：Instructions 优先，后续扩展 Tools/Knowledge）
 model Skill {
   name         String   @id

@@ -291,6 +291,8 @@ export const en: ZhCNTranslation = {
     taskPlaceholder: "The task to compare, e.g. review the runs module and suggest improvements",
     agentsLabel: "Agents to compare (2–4)",
     agentsPlaceholder: "Choose 2–4 agents",
+    historyLabel: "History",
+    historyPlaceholder: "Pick a past comparison to review",
     startHint: "Pick at least 2 agents and fill in the task",
     start: "Start comparison",
     starting: "Starting…",

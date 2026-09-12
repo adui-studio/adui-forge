@@ -296,6 +296,42 @@ export const deleteSkill = (name: string): Promise<{ ok: boolean }> =>
     method: "DELETE",
   });
 
+export interface ComparisonSummaryRecord {
+  id: string;
+  task: string;
+  items: Array<{ agentName: string; runId: string }>;
+  createdAt: string;
+}
+
+export interface ComparisonResultRecord {
+  agentName: string;
+  runId: string;
+  status: string;
+  text: string;
+  tools: string[];
+  error?: string;
+  durationMs: number | null;
+}
+
+export const createComparison = (input: {
+  task: string;
+  items: Array<{ agentName: string; runId: string }>;
+}): Promise<{ id: string }> =>
+  request<{ id: string }>("/api/v1/comparisons", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+
+export const fetchComparisons = (): Promise<ComparisonSummaryRecord[]> =>
+  request<ComparisonSummaryRecord[]>("/api/v1/comparisons");
+
+export const fetchComparison = (
+  id: string,
+): Promise<{ record: ComparisonSummaryRecord; results: ComparisonResultRecord[] }> =>
+  request<{ record: ComparisonSummaryRecord; results: ComparisonResultRecord[] }>(
+    `/api/v1/comparisons/${encodeURIComponent(id)}`,
+  );
+
 export interface MemoryRecord {
   agentName: string;
   task: string;
