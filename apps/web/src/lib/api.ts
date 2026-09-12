@@ -213,6 +213,26 @@ export const deleteConversation = (id: string): Promise<{ ok: boolean }> =>
     method: "DELETE",
   });
 
+export interface McpServerStatusRecord {
+  name: string;
+  command: string;
+  args?: string[];
+  status: "connected" | "failed";
+  toolNames: string[];
+  error?: string;
+}
+
+export const fetchMcpServers = (): Promise<McpServerStatusRecord[]> =>
+  request<McpServerStatusRecord[]>("/api/v1/mcp/servers");
+
+export const testMcpServer = (
+  name: string,
+): Promise<{ ok: boolean; toolNames?: string[]; error?: string }> =>
+  request<{ ok: boolean; toolNames?: string[]; error?: string }>(
+    `/api/v1/mcp/servers/${encodeURIComponent(name)}/test`,
+    { method: "POST", body: JSON.stringify({ name }) },
+  );
+
 export interface MemoryRecord {
   agentName: string;
   task: string;

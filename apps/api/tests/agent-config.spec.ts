@@ -38,6 +38,7 @@ const buildContext = (): AgentBuildContext => ({
       { name: "big-model", provider: "deepseek", modelId: "deepseek-chat" },
     ],
   } as never,
+  mcpServers: [],
   toolPool: [echoTool],
 });
 

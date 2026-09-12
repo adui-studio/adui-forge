@@ -11,6 +11,7 @@ import {
 } from "./agent-config.store";
 import { buildAgentBuildContext, registerDefaultAgent } from "./agent.factory";
 import { AgentsController } from "./agents.controller";
+import { McpController } from "./mcp.controller";
 
 /**
  * Agent 装配模块：组装构建上下文（模型 + 工具池 + 审批）并注册默认 Agent，
@@ -20,7 +21,7 @@ import { AgentsController } from "./agents.controller";
  */
 @Module({
   imports: [ApprovalsModule],
-  controllers: [AgentsController],
+  controllers: [AgentsController, McpController],
   providers: [
     {
       // 默认 Agent 与自定义 Agent 共用同一构建上下文（工具池一致）

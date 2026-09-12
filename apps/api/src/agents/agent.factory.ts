@@ -158,6 +158,8 @@ export interface AgentBuildContext {
   config: ForgeModelConfig | null;
   /** 命名模型目录；config 为 null 时为 null。 */
   models: ForgeModelCatalog | null;
+  /** MCP Server 连接观测（启动时逐个连接的结果）。 */
+  mcpServers: McpServerStatus[];
   toolPool: AgentTool[];
   approvals?: {
     createPending: (request: {
@@ -284,6 +286,36 @@ export const readForgeModelConfig = (
   };
 };
 
+/** 单个 MCP Server 的连接观测（管理页展示用；不含 env 中的敏感值）。 */
+export interface McpServerStatus {
+  name: string;
+  command: string;
+  args?: string[];
+  status: "connected" | "failed";
+  /** 连接成功时桥接而来的工具名清单。 */
+  toolNames: string[];
+  error?: string;
+}
+
+/** 按需连接一个 MCP Server（启动装配与管理页"测试连接"共用），返回桥接的工具实例。 */
+export const testMcpServerConnection = async (
+  server: McpServerConfig,
+): Promise<{ ok: true; tools: AgentTool[] } | { ok: false; error: string }> => {
+  try {
+    const { connectStdioServer, createMcpTools } = await import("@adui-forge/mcp");
+    const connection = await connectStdioServer({
+      name: server.name,
+      command: server.command,
+      args: server.args,
+      env: server.env,
+    });
+    const tools = await createMcpTools(connection);
+    return { ok: true, tools };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : String(error) };
+  }
+};
+
 /**
  * 组装 Agent 构建上下文：读模型配置、连接 MCP Server、构建工具池。
  * 默认 Agent 与自定义 Agent 共用同一上下文，保证工具池一致。
@@ -295,28 +327,36 @@ export const buildAgentBuildContext = async (
 ): Promise<AgentBuildContext> => {
   const config = readForgeModelConfig(env);
   if (config === null) {
-    return { config: null, models: null, toolPool: [], approvals };
+    return { config: null, models: null, toolPool: [], mcpServers: [], approvals };
   }
   const trustedLocalMode = env.FORGE_TRUSTED_LOCAL_MODE === "1";
   if (trustedLocalMode) {
     logger.warn("Trusted Local Mode 已开启：进程可在宿主机执行（无隔离）");
   }
   const mcpTools: AgentTool[] = [];
+  const mcpServers: McpServerStatus[] = [];
   for (const server of parseMcpServers(env.FORGE_MCP_SERVERS)) {
-    try {
-      const { connectStdioServer, createMcpTools } = await import("@adui-forge/mcp");
-      const connection = await connectStdioServer({
+    const result = await testMcpServerConnection(server);
+    if (result.ok) {
+      mcpTools.push(...result.tools);
+      mcpServers.push({
         name: server.name,
         command: server.command,
         args: server.args,
-        env: server.env,
+        status: "connected",
+        toolNames: result.tools.map((tool) => tool.name),
       });
-      mcpTools.push(...(await createMcpTools(connection)));
       logger.log(`MCP server "${server.name}" connected`);
-    } catch (error) {
-      logger.warn(
-        `MCP server "${server.name}" 连接失败，已跳过: ${error instanceof Error ? error.message : String(error)}`,
-      );
+    } else {
+      mcpServers.push({
+        name: server.name,
+        command: server.command,
+        args: server.args,
+        status: "failed",
+        toolNames: [],
+        error: result.error,
+      });
+      logger.warn(`MCP server "${server.name}" 连接失败，已跳过: ${result.error}`);
     }
   }
   const toolPool = buildToolPool({
@@ -326,7 +366,7 @@ export const buildAgentBuildContext = async (
     sandboxImage: env.FORGE_SANDBOX_IMAGE,
     mcpTools,
   });
-  return { config, models: buildModelCatalog(config, env), toolPool, approvals };
+  return { config, models: buildModelCatalog(config, env), toolPool, mcpServers, approvals };
 };
 
 /** 组装并注册默认 Agent；模型未配置时跳过注册并告警（启动不失败，Run 时显式 404）。 */

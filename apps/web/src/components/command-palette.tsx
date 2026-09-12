@@ -59,6 +59,14 @@ const PAGES: Array<CommandItem & { to: string }> = [
     run: () => {},
   },
   {
+    id: "page-mcp",
+    to: "/mcp",
+    category: "页面",
+    label: "MCP Servers",
+    keywords: "mcp servers 服务 工具桥接",
+    run: () => {},
+  },
+  {
     id: "page-approvals",
     to: "/approvals",
     category: "页面",
