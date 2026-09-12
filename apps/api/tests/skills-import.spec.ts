@@ -69,3 +69,19 @@ describe("importSkillsFromDir", () => {
     expect(rebuildCount).toBe(0);
   });
 });
+
+describe("skill 导出", () => {
+  it("导出内容可被再次解析（round-trip 由 skill-sdk 保证）", async () => {
+    const { renderSkillMarkdown } = await import("@adui-forge/skill-sdk");
+    const { parseSkillMarkdown } = await import("@adui-forge/skill-sdk");
+    const markdown = renderSkillMarkdown({
+      name: "plan",
+      description: "先规划后动手",
+      instructions: "先理解需求再实现。",
+    });
+    expect(markdown).toContain("name: plan");
+    const parsed = parseSkillMarkdown(markdown);
+    expect(parsed.name).toBe("plan");
+    expect(parsed.instructions).toBe("先理解需求再实现。");
+  });
+});

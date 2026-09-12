@@ -85,3 +85,15 @@ export const parseSkillMarkdown = (raw: string): ParsedSkillMarkdown => {
     instructions,
   };
 };
+
+/** 把 Skill 渲染为 SKILL.md 文本（frontmatter + 正文），与 parseSkillMarkdown 构成 round-trip。 */
+export const renderSkillMarkdown = (skill: {
+  name: string;
+  description: string;
+  instructions: string;
+}): string => {
+  const lines = ["---", `name: ${skill.name}`];
+  if (skill.description !== "") lines.push(`description: ${skill.description}`);
+  lines.push("---", "", skill.instructions.trim());
+  return lines.join("\n") + "\n";
+};

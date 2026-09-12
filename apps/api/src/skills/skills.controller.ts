@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Inject, Param, Patch, Post } from "@nestjs/common";
 import { z } from "zod";
-import { skillSchema } from "@adui-forge/skill-sdk";
+import { renderSkillMarkdown, skillSchema } from "@adui-forge/skill-sdk";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { AgentConfigService } from "../agents/agent-config.service";
 import { SKILL_STORE, type SkillRecord, type SkillStore } from "./skill.store";
@@ -59,6 +59,20 @@ export class SkillsController {
       rebuild: () => this.agents.rebuildAll(),
     });
     return { ok: true as const, ...result };
+  }
+
+  @Get(":name/export")
+  async export(@Param("name") name: string) {
+    const record = await this.store.get(name);
+    if (record === null) {
+      return null;
+    }
+    // 返回生成的 SKILL.md 文本，由客户端下载；服务端不写文件系统
+    return {
+      name: record.name,
+      filename: "SKILL.md",
+      content: renderSkillMarkdown(record),
+    };
   }
 
   @Patch(":name/enabled")

@@ -29,6 +29,7 @@ export const zhCN = {
     refresh: "刷新",
     save: "保存",
     cancel: "取消",
+    export: "导出",
     delete: "删除",
     edit: "编辑",
     saved: "已保存",
@@ -301,6 +302,7 @@ export const zhCN = {
     instructionsRequired: "指令内容不能为空",
     instructionsPlaceholder:
       "写入要注入 Agent 的行为准则，例如：\n1. 先复现问题\n2. 找到根因再修复\n3. 补充回归测试",
+    export: "导出",
   },
   approvals: {
     title: "待审批",

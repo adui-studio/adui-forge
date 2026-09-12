@@ -284,6 +284,13 @@ export interface SkillImportResult {
 export const importSkills = (): Promise<SkillImportResult> =>
   request<SkillImportResult>("/api/v1/skills/import", { method: "POST" });
 
+export const exportSkill = (
+  name: string,
+): Promise<{ name: string; filename: string; content: string }> =>
+  request<{ name: string; filename: string; content: string }>(
+    `/api/v1/skills/${encodeURIComponent(name)}/export`,
+  );
+
 export const deleteSkill = (name: string): Promise<{ ok: boolean }> =>
   request<{ ok: boolean }>(`/api/v1/skills/${encodeURIComponent(name)}`, {
     method: "DELETE",

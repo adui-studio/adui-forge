@@ -2,6 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 import {
   composeSystemPrompt,
   parseSkillMarkdown,
+  renderSkillMarkdown,
   resolveSkills,
   skillSchema,
   type Skill,
@@ -90,5 +91,34 @@ description: 先规划后动手
     const parsed = parseSkillMarkdown("---\r\nname: x\r\n---\r\n\r\nbody");
     expect(parsed.name).toBe("x");
     expect(parsed.instructions).toBe("body");
+  });
+});
+
+describe("renderSkillMarkdown", () => {
+  it("渲染包含 frontmatter 与正文，且与 parseSkillMarkdown 构成 round-trip", () => {
+    const markdown = renderSkillMarkdown({
+      name: "testing",
+      description: "write tests first",
+      instructions: "# Testing\n\nAlways test first.",
+    });
+    expect(markdown).toContain("---");
+    expect(markdown).toContain("name: testing");
+    expect(markdown).toContain("description: write tests first");
+
+    const parsed = parseSkillMarkdown(markdown);
+    expect(parsed.name).toBe("testing");
+    expect(parsed.description).toBe("write tests first");
+    expect(parsed.instructions).toContain("Always test first.");
+  });
+
+  it("description 为空时省略该行", () => {
+    const markdown = renderSkillMarkdown({
+      name: "x",
+      description: "",
+      instructions: "body",
+    });
+    expect(markdown).not.toContain("description:");
+    const parsed = parseSkillMarkdown(markdown);
+    expect(parsed.name).toBe("x");
   });
 });

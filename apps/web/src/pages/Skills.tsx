@@ -1,9 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, FolderInput, Plus, Save } from "lucide-react";
+import { BookOpen, Download, FolderInput, Plus, Save } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { App as AntApp, Button, Card, Empty, Form, Input, Space, Spin, Switch, Tag } from "antd";
-import { deleteSkill, fetchSkills, importSkills, setSkillEnabled, upsertSkill } from "@/lib/api.ts";
+import {
+  deleteSkill,
+  exportSkill,
+  fetchSkills,
+  importSkills,
+  setSkillEnabled,
+  upsertSkill,
+} from "@/lib/api.ts";
 
 /** Skills 管理页（REQUIREMENTS §35）：指令库的增删改查与启停；启用的 Skill 注入选中它的 Agent。 */
 export function SkillsPage() {
@@ -117,6 +124,24 @@ export function SkillsPage() {
                   />
                   <Button size="small" onClick={() => setEditing(skill.name)}>
                     {t("common.edit")}
+                  </Button>
+                  <Button
+                    size="small"
+                    icon={<Download className="h-3.5 w-3.5" />}
+                    onClick={() => {
+                      void exportSkill(skill.name).then((result) => {
+                        // 生成 SKILL.md 并触发浏览器下载
+                        const blob = new Blob([result.content], { type: "text/markdown" });
+                        const url = URL.createObjectURL(blob);
+                        const anchor = document.createElement("a");
+                        anchor.href = url;
+                        anchor.download = "SKILL.md";
+                        anchor.click();
+                        URL.revokeObjectURL(url);
+                      });
+                    }}
+                  >
+                    {t("skills.export")}
                   </Button>
                   <Button danger size="small" onClick={() => remove.mutate(skill.name)}>
                     {t("common.delete")}

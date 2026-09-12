@@ -31,6 +31,7 @@ export const en: ZhCNTranslation = {
     refresh: "Refresh",
     save: "Save",
     cancel: "Cancel",
+    export: "Export",
     delete: "Delete",
     edit: "Edit",
     saved: "Saved",
@@ -313,6 +314,7 @@ export const en: ZhCNTranslation = {
     instructionsRequired: "Instructions are required",
     instructionsPlaceholder:
       "Behaviour rules to inject into the agent, e.g.:\n1. Reproduce first\n2. Fix the root cause\n3. Add a regression test",
+    export: "Export",
   },
   approvals: {
     title: "Approvals",
