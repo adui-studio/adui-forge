@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Inject, NotFoundException, Put, Query } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  NotFoundException,
+  Put,
+  Query,
+} from "@nestjs/common";
 import { z } from "zod";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import {
@@ -34,6 +43,11 @@ export class WorkspaceController {
     input: { path: string; content: string },
   ): WorkspaceFileContent {
     return this.#call(() => this.workspace.writeFile(input.path, input.content));
+  }
+
+  @Delete("file")
+  remove(@Query(new ZodValidationPipe(pathSchema)) query: { path: string }): void {
+    this.#call(() => this.workspace.deleteFile(query.path));
   }
 
   /** Workspace 错误统一收敛为 404/400 语义的 Error Contract，不泄露栈与绝对路径。 */

@@ -65,3 +65,14 @@ describe("WorkspaceService", () => {
     expect(() => service.listDir(".")).toThrow();
   });
 });
+
+describe("WorkspaceService.deleteFile", () => {
+  it("删除边界内的文件；目录拒绝；遍历拦截", () => {
+    const root = makeWorkspace();
+    const service = new WorkspaceService(root);
+    service.deleteFile("src/main.ts");
+    expect(() => readFileSync(join(root, "src", "main.ts"))).toThrow();
+    expect(() => service.deleteFile("src")).toThrow("not a file");
+    expect(() => service.deleteFile("../outside.txt")).toThrow("escapes workspace boundary");
+  });
+});

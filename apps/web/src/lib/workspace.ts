@@ -34,6 +34,11 @@ export const fetchWorkspaceTree = (path: string): Promise<WorkspaceEntryRecord[]
 export const fetchWorkspaceFile = (path: string): Promise<WorkspaceFileRecord> =>
   workspaceRequest<WorkspaceFileRecord>(`/api/v1/workspace/file?path=${encodeURIComponent(path)}`);
 
+export const deleteWorkspaceFile = (path: string): Promise<void> =>
+  workspaceRequest<void>(`/api/v1/workspace/file?path=${encodeURIComponent(path)}`, {
+    method: "DELETE",
+  });
+
 export const writeWorkspaceFile = (path: string, content: string): Promise<WorkspaceFileRecord> =>
   workspaceRequest<WorkspaceFileRecord>("/api/v1/workspace/file", {
     method: "PUT",

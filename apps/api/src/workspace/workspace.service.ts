@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { Inject, Injectable } from "@nestjs/common";
 import { resolveInWorkspace } from "@adui-forge/tool-sdk";
@@ -117,6 +117,17 @@ export class WorkspaceService {
       writeFileSync(join(resolveInWorkspace(root, "."), relativePath), content, "utf8");
     }
     return { path: relativePath, content, size: Buffer.byteLength(content) };
+  }
+
+  /** 删除单个文件（目录拒绝）；文件必须存在于边界内。 */
+  deleteFile(relativePath: string): void {
+    const root = this.#root();
+    ensureTextFile(relativePath);
+    const absolute = resolveInWorkspace(root, relativePath);
+    if (!statSync(absolute).isFile()) {
+      throw new Error(`not a file: ${relativePath}`);
+    }
+    rmSync(absolute);
   }
 
   #root(): string {
