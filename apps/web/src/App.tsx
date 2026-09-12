@@ -8,6 +8,9 @@ const HomePage = lazy(() => import("./pages/Home.tsx").then((m) => ({ default: m
 const AgentsPage = lazy(() =>
   import("./pages/Agents.tsx").then((m) => ({ default: m.AgentsPage })),
 );
+const AgentDetailPage = lazy(() =>
+  import("./pages/AgentDetail.tsx").then((m) => ({ default: m.AgentDetailPage })),
+);
 const ChatPage = lazy(() => import("./pages/Chat.tsx").then((m) => ({ default: m.ChatPage })));
 const ApprovalsPage = lazy(() =>
   import("./pages/Approvals.tsx").then((m) => ({ default: m.ApprovalsPage })),
@@ -44,6 +47,8 @@ export function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/agents" element={<AgentsPage />} />
+          <Route path="/agents/new" element={<AgentDetailPage />} />
+          <Route path="/agents/:name" element={<AgentDetailPage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/memory" element={<MemoryPage />} />
           <Route path="/workflows" element={<WorkflowsPage />} />

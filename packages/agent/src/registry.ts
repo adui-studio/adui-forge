@@ -26,4 +26,17 @@ export class AgentRegistry {
   list(): Agent[] {
     return [...this.#agents.values()];
   }
+
+  /**
+   * 自定义 Agent 的 upsert 语义：已存在时覆盖（AgentConfigService 编辑保存用）。
+   * 与 register 的“重名视为配置错误”不同，upsert 面向运行时可变配置。
+   */
+  upsert(agent: Agent): void {
+    this.#agents.set(agent.name, agent);
+  }
+
+  /** 删除自定义 Agent；返回是否确实存在过。 */
+  remove(name: string): boolean {
+    return this.#agents.delete(name);
+  }
 }

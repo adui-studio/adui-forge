@@ -107,6 +107,41 @@ export const createTask = (input: {
     body: JSON.stringify(input),
   });
 
+export interface AgentDetailRecord {
+  name: string;
+  description: string;
+  systemPrompt: string;
+  tools: string[];
+  loop: { maxSteps: number; timeoutMs: number; tokenLimit: number | null };
+  source: "builtin" | "custom";
+  availableTools: string[];
+}
+
+export const fetchAgent = (name: string): Promise<AgentDetailRecord> =>
+  request<AgentDetailRecord>(`/api/v1/agents/${encodeURIComponent(name)}`);
+
+export const upsertAgent = (input: {
+  name: string;
+  description: string;
+  systemPrompt: string;
+  tools: string[];
+  maxSteps: number;
+  timeoutMs: number;
+  tokenLimit?: number;
+}): Promise<{ name: string }> =>
+  request<{ name: string }>("/api/v1/agents", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+
+export const deleteAgent = (name: string): Promise<{ ok: boolean }> =>
+  request<{ ok: boolean }>(`/api/v1/agents/${encodeURIComponent(name)}`, { method: "DELETE" });
+
+export const fetchAgentToolPool = async (): Promise<string[]> => {
+  const detail = await request<{ tools: string[] }>("/api/v1/agents/tools");
+  return detail.tools;
+};
+
 export interface MemoryRecord {
   agentName: string;
   task: string;

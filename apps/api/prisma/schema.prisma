@@ -55,3 +55,17 @@ model Workflow {
 
   @@map("workflows")
 }
+
+/// 运行时可配置的自定义 Agent（REQUIREMENTS §29：name/systemPrompt/tools/loop）
+model AgentConfig {
+  name         String   @id
+  description  String   @default("")
+  systemPrompt String
+  tools        Json
+  maxSteps     Int      @default(16)
+  timeoutMs    Int      @default(300000)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("agent_configs")
+}
