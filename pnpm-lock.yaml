@@ -439,6 +439,15 @@ importers:
 
   apps/runner:
     dependencies:
+      '@adui-forge/agent':
+        specifier: workspace:*
+        version: link:../../packages/agent
+      '@adui-forge/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
+      '@adui-forge/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@adui-forge/tool-sdk':
         specifier: workspace:*
         version: link:../../packages/tool-sdk

@@ -1,5 +1,7 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import { z } from "zod";
+import type { AgentEvent } from "@adui-forge/contracts";
+import type { RunnerRunService } from "./runs.ts";
 import {
   deleteWorkspaceTextFile,
   listWorkspaceDir,
@@ -10,6 +12,8 @@ import {
 export interface RunnerOptions {
   /** 本地工作区根目录（Desktop Shell 经环境变量注入）。 */
   root: string;
+  /** 本地 Runs 服务（FORGE_MODEL_* 已配置时才有；未配置时 runs 端点显式降级）。 */
+  runs?: RunnerRunService;
   /** Tauri 启动时注入的一次性 token（ADR-005 §3）；为空时跳过鉴权（仅测试用）。 */
   token?: string;
 }
@@ -102,6 +106,76 @@ export const buildServer = (options: RunnerOptions): FastifyInstance => {
         message: errorMessage(error),
       });
     }
+  });
+
+  // —— Runs 子集（FORGE_MODEL_* 未配置时 runs === undefined，显式降级 503）——
+
+  server.get("/api/v1/runs", async (_request, reply) => {
+    if (options.runs === undefined) {
+      return await reply
+        .code(503)
+        .send({ message: "local runs unavailable: FORGE_MODEL_* not configured" });
+    }
+    return options.runs.list();
+  });
+
+  server.post("/api/v1/runs", async (request, reply) => {
+    if (options.runs === undefined) {
+      return await reply
+        .code(503)
+        .send({ message: "local runs unavailable: FORGE_MODEL_* not configured" });
+    }
+    const parsed = z
+      .object({
+        task: z.string().min(1).max(10_000),
+        agentName: z.string().min(1).optional(),
+      })
+      .safeParse(request.body);
+    if (!parsed.success) {
+      return await reply.code(400).send({ message: "invalid body" });
+    }
+    try {
+      return options.runs.create(parsed.data);
+    } catch (error) {
+      return await reply.code(404).send({ message: errorMessage(error) });
+    }
+  });
+
+  server.get("/api/v1/runs/:id", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const record = options.runs?.get(id);
+    if (record === undefined) {
+      return await reply.code(404).send({ message: `unknown run: "${id}"` });
+    }
+    return record;
+  });
+
+  server.get("/api/v1/runs/:id/events", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    if (options.runs === undefined || options.runs.get(id) === undefined) {
+      return await reply.code(404).send({ message: `unknown run: "${id}"` });
+    }
+    // SSE：手动写原始响应（快照 + 实时，由 RunnerRunService.subscribe 保证）
+    reply.raw.writeHead(200, {
+      "content-type": "text/event-stream",
+      "cache-control": "no-cache",
+      connection: "keep-alive",
+    });
+    const send = (event: AgentEvent): void => {
+      reply.raw.write(`data: ${JSON.stringify(event)}\n\n`);
+    };
+    const unsubscribe = options.runs.subscribe(id, send);
+    request.raw.on("close", () => unsubscribe?.());
+    return reply;
+  });
+
+  server.post("/api/v1/runs/:id/cancel", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const record = options.runs?.cancel(id);
+    if (record === undefined) {
+      return await reply.code(404).send({ message: `unknown run: "${id}"` });
+    }
+    return record;
   });
 
   return server;

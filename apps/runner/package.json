@@ -11,6 +11,9 @@
     "build": "vp pack"
   },
   "dependencies": {
+    "@adui-forge/agent": "workspace:*",
+    "@adui-forge/ai": "workspace:*",
+    "@adui-forge/contracts": "workspace:*",
     "@adui-forge/tool-sdk": "workspace:*",
     "fastify": "catalog:",
     "zod": "catalog:"

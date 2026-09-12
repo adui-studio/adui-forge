@@ -1,3 +1,5 @@
+import { buildLocalAgents } from "./agents.ts";
+import { RunnerRunService } from "./runs.ts";
 import { buildServer } from "./server.ts";
 
 /** Local Runner 入口（ADR-005）：
@@ -12,7 +14,13 @@ if (root === undefined || root === "") {
 const token = process.env.RUNNER_TOKEN;
 const port = Number(process.env.RUNNER_PORT ?? 0);
 
-const server = buildServer({ root, token });
+const agents = buildLocalAgents(root);
+const runs = agents === null ? undefined : new RunnerRunService(agents);
+if (runs === undefined) {
+  console.warn("FORGE_MODEL_* not configured; local runs disabled (workspace-only mode)");
+}
+
+const server = buildServer({ root, token, runs });
 server.listen({ host: "127.0.0.1", port }, (error, address) => {
   if (error !== null) {
     console.error(`runner failed to start: ${error.message}`);
