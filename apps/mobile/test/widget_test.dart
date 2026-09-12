@@ -71,6 +71,9 @@ Future<void> pumpApp(WidgetTester tester) async {
 void main() {
   testWidgets('Runs 列表渲染 Run 条目并可进入详情', (tester) async {
     await pumpApp(tester);
+    // 初始路由是 /chat，经由 AppBar 的 Runs 按钮进入列表
+    await tester.tap(find.byTooltip('Runs'));
+    await tester.pumpAndSettle();
 
     expect(find.textContaining('实现搜索功能'), findsOneWidget);
     expect(find.textContaining('修复构建'), findsOneWidget);
