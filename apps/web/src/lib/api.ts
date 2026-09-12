@@ -209,6 +209,12 @@ export const appendConversationMessage = (
     body: JSON.stringify(message),
   });
 
+export const renameConversation = (id: string, title: string): Promise<ConversationRecord> =>
+  request<ConversationRecord>(`/api/v1/conversations/${encodeURIComponent(id)}/title`, {
+    method: "PATCH",
+    body: JSON.stringify({ title }),
+  });
+
 export const deleteConversation = (id: string): Promise<{ ok: boolean }> =>
   request<{ ok: boolean }>(`/api/v1/conversations/${encodeURIComponent(id)}`, {
     method: "DELETE",

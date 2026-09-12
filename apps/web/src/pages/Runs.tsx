@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, useSearchParams } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { StatusTag } from "@/components/status-tag.tsx";
 import { Segmented, Table, type TableColumnsType } from "antd";
@@ -10,6 +10,7 @@ import { timeAgo } from "@/lib/relative-time.ts";
 
 export function RunsPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const statusFilter = searchParams.get("status") ?? "all";
   const { data: runs, isLoading } = useQuery({
@@ -78,6 +79,10 @@ export function RunsPage() {
         columns={columns}
         dataSource={filtered}
         rowKey="id"
+        onRow={(record) => ({
+          onClick: () => void navigate(`/runs/${record.id}`),
+          className: "cursor-pointer",
+        })}
         loading={isLoading}
         pagination={{ pageSize: 20, showSizeChanger: false }}
         size="middle"

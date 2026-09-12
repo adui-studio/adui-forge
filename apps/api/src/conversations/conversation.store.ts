@@ -38,6 +38,8 @@ export interface ConversationStore {
   appendMessage(id: string, message: ConversationMessage): Promise<ConversationRecord | null>;
   /** 空标题会话在首条用户消息落库时补标题。 */
   ensureTitle(id: string, title: string): Promise<void>;
+  /** 显式重命名会话。 */
+  rename(id: string, title: string): Promise<ConversationRecord | null>;
   delete(id: string): Promise<boolean>;
 }
 
@@ -75,6 +77,14 @@ export class InMemoryConversationStore implements ConversationStore {
     if (record !== undefined && record.title === "") {
       record.title = title;
     }
+  }
+
+  async rename(id: string, title: string): Promise<ConversationRecord | null> {
+    const record = this.#conversations.get(id);
+    if (record === undefined) return null;
+    record.title = title;
+    record.updatedAt = new Date().toISOString();
+    return record;
   }
 
   async delete(id: string): Promise<boolean> {
@@ -150,6 +160,16 @@ export class PrismaConversationStore implements ConversationStore {
     if (existing !== null && existing.title === "") {
       await this.#prisma.conversation.update({ where: { id }, data: { title } });
     }
+  }
+
+  async rename(id: string, title: string): Promise<ConversationRecord | null> {
+    const existing = await this.get(id);
+    if (existing === null) return null;
+    const row = await this.#prisma.conversation.update({
+      where: { id },
+      data: { title },
+    });
+    return this.#toRecord(row);
   }
 
   async delete(id: string): Promise<boolean> {

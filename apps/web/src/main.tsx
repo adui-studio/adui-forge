@@ -1,7 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { App as AntApp, ConfigProvider, theme as antdTheme } from "antd";
+import type { Locale } from "antd/es/locale/index.js";
+import enUS from "antd/locale/en_US.js";
+import zhCN from "antd/locale/zh_CN.js";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { useTranslation } from "react-i18next";
 import { BrowserRouter } from "react-router";
 import { App } from "./App.tsx";
 import "./i18n/index.ts";
@@ -9,14 +13,14 @@ import "./index.css";
 
 const queryClient = new QueryClient();
 
-const container = document.getElementById("root");
-if (container === null) {
-  throw new Error("missing #root container");
-}
-
-createRoot(container).render(
-  <StrictMode>
+/** antd 内置文案（分页/空态/确认等）跟随 i18n 语言切换。 */
+const LocalizedProviders = () => {
+  const { i18n } = useTranslation();
+  // antd locale 文件为 CJS，TS7 下默认导入被建模为命名空间，此处做类型收敛
+  const antdLocale = (i18n.language === "en" ? enUS : zhCN) as unknown as Locale;
+  return (
     <ConfigProvider
+      locale={antdLocale}
       theme={{
         algorithm: antdTheme.darkAlgorithm,
         token: {
@@ -72,5 +76,16 @@ createRoot(container).render(
         </QueryClientProvider>
       </AntApp>
     </ConfigProvider>
+  );
+};
+
+const container = document.getElementById("root");
+if (container === null) {
+  throw new Error("missing #root container");
+}
+
+createRoot(container).render(
+  <StrictMode>
+    <LocalizedProviders />
   </StrictMode>,
 );

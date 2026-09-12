@@ -1,10 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eraser, MessageSquare, Plus, Send, Square, Trash2 } from "lucide-react";
+import { Eraser, MessageSquare, Pencil, Plus, Send, Square, Trash2 } from "lucide-react";
 import { useEffect, useReducer, useRef, useState } from "react";
-import { App as AntApp, Button, Empty, Popconfirm, Select, Space, Tag, Tooltip } from "antd";
+import {
+  App as AntApp,
+  Button,
+  Empty,
+  Input,
+  Modal,
+  Popconfirm,
+  Select,
+  Space,
+  Tag,
+  Tooltip,
+} from "antd";
 import { useTranslation } from "react-i18next";
 import {
   appendConversationMessage,
+  renameConversation,
   cancelRun,
   createConversation,
   createRun,
@@ -138,6 +150,23 @@ export function ChatPage() {
     },
   });
 
+  // 会话重命名
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
+  const rename = useMutation({
+    mutationFn: () => renameConversation(conversationId ?? "", renameValue.trim()),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      void message.success(t("common.saved"));
+      setRenameOpen(false);
+    },
+  });
+  const openRename = (): void => {
+    const current = (conversations ?? []).find((c) => c.id === conversationId);
+    setRenameValue(current?.title ?? "");
+    setRenameOpen(true);
+  };
+
   // 新消息/流式增量时滚动到底部
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
@@ -174,6 +203,17 @@ export function ChatPage() {
               onClick={newConversation}
             />
           </Tooltip>
+          {conversationId !== null && (
+            <Tooltip title={t("chat.renameAria")}>
+              <Button
+                type="text"
+                icon={<Pencil className="h-4 w-4" />}
+                aria-label={t("chat.renameAria")}
+                disabled={state.active}
+                onClick={openRename}
+              />
+            </Tooltip>
+          )}
           <Select
             aria-label={t("chat.agentAria")}
             value={agentName ?? agents?.[0]?.name}
@@ -326,6 +366,33 @@ export function ChatPage() {
           </Space>
         </div>
       </div>
+
+      <Modal
+        title={t("chat.renameTitle")}
+        open={renameOpen}
+        okText={t("common.save")}
+        cancelText={t("common.cancel")}
+        confirmLoading={rename.isPending}
+        okButtonProps={{ disabled: renameValue.trim().length === 0 }}
+        onOk={() => rename.mutate()}
+        onCancel={() => setRenameOpen(false)}
+        destroyOnHidden
+      >
+        <label className="text-sm text-slate-300" htmlFor="rename-input">
+          {t("chat.renameLabel")}
+        </label>
+        <Input
+          id="rename-input"
+          className="mt-2"
+          value={renameValue}
+          placeholder={t("chat.renamePlaceholder")}
+          maxLength={200}
+          onChange={(event) => setRenameValue(event.target.value)}
+          onPressEnter={() => {
+            if (renameValue.trim().length > 0 && !rename.isPending) rename.mutate();
+          }}
+        />
+      </Modal>
     </div>
   );
 }

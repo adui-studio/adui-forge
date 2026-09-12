@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Inject, Param, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Inject, Param, Patch, Post } from "@nestjs/common";
 import { z } from "zod";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { ConversationService } from "./conversation.service";
@@ -6,6 +6,10 @@ import { ConversationService } from "./conversation.service";
 export const createConversationSchema = z.object({
   agentName: z.string().min(1).default("forge-dev"),
   title: z.string().max(200).default(""),
+});
+
+export const renameConversationSchema = z.object({
+  title: z.string().min(1).max(200),
 });
 
 export const appendMessageSchema = z.object({
@@ -50,6 +54,14 @@ export class ConversationsController {
       id,
       message as Parameters<ConversationService["appendMessage"]>[1],
     );
+  }
+
+  @Patch(":id/title")
+  rename(
+    @Param("id") id: string,
+    @Body(new ZodValidationPipe(renameConversationSchema)) input: { title: string },
+  ) {
+    return this.conversations.rename(id, input.title);
   }
 
   @Delete(":id")

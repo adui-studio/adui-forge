@@ -54,6 +54,14 @@ export class ConversationService {
     return record;
   }
 
+  async rename(id: string, title: string): Promise<ConversationRecord> {
+    const record = await this.store.rename(id, title);
+    if (record === null) {
+      throw new NotFoundException(`unknown conversation: "${id}"`);
+    }
+    return record;
+  }
+
   async delete(id: string): Promise<void> {
     const deleted = await this.store.delete(id);
     if (!deleted) {

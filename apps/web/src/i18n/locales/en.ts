@@ -163,6 +163,10 @@ export const en: ZhCNTranslation = {
     emptyTitle: "Ask the agent a question or give it a task.",
     emptyExample:
       "For example: “Analyse the structure of the runs module and suggest improvements”.",
+    renameAria: "Rename conversation",
+    renameTitle: "Rename conversation",
+    renameLabel: "Conversation name",
+    renamePlaceholder: "Enter a new name",
     deleteOk: "Delete",
     unknownError: "Unknown error",
   },

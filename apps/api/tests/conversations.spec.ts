@@ -33,6 +33,15 @@ describe("ConversationService", () => {
     expect(summaries[0]?.messageCount).toBe(2);
   });
 
+  it("重命名会话更新标题；未知会话 404", async () => {
+    const service = new ConversationService(new InMemoryConversationStore());
+    const conversation = await service.create({ agentName: "a", title: "" });
+    await service.appendMessage(conversation.id, { role: "user", text: "hi", status: "completed" });
+    const renamed = await service.rename(conversation.id, "重构讨论");
+    expect(renamed.title).toBe("重构讨论");
+    await expect(service.rename("conv_none", "x")).rejects.toThrow("unknown conversation");
+  });
+
   it("未知会话 404；删除后不可再取", async () => {
     const service = new ConversationService(new InMemoryConversationStore());
     await expect(service.get("conv_none")).rejects.toThrow("unknown conversation");
