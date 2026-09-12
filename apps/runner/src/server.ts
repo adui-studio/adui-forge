@@ -43,8 +43,11 @@ export const buildServer = (options: RunnerOptions): FastifyInstance => {
   server.addHook("onRequest", async (request, reply) => {
     if (options.token === undefined || options.token === "") return;
     if (request.url.startsWith("/health")) return;
+    // EventSource 无法携带 Header：SSE 等场景允许 ?token= 查询参数（仅本机回环）
+    const queryToken = (request.query as { token?: string }).token;
     const header = request.headers.authorization;
-    if (header !== `Bearer ${options.token}`) {
+    const authorized = header === `Bearer ${options.token}` || queryToken === options.token;
+    if (!authorized) {
       await reply.code(401).send({ message: "runner token missing or invalid" });
     }
   });

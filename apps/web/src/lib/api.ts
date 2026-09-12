@@ -1,6 +1,7 @@
 import i18next from "i18next";
 import type { AgentEvent } from "@adui-forge/contracts";
 import { authHeader, clearToken } from "./auth.ts";
+import { getPlatformAdapter } from "../platform/adapter.ts";
 
 /** Run 记录（与 apps/api 的 RunRecord 对齐，经 contracts 事件协议关联）。 */
 export interface RunRecord {
@@ -32,19 +33,54 @@ const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
   return (await response.json()) as T;
 };
 
-export const fetchRuns = (): Promise<RunRecord[]> => request<RunRecord[]>("/api/v1/runs");
+export const fetchRuns = (): Promise<RunRecord[]> => runsRequest<RunRecord[]>(listRunsPath());
+
+/** Desktop + Runner 运行中时，Runs 数据源路由到本地 Runner；否则走云端 API。 */
+const runnerApi = async (): Promise<{
+  base: string;
+  token: string;
+  headers: Record<string, string>;
+} | null> => {
+  const runner = await getPlatformAdapter().getRunnerInfo();
+  if (runner?.running === true && runner.baseUrl !== null) {
+    return {
+      base: runner.baseUrl,
+      token: runner.token ?? "",
+      headers: { authorization: `Bearer ${runner.token ?? ""}` },
+    };
+  }
+  return null;
+};
+
+const listRunsPath = (): string => "/api/v1/runs";
+
+const runsRequest = async <T>(path: string, init?: RequestInit): Promise<T> => {
+  const runner = await runnerApi();
+  if (runner === null) {
+    return request<T>(path, init);
+  }
+  const response = await fetch(`${runner.base}${path}`, {
+    headers: { "content-type": "application/json", ...authHeader(), ...runner.headers },
+    ...init,
+  });
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message ?? `request failed: ${response.status}`);
+  }
+  return (await response.json()) as T;
+};
 
 export const fetchRun = (id: string): Promise<RunRecord> =>
-  request<RunRecord>(`/api/v1/runs/${id}`);
+  runsRequest<RunRecord>(`/api/v1/runs/${id}`);
 
 export const cancelRun = (id: string): Promise<RunRecord> =>
-  request<RunRecord>(`/api/v1/runs/${id}/cancel`, { method: "POST" });
+  runsRequest<RunRecord>(`/api/v1/runs/${id}/cancel`, { method: "POST" });
 
 export const retryRun = (id: string): Promise<RunRecord> =>
   request<RunRecord>(`/api/v1/runs/${id}/retry`, { method: "POST" });
 
 export const createRun = (task: string, agentName?: string): Promise<RunRecord> =>
-  request<RunRecord>("/api/v1/runs", {
+  runsRequest<RunRecord>("/api/v1/runs", {
     method: "POST",
     body: JSON.stringify(agentName === undefined ? { task } : { task, agentName }),
   });
@@ -55,12 +91,17 @@ const TERMINAL_EVENTS = new Set(["run.completed", "run.failed", "run.cancelled"]
  * 订阅 Run 的 SSE 事件流。
  * 返回关闭函数；终态事件后自动关闭连接。
  */
-export const streamRunEvents = (
+export const streamRunEvents = async (
   runId: string,
   onEvent: (event: AgentEvent) => void,
   onComplete: () => void,
-): (() => void) => {
-  const source = new EventSource(`/api/v1/runs/${runId}/events`);
+): Promise<() => void> => {
+  const runner = await runnerApi();
+  const url =
+    runner !== null
+      ? `${runner.base}/api/v1/runs/${runId}/events?token=${encodeURIComponent(runner.token ?? "")}`
+      : `/api/v1/runs/${runId}/events`;
+  const source = new EventSource(url);
   source.onmessage = (messageEvent) => {
     const event = JSON.parse(messageEvent.data) as AgentEvent;
     onEvent(event);

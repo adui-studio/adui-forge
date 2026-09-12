@@ -86,7 +86,7 @@ export function ChatPage() {
       setInput((current) => (current.trim() === sentText ? "" : current));
       void queryClient.invalidateQueries({ queryKey: ["runs"] });
       void queryClient.invalidateQueries({ queryKey: ["conversations"] });
-      streamRunEvents(
+      void streamRunEvents(
         record.id,
         (event) => dispatch({ type: "event", event }),
         () => {

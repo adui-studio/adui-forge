@@ -132,12 +132,17 @@ export function RunDetailPage() {
     if (run === undefined || isTerminalStatus(run.status)) {
       return;
     }
-    closeStream.current = streamRunEvents(
+    let cancelled = false;
+    void streamRunEvents(
       id,
       (event) => setLiveEvents((previous) => [...previous, event]),
       () => void queryClient.invalidateQueries({ queryKey: ["run", id] }),
-    );
+    ).then((unsubscribe) => {
+      if (cancelled) unsubscribe();
+      else closeStream.current = unsubscribe;
+    });
     return () => {
+      cancelled = true;
       closeStream.current?.();
       closeStream.current = null;
     };

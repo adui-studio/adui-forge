@@ -78,26 +78,25 @@ export function ComparePage() {
                   i === index ? { ...column, state: { ...column.state, runId: run.id } } : column,
                 ),
           );
-          closeFns.current.push(
-            streamRunEvents(
-              run.id,
-              (event) => {
-                setColumns((current) =>
-                  current === null
-                    ? []
-                    : current.map((column, i) =>
-                        i === index
-                          ? { ...column, state: applyCompareEvent(column.state, event) }
-                          : column,
-                      ),
-                );
-              },
-              () => {
-                void queryClient.invalidateQueries({ queryKey: ["runs"] });
-                void queryClient.invalidateQueries({ queryKey: ["memory"] });
-              },
-            ),
+          const unsubscribe = await streamRunEvents(
+            run.id,
+            (event) => {
+              setColumns((current) =>
+                current === null
+                  ? []
+                  : current.map((column, i) =>
+                      i === index
+                        ? { ...column, state: applyCompareEvent(column.state, event) }
+                        : column,
+                    ),
+              );
+            },
+            () => {
+              void queryClient.invalidateQueries({ queryKey: ["runs"] });
+              void queryClient.invalidateQueries({ queryKey: ["memory"] });
+            },
           );
+          closeFns.current.push(unsubscribe);
         }),
       );
     },
