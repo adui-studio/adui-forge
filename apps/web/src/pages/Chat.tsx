@@ -72,8 +72,8 @@ export function ChatPage() {
   };
 
   const send = useMutation({
-    mutationFn: async () => {
-      const text = input.trim();
+    mutationFn: async (sentText: string) => {
+      const text = sentText;
       const id = await ensureConversation();
       dispatch({ type: "send", text });
       await appendConversationMessage(id, { role: "user", text, status: "completed" });
@@ -81,8 +81,9 @@ export function ChatPage() {
       dispatch({ type: "run-created", runId: record.id });
       return record;
     },
-    onSuccess: (record) => {
-      setInput("");
+    onSuccess: (record, sentText) => {
+      // 重试时保留用户当前输入框草稿
+      setInput((current) => (current.trim() === sentText ? "" : current));
       void queryClient.invalidateQueries({ queryKey: ["runs"] });
       void queryClient.invalidateQueries({ queryKey: ["conversations"] });
       streamRunEvents(
@@ -171,6 +172,12 @@ export function ChatPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [state.messages]);
+
+  const sendText = (): void => {
+    const text = input.trim();
+    if (text.length === 0 || state.active || send.isPending) return;
+    send.mutate(text);
+  };
 
   const canSend = !state.active && input.trim().length > 0 && !send.isPending;
 
@@ -313,6 +320,25 @@ export function ChatPage() {
                     {message.status === "cancelled" && (
                       <p className="mt-2 text-sm text-slate-500">{t("chat.cancelled")}</p>
                     )}
+                    {(message.status === "failed" || message.status === "cancelled") && (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        className="mt-2"
+                        disabled={state.active}
+                        onClick={() => {
+                          // 找到该回复对应的用户消息原文重发
+                          const index = state.messages.indexOf(message);
+                          const userMessage = [...state.messages]
+                            .slice(0, index)
+                            .reverse()
+                            .find((m) => m.role === "user");
+                          if (userMessage !== undefined) send.mutate(userMessage.text);
+                        }}
+                      >
+                        {t("chat.retry")}
+                      </Button>
+                    )}
                   </div>
                 </div>
               ),
@@ -333,7 +359,7 @@ export function ChatPage() {
           onKeyDown={(event) => {
             if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && canSend) {
               event.preventDefault();
-              send.mutate();
+              sendText();
             }
           }}
           className="w-full resize-none rounded-md border border-[#292E39] bg-[#111318] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-[#8B51A6] focus:outline-none disabled:opacity-60"
@@ -359,7 +385,7 @@ export function ChatPage() {
               icon={<Send className="h-4 w-4" />}
               disabled={!canSend}
               loading={send.isPending}
-              onClick={() => send.mutate()}
+              onClick={sendText}
             >
               {send.isPending ? t("chat.creating") : t("chat.send")}
             </Button>
