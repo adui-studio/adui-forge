@@ -70,3 +70,16 @@ model AgentConfig {
 
   @@map("agent_configs")
 }
+
+/// Chat 会话（消息为 Web ChatMessage 形状的 Json 列表；assistant 消息关联派生 Run）
+model Conversation {
+  id        String   @id
+  title     String   @default("")
+  agentName String   @default("forge-dev")
+  messages  Json     @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([updatedAt])
+  @@map("conversations")
+}

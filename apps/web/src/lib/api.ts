@@ -157,6 +157,62 @@ export const fetchAgentToolPool = async (): Promise<string[]> => {
   return detail.tools;
 };
 
+export interface ConversationMessageRecord {
+  role: "user" | "assistant";
+  text: string;
+  runId?: string;
+  status: "streaming" | "completed" | "failed" | "cancelled";
+  error?: string;
+  tools?: string[];
+}
+
+export interface ConversationRecord {
+  id: string;
+  title: string;
+  agentName: string;
+  messages: ConversationMessageRecord[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ConversationSummaryRecord {
+  id: string;
+  title: string;
+  agentName: string;
+  messageCount: number;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export const createConversation = (input: {
+  agentName: string;
+  title?: string;
+}): Promise<ConversationRecord> =>
+  request<ConversationRecord>("/api/v1/conversations", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+
+export const fetchConversations = (): Promise<ConversationSummaryRecord[]> =>
+  request<ConversationSummaryRecord[]>("/api/v1/conversations");
+
+export const fetchConversation = (id: string): Promise<ConversationRecord> =>
+  request<ConversationRecord>(`/api/v1/conversations/${encodeURIComponent(id)}`);
+
+export const appendConversationMessage = (
+  id: string,
+  message: ConversationMessageRecord,
+): Promise<ConversationRecord> =>
+  request<ConversationRecord>(`/api/v1/conversations/${encodeURIComponent(id)}/messages`, {
+    method: "POST",
+    body: JSON.stringify(message),
+  });
+
+export const deleteConversation = (id: string): Promise<{ ok: boolean }> =>
+  request<{ ok: boolean }>(`/api/v1/conversations/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+
 export interface MemoryRecord {
   agentName: string;
   task: string;

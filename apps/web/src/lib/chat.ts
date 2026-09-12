@@ -23,6 +23,8 @@ export type ChatAction =
   | { type: "send"; text: string }
   | { type: "run-created"; runId: string }
   | { type: "event"; event: AgentEvent }
+  /** 从服务端会话恢复（切换历史会话） */
+  | { type: "loaded"; messages: ChatMessage[] }
   | { type: "reset" };
 
 const payloadString = (event: AgentEvent, key: string): string => {
@@ -95,6 +97,12 @@ export const chatReducer = (state: ChatState, action: ChatAction): ChatState => 
       }
       const active = messages[index]?.status === "streaming";
       return { active, messages };
+    }
+    case "loaded": {
+      const hasStreaming = action.messages.some(
+        (message) => message.role === "assistant" && message.status === "streaming",
+      );
+      return { active: hasStreaming, messages: action.messages };
     }
     case "reset":
       return initialChatState;

@@ -1,21 +1,39 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eraser, MessageSquare, Send, Square } from "lucide-react";
+import { Eraser, MessageSquare, Plus, Send, Square, Trash2 } from "lucide-react";
 import { useEffect, useReducer, useRef, useState } from "react";
-import { Button, Empty, Select, Space, Tag, Tooltip } from "antd";
-import { cancelRun, createRun, fetchAgents, streamRunEvents } from "@/lib/api.ts";
+import { App as AntApp, Button, Empty, Popconfirm, Select, Space, Tag, Tooltip } from "antd";
+import {
+  appendConversationMessage,
+  cancelRun,
+  createConversation,
+  createRun,
+  deleteConversation,
+  fetchAgents,
+  fetchConversation,
+  fetchConversations,
+  streamRunEvents,
+} from "@/lib/api.ts";
 import { chatReducer, initialChatState } from "@/lib/chat.ts";
 
 export function ChatPage() {
   const [state, dispatch] = useReducer(chatReducer, initialChatState);
   const [input, setInput] = useState("");
   const [agentName, setAgentName] = useState<string | undefined>(undefined);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
+  const { message } = AntApp.useApp();
+  // 已落库的 assistant 消息（按 runId 去重，避免终态effect重复追加）
+  const appendedRunIds = useRef<Set<string>>(new Set());
 
   const { data: agents } = useQuery({
     queryKey: ["agents"],
     queryFn: fetchAgents,
     staleTime: 60_000,
+  });
+  const { data: conversations } = useQuery({
+    queryKey: ["conversations"],
+    queryFn: fetchConversations,
   });
 
   // 兼容无 findLast 的目标环境
@@ -30,10 +48,21 @@ export function ChatPage() {
     },
   });
 
+  /** 确保已有会话；没有则创建（标题留空，由首条用户消息补默认标题）。 */
+  const ensureConversation = async (): Promise<string> => {
+    if (conversationId !== null) return conversationId;
+    const record = await createConversation({ agentName: agentName ?? agents?.[0]?.name ?? "" });
+    setConversationId(record.id);
+    void queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    return record.id;
+  };
+
   const send = useMutation({
     mutationFn: async () => {
       const text = input.trim();
+      const id = await ensureConversation();
       dispatch({ type: "send", text });
+      await appendConversationMessage(id, { role: "user", text, status: "completed" });
       const record = await createRun(text, agentName);
       dispatch({ type: "run-created", runId: record.id });
       return record;
@@ -41,6 +70,7 @@ export function ChatPage() {
     onSuccess: (record) => {
       setInput("");
       void queryClient.invalidateQueries({ queryKey: ["runs"] });
+      void queryClient.invalidateQueries({ queryKey: ["conversations"] });
       streamRunEvents(
         record.id,
         (event) => dispatch({ type: "event", event }),
@@ -49,6 +79,60 @@ export function ChatPage() {
           void queryClient.invalidateQueries({ queryKey: ["memory"] });
         },
       );
+    },
+  });
+
+  // assistant 消息到达终态后落库到会话（流式文本在本地累积完成）
+  useEffect(() => {
+    const last = [...state.messages].reverse().find((m) => m.role === "assistant");
+    if (
+      last === undefined ||
+      last.runId === undefined ||
+      last.status === "streaming" ||
+      appendedRunIds.current.has(last.runId) ||
+      conversationId === null
+    ) {
+      return;
+    }
+    appendedRunIds.current.add(last.runId);
+    void appendConversationMessage(conversationId, {
+      role: "assistant",
+      text: last.text,
+      runId: last.runId,
+      status: last.status,
+      error: last.error,
+      tools: last.tools,
+    })
+      .then(() => queryClient.invalidateQueries({ queryKey: ["conversations"] }))
+      .catch(() => {});
+  }, [state.messages, conversationId, queryClient]);
+
+  // 切换历史会话
+  const selectConversation = async (id: string): Promise<void> => {
+    if (state.active) return;
+    const detail = await fetchConversation(id);
+    setConversationId(detail.id);
+    appendedRunIds.current = new Set(
+      detail.messages.filter((m) => m.runId !== undefined).map((m) => m.runId as string),
+    );
+    dispatch({
+      type: "loaded",
+      messages: detail.messages.map((m) => ({ ...m, tools: m.tools ?? [] })),
+    });
+  };
+
+  const newConversation = (): void => {
+    if (state.active) return;
+    setConversationId(null);
+    dispatch({ type: "reset" });
+  };
+
+  const removeConversation = useMutation({
+    mutationFn: () => deleteConversation(conversationId ?? ""),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      void message.success("会话已删除");
+      newConversation();
     },
   });
 
@@ -66,6 +150,29 @@ export function ChatPage() {
         <h1 className="text-xl font-semibold text-slate-100">Chat</h1>
         <Space className="ml-auto">
           <Select
+            aria-label="切换历史会话"
+            value={conversationId ?? undefined}
+            placeholder="新对话"
+            onChange={(value) => void selectConversation(value)}
+            options={(conversations ?? []).slice(0, 20).map((conversation) => ({
+              value: conversation.id,
+              label: conversation.title === "" ? "（未命名会话）" : conversation.title,
+            }))}
+            className="w-64"
+            disabled={state.active}
+            allowClear
+            onClear={() => newConversation()}
+          />
+          <Tooltip title="新建对话">
+            <Button
+              type="text"
+              icon={<Plus className="h-4 w-4" />}
+              aria-label="新建对话"
+              disabled={state.active}
+              onClick={newConversation}
+            />
+          </Tooltip>
+          <Select
             aria-label="选择对话使用的 Agent"
             value={agentName ?? agents?.[0]?.name}
             onChange={setAgentName}
@@ -78,19 +185,37 @@ export function ChatPage() {
             className="w-56"
             disabled={state.active}
           />
-          <Tooltip title="清空对话">
-            <Button
-              type="text"
-              icon={<Eraser className="h-4 w-4" />}
-              aria-label="清空对话"
-              disabled={state.active}
-              onClick={() => dispatch({ type: "reset" })}
-            />
+          <Tooltip title={conversationId === null ? "清空对话" : "删除当前会话"}>
+            {conversationId === null ? (
+              <Button
+                type="text"
+                icon={<Eraser className="h-4 w-4" />}
+                aria-label="清空对话"
+                disabled={state.active}
+                onClick={() => dispatch({ type: "reset" })}
+              />
+            ) : (
+              <Popconfirm
+                title="删除当前会话？"
+                description="会话消息将被移除，派生 Run 记录保留。"
+                okText="删除"
+                cancelText="取消"
+                onConfirm={() => removeConversation.mutate()}
+              >
+                <Button
+                  type="text"
+                  danger
+                  icon={<Trash2 className="h-4 w-4" />}
+                  aria-label="删除当前会话"
+                  disabled={state.active}
+                />
+              </Popconfirm>
+            )}
           </Tooltip>
         </Space>
       </div>
       <p className="mb-4 text-sm text-slate-400">
-        每条消息作为一个独立 Run 执行；会话记忆会自动注入上下文，形成连续对话。
+        每条消息作为一个独立 Run 执行；会话自动保存，可随时切换历史会话继续。
       </p>
 
       {/* 消息流 */}

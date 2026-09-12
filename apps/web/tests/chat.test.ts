@@ -48,3 +48,33 @@ describe("chatReducer", () => {
     expect(state).toEqual(initialChatState);
   });
 });
+
+describe("chatReducer 会话恢复", () => {
+  it("loaded 恢复历史消息且历史 streaming 消息驱动 active", () => {
+    let state = chatReducer(initialChatState, {
+      type: "loaded",
+      messages: [
+        { role: "user", text: "hi", status: "completed", tools: [] },
+        { role: "assistant", text: "done", status: "completed", tools: [] },
+      ],
+    });
+    expect(state.active).toBe(false);
+    expect(state.messages).toHaveLength(2);
+
+    state = chatReducer(initialChatState, {
+      type: "loaded",
+      messages: [{ role: "assistant", text: "partial", status: "streaming", tools: [] }],
+    });
+    expect(state.active).toBe(true);
+  });
+
+  it("恢复后可继续发送新消息", () => {
+    let state = chatReducer(initialChatState, {
+      type: "loaded",
+      messages: [{ role: "assistant", text: "done", status: "completed", tools: [] }],
+    });
+    state = chatReducer(state, { type: "send", text: "下一个问题" });
+    expect(state.messages).toHaveLength(3);
+    expect(state.messages[2]?.status).toBe("streaming");
+  });
+});
