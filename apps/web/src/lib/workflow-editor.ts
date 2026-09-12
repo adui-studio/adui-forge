@@ -1,5 +1,6 @@
 import { MarkerType, type Edge, type Node } from "@xyflow/react";
 import type { WorkflowGraph } from "@adui-forge/workflow";
+import i18next from "i18next";
 
 export interface WorkflowGraphConditionData {
   node: string;
@@ -25,7 +26,12 @@ export const tasksToGraph = (
   edges: Edge[];
 } => {
   const nodes: Node[] = [
-    { id: "start", type: "start", position: { x: 200, y: 0 }, data: { label: "开始" } },
+    {
+      id: "start",
+      type: "start",
+      position: { x: 200, y: 0 },
+      data: { label: i18next.t("common.start") },
+    },
     ...tasks.map((task, index) => ({
       id: `task-${index}`,
       type: "task",
@@ -36,7 +42,7 @@ export const tasksToGraph = (
       id: "end",
       type: "end",
       position: { x: 200, y: (tasks.length + 1) * 110 },
-      data: { label: "结束" },
+      data: { label: i18next.t("common.end") },
     },
   ];
 
@@ -96,7 +102,7 @@ export const graphToFlow = (graph: WorkflowGraph): { nodes: Node[]; edges: Edge[
       id: node.id,
       type: "condition",
       position,
-      data: { label: "条件", when: node.when },
+      data: { label: i18next.t("workflowEditor.conditionLabel"), when: node.when },
     };
   });
   const edges: Edge[] = graph.edges.map((edge) => ({
@@ -105,7 +111,12 @@ export const graphToFlow = (graph: WorkflowGraph): { nodes: Node[]; edges: Edge[
     target: edge.target,
     markerEnd: { type: MarkerType.ArrowClosed },
     animated: edge.branch !== undefined,
-    label: edge.branch === "then" ? "是" : edge.branch === "else" ? "否" : undefined,
+    label:
+      edge.branch === "then"
+        ? i18next.t("workflowEditor.edgeThen")
+        : edge.branch === "else"
+          ? i18next.t("workflowEditor.edgeElse")
+          : undefined,
     data: { branch: edge.branch },
   }));
   return { nodes, edges };

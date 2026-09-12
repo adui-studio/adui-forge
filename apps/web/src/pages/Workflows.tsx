@@ -2,12 +2,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Play, Plus, Workflow as WorkflowIcon } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 import { Button, Card, Empty, Form, Input, Spin, Steps } from "antd";
 import { fetchWorkflows, runWorkflow } from "@/lib/workflows.ts";
 import type { WorkflowDefinitionRecord } from "@/lib/workflows.ts";
 import { registerWorkflow } from "@/lib/api.ts";
 
 export function WorkflowsPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const {
@@ -32,7 +34,7 @@ export function WorkflowsPage() {
     <>
       <div className="mb-6 flex items-center gap-2">
         <WorkflowIcon className="h-5 w-5 text-brand-300" />
-        <h1 className="text-xl font-semibold text-slate-100">Workflows</h1>
+        <h1 className="text-xl font-semibold text-slate-100">{t("workflows.title")}</h1>
       </div>
 
       <div className="flex gap-2">
@@ -44,7 +46,7 @@ export function WorkflowsPage() {
           icon={<Plus className="h-3.5 w-3.5" />}
           onClick={() => navigate("/workflows/new")}
         >
-          可视化新建
+          {t("workflows.newVisual")}
         </Button>
       </div>
 
@@ -59,7 +61,7 @@ export function WorkflowsPage() {
         </p>
       )}
       {workflows !== undefined && workflows.length === 0 && (
-        <Empty className="mt-6" description="还没有注册的 Workflow，用上方表单注册第一个" />
+        <Empty className="mt-6" description={t("workflows.empty")} />
       )}
       <div className="mt-6 grid gap-3 md:grid-cols-2">
         {workflows?.map((workflow) => (
@@ -85,7 +87,7 @@ export function WorkflowsPage() {
               onClick={() => run.mutate(workflow.name)}
             >
               <Play className="mr-1 inline h-3.5 w-3.5" />
-              {run.isPending ? "启动中…" : "运行"}
+              {run.isPending ? t("workflows.starting") : t("workflows.run")}
             </Button>
           </Card>
         ))}
@@ -101,6 +103,7 @@ export function WorkflowsPage() {
 
 /** 注册表单（§53：普通内容用内联面板而非 Modal） */
 function RegisterCard({ onRegistered }: { onRegistered: () => void }) {
+  const { t } = useTranslation();
   const [form] = Form.useForm<{
     name: string;
     description?: string;
@@ -132,13 +135,13 @@ function RegisterCard({ onRegistered }: { onRegistered: () => void }) {
         icon={<Plus className="h-3.5 w-3.5" />}
         onClick={() => setOpen(true)}
       >
-        注册 Workflow
+        {t("workflows.register")}
       </Button>
     );
   }
 
   return (
-    <Card className="mb-6" title="注册 Workflow">
+    <Card className="mb-6" title={t("workflows.formTitle")}>
       <Form
         form={form}
         layout="vertical"
@@ -147,34 +150,34 @@ function RegisterCard({ onRegistered }: { onRegistered: () => void }) {
       >
         <Form.Item
           name="name"
-          label="名称"
+          label={t("workflows.nameLabel")}
           rules={[
-            { required: true, message: "名称不能为空" },
+            { required: true, message: t("workflows.nameRequired") },
             {
               pattern: /^[a-z0-9-]+$/,
-              message: "仅允许小写字母、数字与连字符",
+              message: t("workflows.namePattern"),
             },
           ]}
         >
-          <Input placeholder="code-review-pipeline" />
+          <Input placeholder={t("workflows.namePlaceholder")} />
         </Form.Item>
-        <Form.Item name="description" label="描述（可选）">
-          <Input placeholder="一句话说明用途" />
+        <Form.Item name="description" label={t("workflows.descLabel")}>
+          <Input placeholder={t("workflows.descPlaceholder")} />
         </Form.Item>
         <Form.Item
           name="tasks"
-          label="任务列表（每行一条，顺序执行）"
+          label={t("workflows.tasksLabel")}
           rules={[
-            { required: true, message: "至少填写一条任务" },
+            { required: true, message: t("workflows.tasksRequired") },
             {
               validator: (_, value: string) =>
                 value && value.split("\n").filter((l) => l.trim()).length > 10
-                  ? Promise.reject(new Error("最多 10 条任务"))
+                  ? Promise.reject(new Error(t("workflows.tasksTooMany")))
                   : Promise.resolve(),
             },
           ]}
         >
-          <Input.TextArea rows={4} placeholder={"审查代码改动\n补充缺失的测试\n输出评审结论"} />
+          <Input.TextArea rows={4} placeholder={t("workflows.tasksPlaceholder")} />
         </Form.Item>
         {/* §46 表单错误在字段下方显示原因 */}
         {register.isError && (
@@ -183,9 +186,9 @@ function RegisterCard({ onRegistered }: { onRegistered: () => void }) {
           </p>
         )}
         <div className="flex justify-end gap-2">
-          <Button onClick={() => setOpen(false)}>取消</Button>
+          <Button onClick={() => setOpen(false)}>{t("common.cancel")}</Button>
           <Button type="primary" loading={register.isPending} htmlType="submit">
-            注册
+            {t("workflows.register")}
           </Button>
         </div>
       </Form>

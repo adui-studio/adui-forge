@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Bot, Save, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import { useTranslation } from "react-i18next";
 import {
   App as AntApp,
   Button,
@@ -28,6 +29,7 @@ export function AgentDetailPage() {
   const isNew = name === "new";
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const { message } = AntApp.useApp();
 
   const { data: agent, isLoading } = useQuery({
@@ -87,7 +89,7 @@ export function AgentDetailPage() {
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ["agents"] });
       void queryClient.invalidateQueries({ queryKey: ["agent", result.name] });
-      void message.success("已保存");
+      void message.success(t("common.saved"));
       if (result.name !== name) {
         void navigate(`/agents/${result.name}`, { replace: true });
       }
@@ -98,7 +100,7 @@ export function AgentDetailPage() {
     mutationFn: () => deleteAgent(draft.name),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["agents"] });
-      void message.success("已删除");
+      void message.success(t("common.deleted"));
       void navigate("/agents");
     },
   });
@@ -111,7 +113,7 @@ export function AgentDetailPage() {
     );
   }
   if (!isNew && agent === undefined) {
-    return <Empty description={`未找到 Agent "${name}"`} />;
+    return <Empty description={t("agentDetail.notFound", { name })} />;
   }
 
   const isCustom = isNew || agent?.source === "custom";
@@ -130,32 +132,34 @@ export function AgentDetailPage() {
         to="/agents"
         className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-brand-300"
       >
-        <ArrowLeft className="h-4 w-4" /> 返回列表
+        <ArrowLeft className="h-4 w-4" /> {t("common.backList")}
       </Link>
 
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <Bot className="h-5 w-5 text-brand-300" />
         <h1 className="font-mono text-xl font-semibold text-slate-100">
-          {isNew ? "新建 Agent" : draft.name}
+          {isNew ? t("agentDetail.newTitle") : draft.name}
         </h1>
-        {agent?.source === "builtin" && <Tag className="forge-code">内置 · 只读</Tag>}
+        {agent?.source === "builtin" && (
+          <Tag className="forge-code">{t("agentDetail.builtinTag")}</Tag>
+        )}
         {agent?.source === "custom" && (
           <Tag className="forge-code" color="purple">
-            自定义
+            {t("agentDetail.customTag")}
           </Tag>
         )}
         {isCustom && (
           <div className="ml-auto flex items-center gap-2">
             {!isNew && (
               <Popconfirm
-                title={`删除 Agent "${draft.name}"？`}
-                description="删除后使用该 Agent 的请求将返回 404。"
-                okText="删除"
-                cancelText="取消"
+                title={t("agentDetail.deleteTitle", { name: draft.name })}
+                description={t("agentDetail.deleteDesc")}
+                okText={t("common.delete")}
+                cancelText={t("common.cancel")}
                 onConfirm={() => remove.mutate()}
               >
                 <Button danger variant="outlined" icon={<Trash2 className="h-3.5 w-3.5" />}>
-                  删除
+                  {t("common.delete")}
                 </Button>
               </Popconfirm>
             )}
@@ -166,15 +170,13 @@ export function AgentDetailPage() {
               disabled={!canSave}
               onClick={() => save.mutate()}
             >
-              保存
+              {t("common.save")}
             </Button>
           </div>
         )}
       </div>
       {!isNew && !isCustom && (
-        <p className="mt-2 text-xs text-slate-500">
-          内置 Agent 由环境变量与代码定义，如需定制请创建自定义 Agent。
-        </p>
+        <p className="mt-2 text-xs text-slate-500">{t("agentDetail.builtinHint")}</p>
       )}
       {save.isError && (
         <p role="alert" className="mt-2 text-sm text-red-600">
@@ -187,52 +189,52 @@ export function AgentDetailPage() {
         </p>
       )}
 
-      <Card className="mt-4" title="基本定义">
+      <Card className="mt-4" title={t("agentDetail.baseDef")}>
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap gap-4">
             <label className="flex flex-col gap-1 text-sm text-slate-300">
-              名称（kebab-case）
+              {t("agentDetail.nameLabel")}
               <Input
                 value={draft.name}
                 disabled={!isCustom}
-                placeholder="code-reviewer"
+                placeholder={t("agentDetail.namePlaceholder")}
                 className="w-64"
                 onChange={(event) => setDraft({ ...draft, name: event.target.value })}
               />
             </label>
             <label className="flex flex-col gap-1 text-sm text-slate-300">
-              描述
+              {t("agentDetail.descLabel")}
               <Input
                 value={draft.description}
                 disabled={!isCustom}
-                placeholder="一句话说明该 Agent 的职责"
+                placeholder={t("agentDetail.descPlaceholder")}
                 className="w-96"
                 onChange={(event) => setDraft({ ...draft, description: event.target.value })}
               />
             </label>
           </div>
           <label className="flex flex-col gap-1 text-sm text-slate-300">
-            系统提示词（System Prompt）
+            {t("agentDetail.systemPromptLabel")}
             <Input.TextArea
               value={draft.systemPrompt}
               disabled={!isCustom}
               rows={6}
-              placeholder="定义 Agent 的角色、行为准则与输出要求…"
+              placeholder={t("agentDetail.systemPromptPlaceholder")}
               onChange={(event) => setDraft({ ...draft, systemPrompt: event.target.value })}
             />
           </label>
         </div>
       </Card>
 
-      <Card className="mt-4" title="工具与循环限制">
+      <Card className="mt-4" title={t("agentDetail.toolsLoop")}>
         <div className="flex flex-col gap-4">
           <div>
-            <p className="mb-2 text-sm text-slate-300">工具集（从启动工具池中选择）</p>
+            <p className="mb-2 text-sm text-slate-300">{t("agentDetail.toolsTitle")}</p>
             <Select
               mode="multiple"
               value={draft.tools}
               disabled={!isCustom}
-              placeholder="选择该 Agent 可用的工具"
+              placeholder={t("agentDetail.toolsPlaceholder")}
               className="w-full"
               options={(toolPool ?? agent?.availableTools ?? []).map((tool) => ({
                 value: tool,
@@ -240,13 +242,11 @@ export function AgentDetailPage() {
               }))}
               onChange={(value) => setDraft({ ...draft, tools: value })}
             />
-            <p className="mt-1 text-xs text-slate-500">
-              shell_exec / git 写入类工具为 approval 权限，执行时会触发人工审批。
-            </p>
+            <p className="mt-1 text-xs text-slate-500">{t("agentDetail.toolsHint")}</p>
           </div>
           <div>
             <label htmlFor="agent-model" className="text-sm text-slate-300">
-              模型
+              {t("agentDetail.modelLabel")}
             </label>
             <Select
               id="agent-model"
@@ -255,7 +255,12 @@ export function AgentDetailPage() {
               className="mt-1 w-96"
               options={[
                 ...(modelCatalog?.default !== null && modelCatalog?.default !== undefined
-                  ? [{ value: modelCatalog.default, label: `默认（${modelCatalog.default}）` }]
+                  ? [
+                      {
+                        value: modelCatalog.default,
+                        label: t("agentDetail.modelDefault", { name: modelCatalog.default }),
+                      },
+                    ]
                   : []),
                 ...(modelCatalog?.models ?? [])
                   .filter((model) => model.name !== modelCatalog?.default)
@@ -268,13 +273,11 @@ export function AgentDetailPage() {
                 setDraft({ ...draft, model: value === modelCatalog?.default ? "" : value })
               }
             />
-            <p className="mt-1 text-xs text-slate-500">
-              通过 FORGE_MODELS 环境变量声明更多命名模型。
-            </p>
+            <p className="mt-1 text-xs text-slate-500">{t("agentDetail.modelHint")}</p>
           </div>
           <div className="flex flex-wrap gap-4">
             <label className="flex flex-col gap-1 text-sm text-slate-300">
-              最大步数（maxSteps）
+              {t("agentDetail.maxStepsLabel")}
               <InputNumber
                 value={draft.maxSteps}
                 min={1}
@@ -284,7 +287,7 @@ export function AgentDetailPage() {
               />
             </label>
             <label className="flex flex-col gap-1 text-sm text-slate-300">
-              超时（毫秒）
+              {t("agentDetail.timeoutLabel")}
               <InputNumber
                 value={draft.timeoutMs}
                 min={1_000}

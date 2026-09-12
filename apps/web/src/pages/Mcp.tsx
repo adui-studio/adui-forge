@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plug, RefreshCw, Zap } from "lucide-react";
 import { App as AntApp, Button, Card, Empty, Spin, Tag, Tooltip } from "antd";
+import { useTranslation } from "react-i18next";
 import { fetchMcpServers, testMcpServer } from "@/lib/api.ts";
 
 /** MCP Servers 管理页：展示 FORGE_MCP_SERVERS 各服务的连接状态与桥接工具，支持按需重连测试。 */
 export function McpPage() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const { message } = AntApp.useApp();
   const {
     data: servers,
@@ -23,9 +25,9 @@ export function McpPage() {
     mutationFn: (name: string) => testMcpServer(name),
     onSuccess: (result) => {
       if (result.ok) {
-        void message.success(`连接成功，桥接 ${result.toolNames?.length ?? 0} 个工具`);
+        void message.success(t("mcp.testOk", { count: result.toolNames?.length ?? 0 }));
       } else {
-        void message.error(`连接失败：${result.error ?? "未知错误"}`);
+        void message.error(t("mcp.testFail", { error: result.error ?? "" }));
       }
       void queryClient.invalidateQueries({ queryKey: ["mcp-servers"] });
     },
@@ -36,19 +38,16 @@ export function McpPage() {
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Plug className="h-5 w-5 text-brand-300" />
-          <h1 className="text-xl font-semibold text-slate-100">MCP Servers</h1>
+          <h1 className="text-xl font-semibold text-slate-100">{t("mcp.title")}</h1>
         </div>
         <Button
           icon={<RefreshCw className={"h-3.5 w-3.5" + (isFetching ? " animate-spin" : "")} />}
           onClick={() => void refetch()}
         >
-          刷新
+          {t("mcp.refresh")}
         </Button>
       </div>
-      <p className="mb-4 text-sm text-slate-400">
-        通过 <code className="forge-code text-[#B79AEC]">FORGE_MCP_SERVERS</code> 环境变量配置的 MCP
-        服务在此展示连接状态；桥接的工具会进入工具池供 Agent 使用。
-      </p>
+      <p className="mb-4 text-sm text-slate-400">{t("mcp.subtitle")}</p>
 
       {isLoading && (
         <div className="flex justify-center py-12">
@@ -66,9 +65,9 @@ export function McpPage() {
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             description={
               <span className="text-slate-500">
-                未配置任何 MCP Server。
+                {t("mcp.empty1")}
                 <br />
-                在 FORGE_MCP_SERVERS 中添加（JSON 数组：name / command / args）。
+                {t("mcp.empty2")}
               </span>
             }
           />
@@ -90,12 +89,12 @@ export function McpPage() {
               />
               <span className="forge-code text-sm font-semibold text-slate-100">{server.name}</span>
               <Tag className="forge-code" color={server.status === "connected" ? "green" : "red"}>
-                {server.status === "connected" ? "已连接" : "连接失败"}
+                {server.status === "connected" ? t("mcp.connected") : t("mcp.failed")}
               </Tag>
               <span className="forge-code text-xs text-slate-500">
                 {server.command} {(server.args ?? []).join(" ")}
               </span>
-              <Tooltip title="重新连接测试（不影响运行中的工具池）">
+              <Tooltip title={t("mcp.testTooltip")}>
                 <Button
                   size="small"
                   className="ml-auto"
@@ -103,14 +102,14 @@ export function McpPage() {
                   loading={test.isPending && test.variables === server.name}
                   onClick={() => test.mutate(server.name)}
                 >
-                  测试连接
+                  {t("mcp.test")}
                 </Button>
               </Tooltip>
             </div>
             {server.status === "connected" && (
               <div className="mt-3">
                 <p className="mb-1.5 text-xs text-slate-500">
-                  桥接工具（{server.toolNames.length}）
+                  {t("mcp.tools", { count: server.toolNames.length })}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {server.toolNames.map((tool) => (
@@ -119,7 +118,7 @@ export function McpPage() {
                     </Tag>
                   ))}
                   {server.toolNames.length === 0 && (
-                    <span className="text-xs text-slate-500">该服务未提供工具</span>
+                    <span className="text-xs text-slate-500">{t("mcp.noTools")}</span>
                   )}
                 </div>
               </div>

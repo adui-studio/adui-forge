@@ -1,6 +1,6 @@
 export interface CommandItem {
   id: string;
-  category: "页面" | "Workflow" | "Run";
+  category: string;
   label: string;
   hint?: string;
   keywords: string;

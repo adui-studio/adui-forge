@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ShieldAlert } from "lucide-react";
 import { Link } from "react-router";
+import { useTranslation } from "react-i18next";
 import { Button, Card, Listy, Spin } from "antd";
 import { fetchPendingApprovals, submitApprovalDecision } from "@/lib/approvals.ts";
 
 export function ApprovalsPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const {
     data: approvals,
@@ -30,7 +32,7 @@ export function ApprovalsPage() {
     <>
       <div className="mb-6 flex items-center gap-2">
         <ShieldAlert className="h-5 w-5 text-amber-400" />
-        <h1 className="text-xl font-semibold text-slate-100">待审批</h1>
+        <h1 className="text-xl font-semibold text-slate-100">{t("approvals.title")}</h1>
       </div>
 
       {isLoading && (
@@ -45,9 +47,7 @@ export function ApprovalsPage() {
       )}
       {approvals !== undefined && approvals.length === 0 && (
         <Card>
-          <div className="p-8 text-center text-sm text-slate-500">
-            当前没有待审批操作。高风险操作（Shell / Git 写入）执行前会在这里请求批准。
-          </div>
+          <div className="p-8 text-center text-sm text-slate-500">{t("approvals.empty")}</div>
         </Card>
       )}
 
@@ -65,7 +65,7 @@ export function ApprovalsPage() {
                   to={`/runs/${item.runId}`}
                   className="ml-auto text-xs text-[#B79AEC] hover:underline"
                 >
-                  查看 Run
+                  {t("approvals.viewRun")}
                 </Link>
               </div>
               <p className="mt-1 text-sm text-slate-400">{item.reason}</p>
@@ -82,7 +82,7 @@ export function ApprovalsPage() {
                   disabled={decision.isPending}
                   onClick={() => decision.mutate({ id: item.id, decision: "rejected" })}
                 >
-                  拒绝
+                  {t("approvals.reject")}
                 </Button>
                 <Button
                   color="primary"
@@ -91,7 +91,7 @@ export function ApprovalsPage() {
                   disabled={decision.isPending}
                   onClick={() => decision.mutate({ id: item.id, decision: "approved" })}
                 >
-                  批准
+                  {t("approvals.approve")}
                 </Button>
               </div>
             </div>

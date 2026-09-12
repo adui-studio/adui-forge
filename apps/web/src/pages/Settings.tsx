@@ -1,11 +1,14 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Database, LogOut, Server } from "lucide-react";
 import { Link, useNavigate } from "react-router";
-import { App as AntApp, Button, Card, Descriptions, Popconfirm, Spin } from "antd";
+import { useTranslation } from "react-i18next";
+import { changeLanguage, SUPPORTED_LANGUAGES, type SupportedLanguage } from "@/i18n/index.ts";
+import { App as AntApp, Button, Card, Descriptions, Popconfirm, Select, Spin } from "antd";
 import { clearToken } from "@/lib/auth.ts";
 import { fetchHealth } from "@/lib/approvals-metrics.ts";
 
 export function SettingsPage() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { message } = AntApp.useApp();
@@ -22,15 +25,20 @@ export function SettingsPage() {
 
   return (
     <>
-      <h1 className="mb-6 text-xl font-semibold text-slate-100">设置</h1>
+      <h1 className="mb-6 text-xl font-semibold text-slate-100">{t("settings.title")}</h1>
 
-      <Card title="API 状态">
+      <Card title={t("settings.apiStatus")}>
         {isLoading && (
           <div className="flex justify-center py-12">
             <Spin />
           </div>
         )}
-        {isError && <p className="text-sm text-red-600">无法连接 API：{String(error)}</p>}
+        {isError && (
+          <p className="text-sm text-red-600">
+            {t("settings.cannotConnect")}
+            {String(error)}
+          </p>
+        )}
         {health !== undefined && (
           <Descriptions
             column={1}
@@ -39,7 +47,7 @@ export function SettingsPage() {
                 key: "service",
                 label: (
                   <span className="flex items-center gap-1.5">
-                    <Server className="h-3.5 w-3.5" /> 服务
+                    <Server className="h-3.5 w-3.5" /> {t("settings.service")}
                   </span>
                 ),
                 children: health.status,
@@ -48,41 +56,55 @@ export function SettingsPage() {
                 key: "db",
                 label: (
                   <span className="flex items-center gap-1.5">
-                    <Database className="h-3.5 w-3.5" /> 数据库
+                    <Database className="h-3.5 w-3.5" /> {t("settings.db")}
                   </span>
                 ),
                 children:
                   health.db === "up"
-                    ? "已连接"
+                    ? t("settings.dbUp")
                     : health.db === "down"
-                      ? "连接失败"
-                      : "未配置（内存模式）",
+                      ? t("settings.dbDown")
+                      : t("settings.dbNone"),
               },
             ]}
           />
         )}
       </Card>
 
-      <Card title="登录态" className="mt-4">
+      <Card title={t("settings.language")} className="mt-4">
+        <Select
+          aria-label={t("settings.language")}
+          value={i18n.language}
+          options={SUPPORTED_LANGUAGES.map((language) => ({
+            value: language,
+            label: language === "zh-CN" ? "简体中文" : "English",
+          }))}
+          onChange={(value) => changeLanguage(value as SupportedLanguage)}
+          className="w-48"
+        />
+        <p className="mt-2 text-xs text-slate-500">{t("settings.languageHint")}</p>
+      </Card>
+
+      <Card title={t("settings.loginState")} className="mt-4">
         <div className="flex gap-2">
           <Link to="/login">
-            <Button>前往登录 / 注册</Button>
+            <Button>{t("settings.gotoLogin")}</Button>
           </Link>
           {/* 破坏性操作先确认 */}
           <Popconfirm
-            title="清除本机令牌？"
-            description="清除后需要重新登录才能访问 API。"
-            okText="清除"
-            cancelText="取消"
+            title={t("settings.clearTitle")}
+            description={t("settings.clearDesc")}
+            okText={t("settings.clearOk")}
+            cancelText={t("common.cancel")}
             onConfirm={() => {
               clearToken();
               queryClient.clear();
-              void message.success("已清除本机令牌");
+              void message.success(t("settings.cleared"));
               void navigate("/");
             }}
           >
             <Button type="text" icon={<LogOut className="h-4 w-4" />}>
-              清除本机令牌
+              {t("settings.clearToken")}
             </Button>
           </Popconfirm>
         </div>

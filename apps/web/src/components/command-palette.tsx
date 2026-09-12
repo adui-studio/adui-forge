@@ -3,97 +3,16 @@ import { Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { Empty } from "antd";
+import { useTranslation } from "react-i18next";
 import { fetchRuns } from "@/lib/api.ts";
 import { fetchWorkflows } from "@/lib/workflows.ts";
 import { runWorkflow } from "@/lib/workflows.ts";
 import { filterCommands, type CommandItem } from "@/lib/command-palette.ts";
 import { cn } from "@/lib/utils.ts";
 
-const PAGES: Array<CommandItem & { to: string }> = [
-  {
-    id: "page-dashboard",
-    to: "/",
-    category: "页面",
-    label: "控制台",
-    keywords: "dashboard home 首页 控制台",
-    run: () => {},
-  },
-  {
-    id: "page-runs",
-    to: "/runs",
-    category: "页面",
-    label: "Runs",
-    keywords: "runs 执行 记录 列表",
-    run: () => {},
-  },
-  {
-    id: "page-tasks",
-    to: "/tasks",
-    category: "页面",
-    label: "任务",
-    keywords: "tasks 任务 台账 工作单元",
-    run: () => {},
-  },
-  {
-    id: "page-chat",
-    to: "/chat",
-    category: "页面",
-    label: "Chat",
-    keywords: "chat 对话 聊天 agent",
-    run: () => {},
-  },
-  {
-    id: "page-agents",
-    to: "/agents",
-    category: "页面",
-    label: "Agents",
-    keywords: "agents 工具",
-    run: () => {},
-  },
-  {
-    id: "page-workflows",
-    to: "/workflows",
-    category: "页面",
-    label: "Workflows",
-    keywords: "workflows 编排",
-    run: () => {},
-  },
-  {
-    id: "page-mcp",
-    to: "/mcp",
-    category: "页面",
-    label: "MCP Servers",
-    keywords: "mcp servers 服务 工具桥接",
-    run: () => {},
-  },
-  {
-    id: "page-approvals",
-    to: "/approvals",
-    category: "页面",
-    label: "审批",
-    keywords: "approvals 批准",
-    run: () => {},
-  },
-  {
-    id: "page-memory",
-    to: "/memory",
-    category: "页面",
-    label: "记忆",
-    keywords: "memory 记忆 摘要",
-    run: () => {},
-  },
-  {
-    id: "page-settings",
-    to: "/settings",
-    category: "页面",
-    label: "设置",
-    keywords: "settings 设置 配置",
-    run: () => {},
-  },
-];
-
 /** 命令面板(DesignGuidelines §41-43):Ctrl/Cmd+K 唤起,过滤/上下键/Enter/Esc。 */
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [highlight, setHighlight] = useState(0);
@@ -111,20 +30,44 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
     enabled: open,
   });
 
+  const pages = useMemo(
+    () =>
+      [
+        { to: "/", labelKey: "nav.dashboard", keywords: "dashboard home 首页 控制台 dashboard" },
+        { to: "/runs", labelKey: "nav.runs", keywords: "runs 执行 记录 列表 runs" },
+        { to: "/tasks", labelKey: "nav.tasks", keywords: "tasks 任务 台账 工作单元 tasks" },
+        { to: "/chat", labelKey: "nav.chat", keywords: "chat 对话 聊天 agent chat" },
+        { to: "/agents", labelKey: "nav.agents", keywords: "agents 工具 agents" },
+        { to: "/workflows", labelKey: "nav.workflows", keywords: "workflows 编排 workflows" },
+        { to: "/mcp", labelKey: "nav.mcp", keywords: "mcp servers 服务 工具桥接 mcp" },
+        { to: "/approvals", labelKey: "nav.approvals", keywords: "approvals 批准 approvals" },
+        { to: "/memory", labelKey: "nav.memory", keywords: "memory 记忆 摘要 memory" },
+        { to: "/settings", labelKey: "nav.settings", keywords: "settings 设置 配置 settings" },
+      ].map((page) => ({
+        id: `page-${page.to.slice(1) || "dashboard"}`,
+        to: page.to,
+        category: "palette.categoryPages",
+        label: t(page.labelKey),
+        keywords: page.keywords,
+        run: () => {},
+      })),
+    [t],
+  );
+
   const commands = useMemo<CommandItem[]>(() => {
     const goto = (to: string) => () => {
       void navigate(to);
       onClose();
     };
-    const runPageCommands: CommandItem[] = PAGES.map((page) => ({
+    const runPageCommands: CommandItem[] = pages.map((page) => ({
       ...page,
       run: goto(page.to),
     }));
     const workflowCommands: CommandItem[] = (workflows ?? []).map((workflow) => ({
       id: `wf-${workflow.name}`,
-      category: "Workflow",
-      label: `运行 ${workflow.name}`,
-      hint: "Workflow",
+      category: "palette.categoryWorkflow",
+      label: `${t("workflows.run")} ${workflow.name}`,
+      hint: t("palette.categoryWorkflow"),
       keywords: `${workflow.name} ${workflow.description} workflow run`,
       run: () => {
         void runWorkflow(workflow.name)
@@ -137,7 +80,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
     }));
     const runCommands: CommandItem[] = (runs ?? []).slice(0, 10).map((run) => ({
       id: `run-${run.id}`,
-      category: "Run",
+      category: "palette.categoryRun",
       label: run.task,
       hint: run.status,
       keywords: `${run.id} ${run.task}`,
@@ -147,7 +90,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       },
     }));
     return [...runPageCommands, ...workflowCommands, ...runCommands];
-  }, [workflows, runs, navigate, onClose]);
+  }, [pages, workflows, runs, navigate, onClose]);
 
   const filtered = useMemo(() => filterCommands(commands, query), [commands, query]);
 
@@ -211,7 +154,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
           <input
             ref={inputRef}
             value={query}
-            placeholder="搜索页面、Workflow、Run…"
+            placeholder={t("palette.placeholder")}
             className="h-12 w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={onKeyDown}
@@ -222,7 +165,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
         </div>
         <div ref={listRef} className="max-h-80 overflow-auto p-2">
           {filtered.length === 0 && (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="无匹配结果" />
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("palette.noResult")} />
           )}
           {filtered.map((command, index) => {
             const header = command.category !== lastCategory ? command.category : null;
@@ -231,7 +174,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
               <div key={command.id} data-index={index}>
                 {header !== null && (
                   <p className="px-2 pb-1 pt-2 text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
-                    {header}
+                    {t(header)}
                   </p>
                 )}
                 <button
@@ -255,9 +198,9 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
           })}
         </div>
         <div className="flex items-center gap-3 border-t border-[#20242C] px-4 py-2 text-[10px] text-slate-500">
-          <span>↑↓ 选择</span>
-          <span>↵ 执行</span>
-          <span>ESC 关闭</span>
+          <span>{t("palette.hintSelect")}</span>
+          <span>{t("palette.hintExecute")}</span>
+          <span>{t("palette.hintClose")}</span>
         </div>
       </div>
     </div>

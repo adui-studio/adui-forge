@@ -2,10 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Bot, Plus, Wrench } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Link } from "react-router";
+import { useTranslation } from "react-i18next";
 import { Tag, Card, Empty, Spin } from "antd";
 import { fetchAgents } from "@/lib/api.ts";
 
 export function AgentsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const {
     data: agents,
@@ -22,14 +24,14 @@ export function AgentsPage() {
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Bot className="h-5 w-5 text-brand-300" />
-          <h1 className="text-xl font-semibold text-slate-100">Agents</h1>
+          <h1 className="text-xl font-semibold text-slate-100">{t("agents.title")}</h1>
         </div>
         <button
           type="button"
           onClick={() => navigate("/agents/new")}
           className="inline-flex items-center gap-1.5 rounded-md border border-[#4A3A5C] bg-[#241B2E] px-3 py-1.5 text-sm text-[#D9C7F0] transition-colors hover:border-[#8B51A6]"
         >
-          <Plus className="h-3.5 w-3.5" /> 新建 Agent
+          <Plus className="h-3.5 w-3.5" /> {t("agents.newAgent")}
         </button>
       </div>
 
@@ -48,9 +50,9 @@ export function AgentsPage() {
           <Empty
             description={
               <span className="text-slate-500">
-                尚未注册 Agent。
+                {t("agents.empty1")}
                 <br />
-                配置 FORGE_MODEL_* 环境变量后默认 Agent 会自动注册。
+                {t("agents.empty2")}
               </span>
             }
           />
@@ -70,7 +72,8 @@ export function AgentsPage() {
               />
               <div className="mt-3">
                 <p className="mb-2 flex items-center gap-1.5 text-xs text-slate-500">
-                  <Wrench className="h-3.5 w-3.5" /> 工具集（{agent.tools.length}）
+                  <Wrench className="h-3.5 w-3.5" />{" "}
+                  {t("agents.tools", { count: agent.tools.length })}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {agent.tools.map((tool) => (
@@ -79,7 +82,7 @@ export function AgentsPage() {
                     </Tag>
                   ))}
                   {agent.tools.length === 0 && (
-                    <span className="text-xs text-slate-500">无工具</span>
+                    <span className="text-xs text-slate-500">{t("agents.noTools")}</span>
                   )}
                 </div>
               </div>

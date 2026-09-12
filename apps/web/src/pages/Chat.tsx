@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Eraser, MessageSquare, Plus, Send, Square, Trash2 } from "lucide-react";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { App as AntApp, Button, Empty, Popconfirm, Select, Space, Tag, Tooltip } from "antd";
+import { useTranslation } from "react-i18next";
 import {
   appendConversationMessage,
   cancelRun,
@@ -22,6 +23,7 @@ export function ChatPage() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const { message } = AntApp.useApp();
   // 已落库的 assistant 消息（按 runId 去重，避免终态effect重复追加）
   const appendedRunIds = useRef<Set<string>>(new Set());
@@ -131,7 +133,7 @@ export function ChatPage() {
     mutationFn: () => deleteConversation(conversationId ?? ""),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["conversations"] });
-      void message.success("会话已删除");
+      void message.success(t("common.deleted"));
       newConversation();
     },
   });
@@ -147,33 +149,33 @@ export function ChatPage() {
     <div className="flex h-[calc(100vh-8rem)] flex-col">
       <div className="mb-4 flex items-center gap-2">
         <MessageSquare className="h-5 w-5 text-brand-300" />
-        <h1 className="text-xl font-semibold text-slate-100">Chat</h1>
+        <h1 className="text-xl font-semibold text-slate-100">{t("chat.title")}</h1>
         <Space className="ml-auto">
           <Select
-            aria-label="切换历史会话"
+            aria-label={t("chat.historyAria")}
             value={conversationId ?? undefined}
-            placeholder="新对话"
+            placeholder={t("chat.newConversation")}
             onChange={(value) => void selectConversation(value)}
             options={(conversations ?? []).slice(0, 20).map((conversation) => ({
               value: conversation.id,
-              label: conversation.title === "" ? "（未命名会话）" : conversation.title,
+              label: conversation.title === "" ? t("chat.unnamed") : conversation.title,
             }))}
             className="w-64"
             disabled={state.active}
             allowClear
             onClear={() => newConversation()}
           />
-          <Tooltip title="新建对话">
+          <Tooltip title={t("chat.newConversationTitle")}>
             <Button
               type="text"
               icon={<Plus className="h-4 w-4" />}
-              aria-label="新建对话"
+              aria-label={t("chat.newConversationAria")}
               disabled={state.active}
               onClick={newConversation}
             />
           </Tooltip>
           <Select
-            aria-label="选择对话使用的 Agent"
+            aria-label={t("chat.agentAria")}
             value={agentName ?? agents?.[0]?.name}
             onChange={setAgentName}
             loading={agents === undefined}
@@ -181,32 +183,32 @@ export function ChatPage() {
               value: agent.name,
               label: agent.description ? `${agent.name} · ${agent.description}` : agent.name,
             }))}
-            notFoundContent="暂无可用 Agent"
+            notFoundContent={t("home.noAgents")}
             className="w-56"
             disabled={state.active}
           />
-          <Tooltip title={conversationId === null ? "清空对话" : "删除当前会话"}>
+          <Tooltip title={conversationId === null ? t("chat.clearAria") : t("chat.deleteAria")}>
             {conversationId === null ? (
               <Button
                 type="text"
                 icon={<Eraser className="h-4 w-4" />}
-                aria-label="清空对话"
+                aria-label={t("chat.clearAria")}
                 disabled={state.active}
                 onClick={() => dispatch({ type: "reset" })}
               />
             ) : (
               <Popconfirm
-                title="删除当前会话？"
-                description="会话消息将被移除，派生 Run 记录保留。"
-                okText="删除"
-                cancelText="取消"
+                title={t("chat.deleteTitle")}
+                description={t("chat.deleteDesc")}
+                okText={t("chat.deleteOk")}
+                cancelText={t("common.cancel")}
                 onConfirm={() => removeConversation.mutate()}
               >
                 <Button
                   type="text"
                   danger
                   icon={<Trash2 className="h-4 w-4" />}
-                  aria-label="删除当前会话"
+                  aria-label={t("chat.deleteAria")}
                   disabled={state.active}
                 />
               </Popconfirm>
@@ -214,9 +216,7 @@ export function ChatPage() {
           </Tooltip>
         </Space>
       </div>
-      <p className="mb-4 text-sm text-slate-400">
-        每条消息作为一个独立 Run 执行；会话自动保存，可随时切换历史会话继续。
-      </p>
+      <p className="mb-4 text-sm text-slate-400">{t("chat.subtitle")}</p>
 
       {/* 消息流 */}
       <div className="flex-1 overflow-y-auto rounded-lg border border-[#20242C] bg-[#0D0F13] p-4">
@@ -226,9 +226,9 @@ export function ChatPage() {
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
                 <span className="text-slate-500">
-                  向 Agent 提问或下达指令。
+                  {t("chat.emptyTitle")}
                   <br />
-                  例如：“分析 runs 模块的代码结构，指出可以改进的地方”。
+                  {t("chat.emptyExample")}
                 </span>
               }
             />
@@ -255,7 +255,7 @@ export function ChatPage() {
                       </div>
                     )}
                     {message.text === "" && message.status === "streaming" ? (
-                      <p className="forge-code text-sm text-slate-500">思考中…</p>
+                      <p className="forge-code text-sm text-slate-500">{t("chat.thinking")}</p>
                     ) : (
                       <pre className="forge-code text-sm whitespace-pre-wrap text-slate-100">
                         {message.text}
@@ -266,11 +266,12 @@ export function ChatPage() {
                     )}
                     {message.status === "failed" && (
                       <p role="alert" className="mt-2 text-sm text-red-400">
-                        执行失败：{message.error}
+                        {t("chat.failedPrefix")}
+                        {message.error}
                       </p>
                     )}
                     {message.status === "cancelled" && (
-                      <p className="mt-2 text-sm text-slate-500">已取消。</p>
+                      <p className="mt-2 text-sm text-slate-500">{t("chat.cancelled")}</p>
                     )}
                   </div>
                 </div>
@@ -285,8 +286,8 @@ export function ChatPage() {
       <div className="mt-3">
         <textarea
           value={input}
-          aria-label="对话输入"
-          placeholder="输入消息，例如：帮我审查最近的代码改动…"
+          aria-label={t("chat.inputAria")}
+          placeholder={t("chat.inputPlaceholder")}
           rows={3}
           disabled={state.active}
           onKeyDown={(event) => {
@@ -299,7 +300,7 @@ export function ChatPage() {
           onChange={(event) => setInput(event.target.value)}
         />
         <div className="mt-2 flex items-center justify-between">
-          <span className="text-xs text-slate-500">Ctrl + Enter 发送 · Enter 换行</span>
+          <span className="text-xs text-slate-500">{t("chat.sendHint")}</span>
           <Space>
             {state.active && activeRunId !== undefined && (
               <Button
@@ -310,7 +311,7 @@ export function ChatPage() {
                 loading={cancel.isPending}
                 onClick={() => cancel.mutate()}
               >
-                停止
+                {t("chat.stop")}
               </Button>
             )}
             <Button
@@ -320,7 +321,7 @@ export function ChatPage() {
               loading={send.isPending}
               onClick={() => send.mutate()}
             >
-              {send.isPending ? "创建中…" : "发送"}
+              {send.isPending ? t("chat.creating") : t("chat.send")}
             </Button>
           </Space>
         </div>

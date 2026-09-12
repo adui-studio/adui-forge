@@ -18,6 +18,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { App as AntApp, Badge, Button, Layout, Menu } from "antd";
+import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { fetchHealth, fetchPendingApprovals } from "@/lib/approvals-metrics.ts";
 import { clearToken, getAccessToken } from "@/lib/auth.ts";
@@ -26,16 +27,22 @@ import { CommandPalette } from "@/components/command-palette.tsx";
 const { Sider, Content, Header } = Layout;
 
 const NAV_ITEMS = [
-  { to: "/", label: "控制台", icon: Gauge, key: "dashboard", exact: true },
-  { to: "/runs", label: "Runs", icon: LayoutList, key: "runs" },
-  { to: "/tasks", label: "任务", icon: ListTodo, key: "tasks" },
-  { to: "/chat", label: "Chat", icon: MessageSquare, key: "chat" },
-  { to: "/agents", label: "Agents", icon: Users, key: "agents" },
-  { to: "/workflows", label: "Workflows", icon: Workflow, key: "workflows" },
-  { to: "/mcp", label: "MCP", icon: Plug, key: "mcp" },
-  { to: "/approvals", label: "审批", icon: ClipboardCheck, key: "approvals", badge: true as const },
-  { to: "/memory", label: "记忆", icon: Brain, key: "memory" },
-  { to: "/settings", label: "设置", icon: Settings, key: "settings" },
+  { to: "/", labelKey: "nav.dashboard", icon: Gauge, key: "dashboard", exact: true },
+  { to: "/runs", labelKey: "nav.runs", icon: LayoutList, key: "runs" },
+  { to: "/tasks", labelKey: "nav.tasks", icon: ListTodo, key: "tasks" },
+  { to: "/chat", labelKey: "nav.chat", icon: MessageSquare, key: "chat" },
+  { to: "/agents", labelKey: "nav.agents", icon: Users, key: "agents" },
+  { to: "/workflows", labelKey: "nav.workflows", icon: Workflow, key: "workflows" },
+  { to: "/mcp", labelKey: "nav.mcp", icon: Plug, key: "mcp" },
+  {
+    to: "/approvals",
+    labelKey: "nav.approvals",
+    icon: ClipboardCheck,
+    key: "approvals",
+    badge: true as const,
+  },
+  { to: "/memory", labelKey: "nav.memory", icon: Brain, key: "memory" },
+  { to: "/settings", labelKey: "nav.settings", icon: Settings, key: "settings" },
 ];
 
 /** 轻量健康/待审批轮询（侧边栏状态与角标用，5s 级别足够） */
@@ -86,6 +93,7 @@ function Brand() {
 
 /** 登录态区块：有令牌显示退出，否则显示登录入口 */
 function AuthBlock() {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -105,24 +113,25 @@ function AuthBlock() {
           clearToken();
           setToken(null);
           queryClient.clear();
-          void message.success("已退出登录");
+          void message.success(t("nav.loggedOut"));
           void navigate("/");
         }}
       >
-        退出登录
+        {t("nav.logout")}
       </Button>
     );
   }
   return (
     <Link to="/login" className="block">
       <Button type="text" block icon={<LogIn className="h-4 w-4" />}>
-        登录 / 注册
+        {t("nav.login")}
       </Button>
     </Link>
   );
 }
 
 function StatusFooter() {
+  const { t } = useTranslation();
   const { health } = useSidebarStatus();
   return (
     <div className="flex items-center gap-2 rounded-md border border-[#20242C] bg-[#171A21] px-3 py-2 text-xs text-slate-400">
@@ -136,7 +145,14 @@ function StatusFooter() {
               : "h-2 w-2 animate-pulse rounded-full bg-slate-500"
         }
       />
-      API {health === "up" ? "在线" : health === "down" ? "离线" : "检测中"}
+      {t("nav.apiLabel")}{" "}
+      {t(
+        health === "up"
+          ? "nav.apiOnline"
+          : health === "down"
+            ? "nav.apiOffline"
+            : "nav.apiChecking",
+      )}
       <span className="ml-auto font-mono text-[10px] text-slate-600">v0.5.0</span>
     </div>
   );
@@ -149,6 +165,7 @@ function SiderInner({
   onNavigate?: () => void;
   onOpenPalette?: () => void;
 }) {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { pending } = useSidebarStatus();
@@ -166,7 +183,7 @@ function SiderInner({
         className="flex items-center gap-2 rounded-md border border-[#20242C] bg-[#171A21] px-3 py-1.5 text-xs text-slate-500 transition-colors hover:border-[#3A4150] hover:text-slate-300"
       >
         <Search className="h-3.5 w-3.5" />
-        搜索…
+        {t("nav.search")}
         <span className="ml-auto rounded border border-[#292E39] px-1 font-mono text-[10px]">
           Ctrl K
         </span>
@@ -187,7 +204,7 @@ function SiderInner({
             <span className="flex items-center justify-between">
               <span className="flex items-center gap-2.5">
                 <item.icon className="h-4 w-4" />
-                {item.label}
+                {t(item.labelKey)}
               </span>
               {item.badge && pending > 0 && <Badge count={pending} size="small" />}
             </span>
@@ -203,6 +220,7 @@ function SiderInner({
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
@@ -241,7 +259,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             type="text"
             icon={<MenuIcon className="h-4 w-4" />}
             onClick={() => setMenuOpen((open) => !open)}
-            aria-label="打开菜单"
+            aria-label={t("nav.openMenu")}
           />
         </Header>
         {menuOpen && (

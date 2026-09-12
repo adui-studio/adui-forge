@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 import type { Edge, Node } from "@xyflow/react";
+import "../src/i18n/index.ts";
 import type { WorkflowGraph } from "@adui-forge/workflow";
 import { flowToGraph, graphToFlow, tasksToGraph } from "../src/lib/workflow-editor.ts";
 

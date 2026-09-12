@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import type { AgentEvent } from "@adui-forge/contracts";
 
 export interface ChatMessage {
@@ -88,7 +89,7 @@ export const chatReducer = (state: ChatState, action: ChatAction): ChatState => 
           messages[index] = {
             ...last,
             status: "failed",
-            error: payloadString(event, "error") || "未知错误",
+            error: payloadString(event, "error") || i18next.t("common.unknownError"),
           };
           break;
         }

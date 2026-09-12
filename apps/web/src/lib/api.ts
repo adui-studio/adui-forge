@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import type { AgentEvent } from "@adui-forge/contracts";
 import { authHeader, clearToken } from "./auth.ts";
 
@@ -22,7 +23,7 @@ const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
   if (response.status === 401) {
     clearToken();
     window.location.href = "/login";
-    throw new Error("未登录或令牌已过期");
+    throw new Error(i18next.t("common.unauthorized"));
   }
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as { message?: string } | null;

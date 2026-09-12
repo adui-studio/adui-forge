@@ -1,13 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router";
+import { useTranslation } from "react-i18next";
 import { StatusTag } from "@/components/status-tag.tsx";
 import { Segmented, Table, type TableColumnsType } from "antd";
 import { fetchRuns } from "@/lib/api.ts";
 import type { RunRecord } from "@/lib/api.ts";
-import { STATUS_LABEL } from "@/lib/status.ts";
+import { statusKeys, statusLabel } from "@/lib/status.ts";
 import { timeAgo } from "@/lib/relative-time.ts";
 
 export function RunsPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const statusFilter = searchParams.get("status") ?? "all";
   const { data: runs, isLoading } = useQuery({
@@ -18,14 +20,14 @@ export function RunsPage() {
 
   const columns: TableColumnsType<RunRecord> = [
     {
-      title: "状态",
+      title: t("runs.colStatus"),
       dataIndex: "status",
       key: "status",
       width: 150,
       render: (_, record) => <StatusTag status={record.status} />,
     },
     {
-      title: "任务",
+      title: t("runs.colTask"),
       dataIndex: "task",
       key: "task",
       render: (_, record) => (
@@ -36,7 +38,7 @@ export function RunsPage() {
     },
     { title: "Agent", dataIndex: "agentName", key: "agentName", width: 180 },
     {
-      title: "创建时间",
+      title: t("runs.colCreatedAt"),
       dataIndex: "createdAt",
       key: "createdAt",
       width: 180,
@@ -67,8 +69,8 @@ export function RunsPage() {
             setSearchParams(next, { replace: true });
           }}
           options={[
-            { value: "all", label: "全部" },
-            ...Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })),
+            { value: "all", label: t("common.all") },
+            ...statusKeys().map((value) => ({ value, label: statusLabel(value) })),
           ]}
         />
       </div>
@@ -82,9 +84,9 @@ export function RunsPage() {
         locale={{
           emptyText: (
             <div className="py-6 text-center">
-              <p className="text-sm text-slate-500">还没有 Run。</p>
+              <p className="text-sm text-slate-500">{t("runs.empty")}</p>
               <Link to="/" className="mt-2 inline-block text-sm text-[#B79AEC] hover:underline">
-                去控制台发起第一个任务 →
+                {t("runs.emptyCta")}
               </Link>
             </div>
           ),

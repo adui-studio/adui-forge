@@ -2,15 +2,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ListTodo, Plus } from "lucide-react";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router";
+import { useTranslation } from "react-i18next";
 import { StatusTag } from "@/components/status-tag.tsx";
 import { Button, Card, Form, Input, Segmented, Select, Table } from "antd";
 import type { TableColumnsType } from "antd";
 import { createTask, fetchAgents, fetchTasks } from "@/lib/api.ts";
 import type { TaskRecord } from "@/lib/api.ts";
-import { STATUS_LABEL } from "@/lib/status.ts";
+import { statusKeys, statusLabel } from "@/lib/status.ts";
 import { timeAgo } from "@/lib/relative-time.ts";
 
 export function TasksPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const statusFilter = searchParams.get("status") ?? "all";
   const [formOpen, setFormOpen] = useState(false);
@@ -24,7 +26,7 @@ export function TasksPage() {
 
   const columns: TableColumnsType<TaskRecord> = [
     {
-      title: "任务",
+      title: t("tasks.title"),
       dataIndex: "title",
       key: "title",
       render: (_, record) => (
@@ -34,14 +36,14 @@ export function TasksPage() {
       ),
     },
     {
-      title: "状态",
+      title: t("runs.colStatus"),
       dataIndex: "status",
       key: "status",
       width: 150,
       render: (_, record) => <StatusTag status={record.status} />,
     },
     {
-      title: "创建时间",
+      title: t("runs.colCreatedAt"),
       dataIndex: "createdAt",
       key: "createdAt",
       width: 180,
@@ -64,19 +66,17 @@ export function TasksPage() {
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <ListTodo className="h-5 w-5 text-brand-300" />
-          <h1 className="text-xl font-semibold text-slate-100">任务</h1>
+          <h1 className="text-xl font-semibold text-slate-100">{t("tasks.title")}</h1>
         </div>
         <Button
           type="primary"
           icon={<Plus className="h-3.5 w-3.5" />}
           onClick={() => setFormOpen((open) => !open)}
         >
-          {formOpen ? "收起表单" : "新建任务"}
+          {formOpen ? t("tasks.collapse") : t("tasks.newTask")}
         </Button>
       </div>
-      <p className="mb-4 text-sm text-slate-400">
-        任务是面向人的工作单元：创建后立即派生一个 Run 执行，可随时回到这里跟踪进度。
-      </p>
+      <p className="mb-4 text-sm text-slate-400">{t("tasks.subtitle")}</p>
 
       {formOpen && (
         <NewTaskCard
@@ -98,8 +98,8 @@ export function TasksPage() {
             setSearchParams(next, { replace: true });
           }}
           options={[
-            { value: "all", label: "全部" },
-            ...Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })),
+            { value: "all", label: t("common.all") },
+            ...statusKeys().map((value) => ({ value, label: statusLabel(value) })),
           ]}
         />
       </div>
@@ -113,9 +113,9 @@ export function TasksPage() {
         locale={{
           emptyText: (
             <div className="py-6 text-center">
-              <p className="text-sm text-slate-500">还没有任务。</p>
+              <p className="text-sm text-slate-500">{t("tasks.empty")}</p>
               <Button type="link" onClick={() => setFormOpen(true)}>
-                新建第一个任务 →
+                {t("tasks.emptyCta")}
               </Button>
             </div>
           ),
@@ -126,6 +126,7 @@ export function TasksPage() {
 }
 
 function NewTaskCard({ onCreated }: { onCreated: () => void }) {
+  const { t } = useTranslation();
   const [form] = Form.useForm<{ title: string; task: string; agentName?: string }>();
   const { data: agents } = useQuery({
     queryKey: ["agents"],
@@ -144,7 +145,7 @@ function NewTaskCard({ onCreated }: { onCreated: () => void }) {
   });
 
   return (
-    <Card className="mb-4" title="新建任务">
+    <Card className="mb-4" title={t("tasks.formTitle")}>
       <Form
         form={form}
         layout="vertical"
@@ -153,28 +154,25 @@ function NewTaskCard({ onCreated }: { onCreated: () => void }) {
       >
         <Form.Item
           name="title"
-          label="标题"
+          label={t("tasks.titleLabel")}
           rules={[
-            { required: true, message: "标题不能为空" },
-            { max: 200, message: "标题最长 200 字" },
+            { required: true, message: t("tasks.titleRequired") },
+            { max: 200, message: t("tasks.titleTooLong") },
           ]}
         >
-          <Input placeholder="给用户列表增加搜索功能" />
+          <Input placeholder={t("tasks.titlePlaceholder")} />
         </Form.Item>
         <Form.Item
           name="task"
-          label="任务描述"
-          rules={[{ required: true, message: "任务描述不能为空" }]}
+          label={t("tasks.descLabel")}
+          rules={[{ required: true, message: t("tasks.descRequired") }]}
         >
-          <Input.TextArea
-            rows={3}
-            placeholder="描述要完成的工作，例如：为用户列表增加关键字搜索并补充组件测试"
-          />
+          <Input.TextArea rows={3} placeholder={t("tasks.descPlaceholder")} />
         </Form.Item>
-        <Form.Item name="agentName" label="Agent（可选，默认 forge-dev）">
+        <Form.Item name="agentName" label={t("tasks.agentLabel")}>
           <Select
             allowClear
-            placeholder="选择执行此次任务的 Agent"
+            placeholder={t("tasks.agentPlaceholder")}
             options={(agents ?? []).map((agent) => ({
               value: agent.name,
               label: agent.description ? `${agent.name} · ${agent.description}` : agent.name,
@@ -189,7 +187,7 @@ function NewTaskCard({ onCreated }: { onCreated: () => void }) {
         )}
         <div className="flex justify-end gap-2">
           <Button type="primary" htmlType="submit" loading={create.isPending}>
-            创建并执行
+            {t("tasks.submit")}
           </Button>
         </div>
       </Form>

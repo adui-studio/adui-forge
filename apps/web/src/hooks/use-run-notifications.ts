@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { RunRecord } from "@/lib/api.ts";
 import { getPlatformAdapter } from "@/platform/adapter.ts";
+import i18next from "i18next";
 
 /**
  * Run 状态系统通知（DesignGuidelines §155）：
@@ -29,18 +30,18 @@ export function useRunNotifications(runs: RunRecord[] | undefined): void {
       const adapter = getPlatformAdapter();
       if (run.status === "completed") {
         void adapter.notify({
-          title: "✓ Run 已完成",
+          title: i18next.t("notifications.runCompleted"),
           body: run.task,
         });
       } else if (run.status === "failed") {
         void adapter.notify({
-          title: "✕ Run 失败",
+          title: i18next.t("notifications.runFailed"),
           body: `${run.task}${run.error !== undefined ? ` — ${run.error}` : ""}`,
         });
       } else if (run.status === "waiting_approval" && !notifiedApprovals.current.has(run.id)) {
         notifiedApprovals.current.add(run.id);
         void adapter.notify({
-          title: "⚠ 等待审批",
+          title: i18next.t("notifications.waitingApproval"),
           body: run.task,
         });
       }

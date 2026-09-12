@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Loader2, Send } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
@@ -10,6 +11,7 @@ import { useRunNotifications } from "@/hooks/use-run-notifications.ts";
 
 export function HomePage() {
   const [task, setTask] = useState("");
+  const { t } = useTranslation();
   const [agentName, setAgentName] = useState<string | undefined>(undefined);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -50,21 +52,25 @@ export function HomePage() {
       {pending !== undefined && pending.length > 0 && (
         <Card className="mb-4" style={{ borderColor: "rgba(245,158,11,0.4)" }}>
           <Card.Meta
-            title={<span className="text-amber-300">有 {pending.length} 个操作等待审批</span>}
-            description="任务因等待批准而暂停，处理后 Agent 将继续执行。"
+            title={
+              <span className="text-amber-300">
+                {t("home.pendingTitle", { count: pending.length })}
+              </span>
+            }
+            description={t("home.pendingDesc")}
           />
           <Link to="/approvals" className="text-sm text-[#B79AEC] hover:underline">
-            前往审批 →
+            {t("home.goApprovals")}
           </Link>
         </Card>
       )}
 
       <div className="mb-8">
-        <h1 className="text-xl font-semibold text-slate-100">控制台</h1>
-        <p className="mt-1 text-sm text-slate-400">Agent 运行总览与快速发起。</p>
+        <h1 className="text-xl font-semibold text-slate-100">{t("home.title")}</h1>
+        <p className="mt-1 text-sm text-slate-400">{t("home.subtitle")}</p>
       </div>
 
-      <Card className="mb-6" title="发起任务">
+      <Card className="mb-6" title={t("home.newTask")}>
         <form
           className="flex flex-col gap-3"
           onSubmit={(event) => {
@@ -74,8 +80,8 @@ export function HomePage() {
         >
           <textarea
             value={task}
-            aria-label="任务描述"
-            placeholder="描述你要完成的任务，例如：给用户列表增加搜索功能并补充测试"
+            aria-label={t("home.taskAria")}
+            placeholder={t("home.taskPlaceholder")}
             rows={3}
             onKeyDown={(event) => {
               if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
@@ -87,11 +93,11 @@ export function HomePage() {
             onChange={(event) => setTask(event.target.value)}
           />
           <Space wrap>
-            <span className="text-xs text-slate-500">Ctrl + Enter 运行</span>
+            <span className="text-xs text-slate-500">{t("home.ctrlEnterHint")}</span>
             <span className="flex items-center gap-1.5">
-              <span className="text-xs text-slate-500">Agent</span>
+              <span className="text-xs text-slate-500">{t("home.agentAria")}</span>
               <Select
-                aria-label="选择执行此次任务的 Agent"
+                aria-label={t("home.agentAria")}
                 value={agentName ?? agents?.[0]?.name}
                 onChange={setAgentName}
                 loading={agents === undefined}
@@ -99,7 +105,7 @@ export function HomePage() {
                   value: agent.name,
                   label: agent.description ? `${agent.name} · ${agent.description}` : agent.name,
                 }))}
-                notFoundContent="暂无可用 Agent"
+                notFoundContent={t("home.noAgents")}
                 className="w-52"
               />
             </span>
@@ -115,7 +121,7 @@ export function HomePage() {
                 )
               }
             >
-              {mutation.isPending ? "创建中…" : "交给 Agent 执行"}
+              {mutation.isPending ? t("home.creating") : t("home.send")}
             </Button>
           </Space>
           {mutation.isError && (
@@ -128,9 +134,9 @@ export function HomePage() {
 
       {/* Active Runs（§124 主区域） */}
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-medium text-slate-400">执行中的 Runs</h2>
+        <h2 className="text-sm font-medium text-slate-400">{t("home.activeRuns")}</h2>
         <Link to="/runs" className="text-sm text-[#B79AEC] hover:underline">
-          全部 →
+          {t("home.viewAll")}
         </Link>
       </div>
       {activeRuns.length === 0 ? (
@@ -138,9 +144,9 @@ export function HomePage() {
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={
             <span className="text-slate-500">
-              当前没有执行中的 Run。
+              {t("home.emptyActiveTitle")}
               <br />
-              在上方发起任务，或到 Runs 页查看历史。
+              {t("home.emptyActiveHint")}
             </span>
           }
         />
@@ -164,10 +170,10 @@ export function HomePage() {
 
       {/* 最近 Runs */}
       <div className="mb-3 mt-6 flex items-center justify-between">
-        <h2 className="text-sm font-medium text-slate-400">最近 Runs</h2>
+        <h2 className="text-sm font-medium text-slate-400">{t("home.recentRuns")}</h2>
       </div>
       {(runs ?? []).length === 0 ? (
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无记录" />
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("home.emptyRecent")} />
       ) : (
         <Listy
           items={(runs ?? []).slice(0, 6)}

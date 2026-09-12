@@ -36,11 +36,13 @@ catalog:
   antd: ^6.6.2
   class-variance-authority: ^0.7.1
   clsx: ^2.1.1
+  i18next: ^26.4.2
   lucide-react: ^1.41.0
   pngjs: ^7.0.0
   prisma: 8.0.0-rc.12
   react: ^19.2.8
   react-dom: ^19.2.8
+  react-i18next: ^17.0.13
   react-router: ^8.3.0
   reflect-metadata: ^0.2.2
   rxjs: ^7.8.2

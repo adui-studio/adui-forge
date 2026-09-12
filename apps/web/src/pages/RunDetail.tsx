@@ -3,6 +3,7 @@ import { AlertCircle, ChevronLeft, RotateCcw } from "lucide-react";
 import { Button, Card, Collapse, Empty, Popconfirm, Segmented, Spin, Tabs, Timeline } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import { useTranslation } from "react-i18next";
 import type { AgentEvent } from "@adui-forge/contracts";
 import { cancelRun, fetchRun, retryRun, streamRunEvents } from "@/lib/api.ts";
 import { fetchArtifacts, type ArtifactRecord } from "@/lib/api-metrics.ts";
@@ -13,13 +14,13 @@ import { statusLabel } from "@/lib/status.ts";
 const isTerminalStatus = (status: string): boolean =>
   ["completed", "failed", "cancelled", "timeout"].includes(status);
 
-const EVENT_FILTERS = [
-  { value: "all", label: "全部" },
-  { value: "model", label: "模型" },
-  { value: "tool", label: "工具" },
-  { value: "approval", label: "审批" },
-  { value: "workflow", label: "Workflow" },
-  { value: "run", label: "Run" },
+const eventFilters = (t: (key: string) => string) => [
+  { value: "all", label: t("runDetail.filterAll") },
+  { value: "model", label: t("runDetail.filterModel") },
+  { value: "tool", label: t("runDetail.filterTool") },
+  { value: "approval", label: t("runDetail.filterApproval") },
+  { value: "workflow", label: t("runDetail.filterWorkflow") },
+  { value: "run", label: t("runDetail.filterRun") },
 ];
 
 interface EventGroup {
@@ -107,6 +108,7 @@ export const groupEvents = (events: AgentEvent[]): EventGroup[] => {
 };
 
 export function RunDetailPage() {
+  const { t } = useTranslation();
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -176,7 +178,7 @@ export function RunDetailPage() {
           <AlertCircle className="h-4 w-4" /> {String(error)}
         </p>
         <Link to="/runs" className="mt-3 inline-block text-sm text-brand-300 hover:text-brand-200">
-          ← 返回列表
+          ← {t("runDetail.back")}
         </Link>
       </>
     );
@@ -207,7 +209,7 @@ export function RunDetailPage() {
         to="/runs"
         className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-brand-300"
       >
-        <ChevronLeft className="h-4 w-4" /> 返回列表
+        <ChevronLeft className="h-4 w-4" /> {t("runDetail.back")}
       </Link>
 
       <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -234,7 +236,7 @@ export function RunDetailPage() {
           <div className="flex items-start gap-3 p-4">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-red-300">运行失败</p>
+              <p className="text-sm font-medium text-red-300">{t("runDetail.failedBanner")}</p>
               <p className="forge-code mt-1 text-slate-300">{run.error}</p>
             </div>
           </div>
@@ -245,14 +247,14 @@ export function RunDetailPage() {
       <div className="mt-3 flex gap-2">
         {!isTerminalStatus(run.status) && run.status !== "waiting_approval" && (
           <Popconfirm
-            title="取消这次执行？"
-            description="Agent 将在当前步骤结束后停止，已产生的结果保留。"
-            okText="取消执行"
-            cancelText="继续运行"
+            title={t("runDetail.cancelTitle")}
+            description={t("runDetail.cancelDesc")}
+            okText={t("runDetail.cancelOk")}
+            cancelText={t("runDetail.cancelKeep")}
             onConfirm={() => cancel.mutate()}
           >
             <Button variant="outlined" size="small">
-              取消执行
+              {t("runDetail.cancelAction")}
             </Button>
           </Popconfirm>
         )}
@@ -263,7 +265,7 @@ export function RunDetailPage() {
             icon={<RotateCcw className="h-3.5 w-3.5" />}
             onClick={() => retry.mutate()}
           >
-            重试（创建新 Run）
+            {t("runDetail.retry")}
           </Button>
         )}
       </div>
@@ -284,28 +286,28 @@ export function RunDetailPage() {
         items={[
           {
             key: "output",
-            label: "模型输出",
+            label: t("runDetail.tabOutput"),
             children: streamedText ? (
               <pre className="forge-code max-h-96 overflow-auto rounded-md border border-[#20242C] bg-[#0D0F13] p-4 whitespace-pre-wrap text-slate-100">
                 {streamedText}
               </pre>
             ) : (
-              <Empty description="本次运行没有文本输出（可能只发生了工具调用）" />
+              <Empty description={t("runDetail.emptyOutput")} />
             ),
           },
           {
             key: "events",
-            label: `事件流 (${events.length})`,
+            label: `${t("runDetail.tabEvents")} (${events.length})`,
             children: (
               <>
                 <Segmented
                   className="mb-4"
                   value={eventFilter}
                   onChange={(value) => setEventFilter(value as string)}
-                  options={EVENT_FILTERS}
+                  options={eventFilters(t)}
                 />
                 {groups.length === 0 ? (
-                  <Empty description="暂无匹配事件" />
+                  <Empty description={t("runDetail.emptyEvents")} />
                 ) : (
                   /* §191 按 Step 分组渲染 */
                   <div className="flex flex-col gap-4">
@@ -322,7 +324,11 @@ export function RunDetailPage() {
                           <span className="forge-code text-xs text-slate-400">
                             {group.stepId ?? "Run"}
                           </span>
-                          {group.failed && <span className="text-xs text-red-400">✕ 失败</span>}
+                          {group.failed && (
+                            <span className="text-xs text-red-400">
+                              {t("runDetail.stepFailed")}
+                            </span>
+                          )}
                         </div>
                         <Timeline
                           className="px-4 py-3"
@@ -341,7 +347,7 @@ export function RunDetailPage() {
                                   }
                                 >
                                   {event.aggregate !== undefined
-                                    ? `✓ ${event.aggregate.tool} × ${event.aggregate.count}`
+                                    ? `${t("runDetail.aggregatePrefix")} ${event.aggregate.tool} × ${event.aggregate.count}`
                                     : event.name}
                                 </span>
                                 {event.timestamp !== "" && (
@@ -384,7 +390,7 @@ export function RunDetailPage() {
           },
           {
             key: "artifacts",
-            label: `产物 (${artifacts?.length ?? 0})`,
+            label: `${t("runDetail.tabArtifacts")} (${artifacts?.length ?? 0})`,
             children:
               artifacts !== undefined && artifacts.length > 0 ? (
                 <div className="flex flex-col gap-3">
@@ -405,7 +411,7 @@ export function RunDetailPage() {
                   ))}
                 </div>
               ) : (
-                <Empty description="Run 完成后会在这里登记执行产物（摘要 / 报告）" />
+                <Empty description={t("runDetail.emptyArtifacts")} />
               ),
           },
         ]}
@@ -427,6 +433,7 @@ const eventDot = (name: string): string | undefined => {
 
 /** 运行内联审批：等待审批时在详情页直接批准/拒绝（队列之外的快捷路径）。 */
 function InlineApprovals({ runId }: { runId: string }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { data: approvals } = useQuery({
     queryKey: ["approvals"],
@@ -447,9 +454,9 @@ function InlineApprovals({ runId }: { runId: string }) {
   if (mine.length === 0) {
     return (
       <p className="mt-3 rounded-lg bg-amber-400/10 px-3 py-2 text-sm text-amber-300">
-        该 Run 正在等待人工审批。
+        {t("runDetail.waiting")}
         <Link to="/approvals" className="ml-1 font-medium underline">
-          前往审批页
+          {t("runDetail.goApprovals")}
         </Link>
       </p>
     );
@@ -472,7 +479,7 @@ function InlineApprovals({ runId }: { runId: string }) {
                 disabled={decision.isPending}
                 onClick={() => decision.mutate({ id: item.id, decision: "rejected" })}
               >
-                拒绝
+                {t("runDetail.reject")}
               </Button>
               <Button
                 color="primary"
@@ -481,7 +488,7 @@ function InlineApprovals({ runId }: { runId: string }) {
                 disabled={decision.isPending}
                 onClick={() => decision.mutate({ id: item.id, decision: "approved" })}
               >
-                批准
+                {t("runDetail.approve")}
               </Button>
             </div>
           </div>

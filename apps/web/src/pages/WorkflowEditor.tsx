@@ -18,6 +18,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { GitBranch, Plus, Save } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
+import { useTranslation } from "react-i18next";
 import { App as AntApp, Button, Card, Empty, Input, Select, Spin } from "antd";
 import { validateWorkflowGraph } from "@adui-forge/workflow";
 import { fetchWorkflows } from "@/lib/workflows.ts";
@@ -25,19 +26,21 @@ import { registerWorkflow } from "@/lib/api.ts";
 import { flowToGraph, graphToFlow, nodeText, tasksToGraph } from "@/lib/workflow-editor.ts";
 
 function StartNode() {
+  const { t } = useTranslation();
   return (
     <div className="rounded-md border border-[#292E39] bg-[#171A21] px-4 py-2 text-center text-xs text-slate-400">
-      开始
+      {t("common.start")}
       <Handle type="source" position={Position.Bottom} />
     </div>
   );
 }
 
 function EndNode() {
+  const { t } = useTranslation();
   return (
     <div className="rounded-md border border-[#292E39] bg-[#171A21] px-4 py-2 text-center text-xs text-slate-400">
       <Handle type="target" position={Position.Top} />
-      结束
+      {t("common.end")}
     </div>
   );
 }
@@ -62,6 +65,7 @@ function TaskNode({ data, selected }: NodeProps) {
 
 /** 条件节点：出边自动标记 then(是)/else(否) 分支 */
 function ConditionNode({ data, selected }: NodeProps) {
+  const { t } = useTranslation();
   return (
     <div
       className={
@@ -72,29 +76,32 @@ function ConditionNode({ data, selected }: NodeProps) {
     >
       <Handle type="target" position={Position.Top} />
       <p className="mb-1 flex items-center gap-1 font-mono text-[10px] text-[#B79AEC]">
-        <GitBranch className="h-3 w-3" /> 条件
+        <GitBranch className="h-3 w-3" /> {t("workflowEditor.conditionLabel")}
       </p>
-      <p className="text-sm text-slate-200">{conditionSummary(data.when)}</p>
+      <p className="text-sm text-slate-200">{conditionSummary(data.when, t)}</p>
       <Handle type="source" position={Position.Bottom} id="branch" />
     </div>
   );
 }
 
-const conditionSummary = (when: unknown): string => {
+const conditionSummary = (
+  when: unknown,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): string => {
   const spec = when as { node?: string; op?: string; value?: string } | undefined;
   if (spec === undefined || spec.node === undefined || spec.node === "") {
-    return "未配置（在 Inspector 中设置）";
+    return t("workflowEditor.conditionUnset");
   }
-  const left = `${spec.node} 输出`;
+  const left = t("workflowEditor.conditionNodeLabel", { node: spec.node });
   switch (spec.op) {
     case "contains":
-      return `${left} 包含 "${spec.value ?? ""}"`;
+      return t("workflowEditor.conditionContains", { node: left, value: spec.value ?? "" });
     case "equals":
-      return `${left} 等于 "${spec.value ?? ""}"`;
+      return t("workflowEditor.conditionEquals", { node: left, value: spec.value ?? "" });
     case "not_empty":
-      return `${left} 非空`;
+      return t("workflowEditor.conditionNotEmpty", { node: left });
     default:
-      return "未配置";
+      return t("workflowEditor.conditionUnset");
   }
 };
 
@@ -108,6 +115,7 @@ export function WorkflowEditorPage({ isNew: isNewProp = false }: { isNew?: boole
   const isNew = isNewProp || name === "new";
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const { message } = AntApp.useApp();
 
   const { data: workflows, isLoading } = useQuery({
@@ -151,11 +159,11 @@ export function WorkflowEditorPage({ isNew: isNewProp = false }: { isNew?: boole
       if (!hasThen) branch = "then";
       else if (!hasElse) branch = "else";
       else {
-        void message.warning("条件节点最多两条出边（是 / 否）");
+        void message.warning(t("workflowEditor.conditionOnlyTwo"));
         return;
       }
     } else if (sourceNode?.type === "task" && existingOut.length > 0) {
-      void message.warning("任务节点只能有一条出边；分支请使用条件节点");
+      void message.warning(t("workflowEditor.agentOneOut"));
       return;
     } else if (sourceNode?.type === "end") {
       return;
@@ -163,7 +171,7 @@ export function WorkflowEditorPage({ isNew: isNewProp = false }: { isNew?: boole
     const domainTargets = nodes.filter((node) => node.type === "task" || node.type === "condition");
     const incomingToTarget = edges.filter((edge) => edge.target === connection.target).length;
     if (domainTargets.some((node) => node.id === connection.target) && incomingToTarget > 0) {
-      void message.warning("每个节点只能有一条入边（当前版本分支不可汇合）");
+      void message.warning(t("workflowEditor.singleIncoming"));
       return;
     }
     setEdges((current) =>
@@ -172,7 +180,12 @@ export function WorkflowEditorPage({ isNew: isNewProp = false }: { isNew?: boole
           ...connection,
           markerEnd: { type: MarkerType.ArrowClosed },
           animated: branch !== undefined,
-          label: branch === "then" ? "是" : branch === "else" ? "否" : undefined,
+          label:
+            branch === "then"
+              ? t("workflowEditor.edgeThen")
+              : branch === "else"
+                ? t("workflowEditor.edgeElse")
+                : undefined,
           data: { branch },
         },
         current,
@@ -188,7 +201,7 @@ export function WorkflowEditorPage({ isNew: isNewProp = false }: { isNew?: boole
         id,
         type: "task",
         position: { x: 260 + Math.random() * 80, y: 320 },
-        data: { label: "新任务", task: "新任务" },
+        data: { label: t("workflowEditor.newTask"), task: t("workflowEditor.newTask") },
       },
     ]);
     setSelectedId(id);
@@ -202,7 +215,7 @@ export function WorkflowEditorPage({ isNew: isNewProp = false }: { isNew?: boole
         id,
         type: "condition",
         position: { x: 260 + Math.random() * 80, y: 480 },
-        data: { label: "条件", when: { node: "", op: "not_empty" } },
+        data: { label: t("workflowEditor.conditionLabel"), when: { node: "", op: "not_empty" } },
       },
     ]);
     setSelectedId(id);
@@ -212,7 +225,7 @@ export function WorkflowEditorPage({ isNew: isNewProp = false }: { isNew?: boole
     mutationFn: () => {
       const graph = flowToGraph(nodes, edges);
       if (graph === null) {
-        return Promise.reject(new Error("画布上没有可执行节点，至少添加一个任务节点"));
+        return Promise.reject(new Error(t("workflowEditor.emptyNodes")));
       }
       try {
         validateWorkflowGraph(graph);
@@ -227,7 +240,7 @@ export function WorkflowEditorPage({ isNew: isNewProp = false }: { isNew?: boole
     },
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ["workflows"] });
-      void message.success("已保存");
+      void message.success(t("common.saved"));
       if (workflowName.trim() !== name) {
         void navigate(`/workflows/${result.name}/edit`, { replace: true });
       }
@@ -248,7 +261,7 @@ export function WorkflowEditorPage({ isNew: isNewProp = false }: { isNew?: boole
   }
 
   if (!isNew && workflows !== undefined && existing === undefined) {
-    return <Empty description={`未找到 Workflow "${name}"`} />;
+    return <Empty description={t("workflowEditor.notFound", { name })} />;
   }
 
   const canSave = /^[a-z0-9-]+$/.test(workflowName.trim()) && !save.isPending;
@@ -259,19 +272,19 @@ export function WorkflowEditorPage({ isNew: isNewProp = false }: { isNew?: boole
         <div className="flex items-center gap-2">
           <WorkflowCanvasIcon />
           <h1 className="text-xl font-semibold text-slate-100">
-            {isNew ? "新建 Workflow" : `编辑:${name}`}
+            {isNew ? t("workflowEditor.newTitle") : t("workflowEditor.editTitle", { name })}
           </h1>
         </div>
         <div className="ml-auto flex items-center gap-2">
           <Input
             value={workflowName}
-            placeholder="workflow 名称(小写-数字-连字符)"
+            placeholder={t("workflowEditor.namePlaceholder")}
             className="w-64"
             onChange={(event) => setWorkflowName(event.target.value)}
           />
           <Input
             value={description}
-            placeholder="描述(可选)"
+            placeholder={t("workflowEditor.descPlaceholder")}
             className="w-52"
             onChange={(event) => setDescription(event.target.value)}
           />
@@ -282,12 +295,12 @@ export function WorkflowEditorPage({ isNew: isNewProp = false }: { isNew?: boole
             disabled={!canSave}
             onClick={() => save.mutate()}
           >
-            保存
+            {t("common.save")}
           </Button>
         </div>
       </div>
       {!canSave && workflowName.length > 0 && (
-        <p className="mb-2 text-xs text-amber-300">名称仅允许小写字母、数字与连字符。</p>
+        <p className="mb-2 text-xs text-amber-300">{t("workflowEditor.namePatternHint")}</p>
       )}
       {saveError !== null && (
         <p role="alert" className="mb-2 text-sm text-red-600">
@@ -317,28 +330,31 @@ export function WorkflowEditorPage({ isNew: isNewProp = false }: { isNew?: boole
           </ReactFlow>
           <div className="flex gap-2 border-t border-[#20242C] px-3 py-2">
             <Button size="small" icon={<Plus className="h-3.5 w-3.5" />} onClick={addTaskNode}>
-              添加任务节点
+              {t("workflowEditor.addTask")}
             </Button>
             <Button
               size="small"
               icon={<GitBranch className="h-3.5 w-3.5" />}
               onClick={addConditionNode}
             >
-              添加条件节点
+              {t("workflowEditor.addCondition")}
             </Button>
             <span className="ml-auto self-center text-xs text-slate-500">
-              拖动节点边缘连线 · 选中后 Delete 删除
+              {t("workflowEditor.canvasHint")}
             </span>
           </div>
         </div>
 
         {/* §109 Inspector */}
-        <Card className="w-80 shrink-0" title={selected !== null ? `节点` : "Inspector"}>
+        <Card
+          className="w-80 shrink-0"
+          title={selected !== null ? t("workflowEditor.inspector") : t("workflowEditor.inspector")}
+        >
           {selected === null ? (
             <div className="text-sm text-slate-500">
-              <p>点击画布中的节点进行编辑。</p>
+              <p>{t("workflowEditor.inspectorEmptyHint1")}</p>
               <p className="mt-2 text-xs text-slate-500">
-                任务按连线顺序执行；条件节点按上一节点输出决定走向。
+                {t("workflowEditor.inspectorEmptyHint2")}
               </p>
             </div>
           ) : selected.type === "task" ? (
@@ -368,10 +384,11 @@ function TaskInspector({
   setNodes: (updater: (current: Node[]) => Node[]) => void;
   setSelectedId: (id: string | null) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-3">
       <label htmlFor="task-text" className="text-sm font-medium text-slate-300">
-        任务描述
+        {t("workflowEditor.taskLabel")}
       </label>
       <Input.TextArea
         id="task-text"
@@ -396,10 +413,12 @@ function TaskInspector({
           setSelectedId(null);
         }}
       >
-        删除节点
+        {t("workflowEditor.deleteNode")}
       </Button>
       <p className="text-xs text-slate-500">
-        共 {nodes.filter((n) => n.type === "task").length} 个任务节点
+        {t("workflowEditor.taskNodeCount", {
+          count: nodes.filter((n) => n.type === "task").length,
+        })}
       </p>
     </div>
   );
@@ -414,6 +433,7 @@ function ConditionInspector({
   selected: Node;
   setNodes: (updater: (current: Node[]) => Node[]) => void;
 }) {
+  const { t } = useTranslation();
   const when = (selected.data.when ?? { node: "", op: "not_empty" }) as {
     node: string;
     op: "contains" | "equals" | "not_empty";
@@ -435,13 +455,13 @@ function ConditionInspector({
     <div className="flex flex-col gap-3">
       <div>
         <label htmlFor="when-node" className="text-sm font-medium text-slate-300">
-          判断来源节点
+          {t("workflowEditor.whenNodeLabel")}
         </label>
         <Select
           id="when-node"
           className="mt-1 w-full"
           value={when.node || undefined}
-          placeholder="选择一个任务节点"
+          placeholder={t("workflowEditor.whenNodePlaceholder")}
           options={agentNodes.map((node) => ({
             value: node.id,
             label: nodeText(node.data, node.id),
@@ -451,16 +471,16 @@ function ConditionInspector({
       </div>
       <div>
         <label htmlFor="when-op" className="text-sm font-medium text-slate-300">
-          条件
+          {t("workflowEditor.whenOpLabel")}
         </label>
         <Select
           id="when-op"
           className="mt-1 w-full"
           value={when.op}
           options={[
-            { value: "contains", label: "输出包含…" },
-            { value: "equals", label: "输出等于…" },
-            { value: "not_empty", label: "输出非空" },
+            { value: "contains", label: t("workflowEditor.opContains") },
+            { value: "equals", label: t("workflowEditor.opEquals") },
+            { value: "not_empty", label: t("workflowEditor.opNotEmpty") },
           ]}
           onChange={(value) => patchWhen({ op: value })}
         />
@@ -468,20 +488,18 @@ function ConditionInspector({
       {when.op !== "not_empty" && (
         <div>
           <label htmlFor="when-value" className="text-sm font-medium text-slate-300">
-            比较值
+            {t("workflowEditor.whenValueLabel")}
           </label>
           <Input
             id="when-value"
             className="mt-1"
             value={when.value ?? ""}
-            placeholder='例如 "FAIL"'
+            placeholder={"FAIL"}
             onChange={(event) => patchWhen({ value: event.target.value })}
           />
         </div>
       )}
-      <p className="text-xs text-slate-500">
-        出边自动标记分支：第一条为「是」(then)，第二条为「否」(else)。
-      </p>
+      <p className="text-xs text-slate-500">{t("workflowEditor.branchHint")}</p>
     </div>
   );
 }
