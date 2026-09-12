@@ -2,9 +2,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Play, Split } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Card, Empty, Input, Select, Space, Spin, Tag, Tooltip } from "antd";
+import { App as AntApp } from "antd";
+import { Button, Card, Empty, Input, Popconfirm, Select, Space, Spin, Tag, Tooltip } from "antd";
 import {
   createComparison,
+  deleteComparison,
   createRun,
   fetchAgents,
   fetchComparison,
@@ -27,12 +29,14 @@ interface CompareColumn {
 /** Agent 运行对比：同一任务并发派给多个 Agent，并排流式对比输出/耗时/工具。 */
 export function ComparePage() {
   const { t } = useTranslation();
+  const { message } = AntApp.useApp();
   const queryClient = useQueryClient();
   const [task, setTask] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [columns, setColumns] = useState<CompareColumn[] | null>(null);
   const closeFns = useRef<Array<() => void>>([]);
   const columnsRef = useRef<CompareColumn[] | null>(null);
+  const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
   columnsRef.current = columns;
 
   const { data: agents, isLoading: agentsLoading } = useQuery({
@@ -108,8 +112,19 @@ export function ComparePage() {
     },
   });
 
+  const removeComparison = useMutation({
+    mutationFn: () => deleteComparison(selectedHistoryId ?? ""),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["comparisons"] });
+      void message.success(t("common.deleted"));
+      setSelectedHistoryId(null);
+      setColumns(null);
+    },
+  });
+
   const loadHistory = async (id: string): Promise<void> => {
     if (anyRunning) return;
+    setSelectedHistoryId(id);
     const detail = await fetchComparison(id);
     setColumns(
       detail.results.map((result) => ({
@@ -161,6 +176,18 @@ export function ComparePage() {
             className="min-w-96"
             onChange={(value) => void loadHistory(value)}
           />
+          {selectedHistoryId !== null && (
+            <Popconfirm
+              title={t("compare.deleteTitle")}
+              okText={t("common.delete")}
+              cancelText={t("common.cancel")}
+              onConfirm={() => removeComparison.mutate()}
+            >
+              <Button danger size="small">
+                {t("common.delete")}
+              </Button>
+            </Popconfirm>
+          )}
         </div>
       )}
 

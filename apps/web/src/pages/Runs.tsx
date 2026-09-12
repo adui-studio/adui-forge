@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { StatusTag } from "@/components/status-tag.tsx";
-import { Segmented, Table, type TableColumnsType } from "antd";
+import { Segmented, Select, Table, type TableColumnsType } from "antd";
 import { fetchRuns } from "@/lib/api.ts";
 import type { RunRecord } from "@/lib/api.ts";
 import { statusKeys, statusLabel } from "@/lib/status.ts";
@@ -13,11 +13,20 @@ export function RunsPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const statusFilter = searchParams.get("status") ?? "all";
+  const agentFilter = searchParams.get("agent") ?? "all";
   const { data: runs, isLoading } = useQuery({
     queryKey: ["runs"],
     queryFn: fetchRuns,
     refetchInterval: 2_000,
   });
+
+  // 筛选状态写入 URL，可分享/刷新还原
+  const setFilter = (key: string, value: string): void => {
+    const next = new URLSearchParams(searchParams);
+    if (value === "all") next.delete(key);
+    else next.set(key, value);
+    setSearchParams(next, { replace: true });
+  };
 
   const columns: TableColumnsType<RunRecord> = [
     {
@@ -37,7 +46,7 @@ export function RunsPage() {
         </Link>
       ),
     },
-    { title: "Agent", dataIndex: "agentName", key: "agentName", width: 180 },
+    { title: t("runs.colAgent"), dataIndex: "agentName", key: "agentName", width: 180 },
     {
       title: t("runs.colCreatedAt"),
       dataIndex: "createdAt",
@@ -53,27 +62,38 @@ export function RunsPage() {
     },
   ];
 
+  const agentOptions = [...new Set((runs ?? []).map((run) => run.agentName))].sort();
   const filtered = (runs ?? []).filter(
-    (run) => statusFilter === "all" || run.status === statusFilter,
+    (run) =>
+      (statusFilter === "all" || run.status === statusFilter) &&
+      (agentFilter === "all" || run.agentName === agentFilter),
   );
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-slate-100">Runs</h1>
-        <Segmented
-          value={statusFilter}
-          onChange={(value) => {
-            const next = new URLSearchParams(searchParams);
-            if (value === "all") next.delete("status");
-            else next.set("status", value);
-            setSearchParams(next, { replace: true });
-          }}
-          options={[
-            { value: "all", label: t("common.all") },
-            ...statusKeys().map((value) => ({ value, label: statusLabel(value) })),
-          ]}
-        />
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <h1 className="text-xl font-semibold text-slate-100">{t("runs.title")}</h1>
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <Select
+            aria-label={t("runs.agentFilter")}
+            value={agentFilter}
+            options={[
+              { value: "all", label: t("runs.agentAll") },
+              ...agentOptions.map((name) => ({ value: name, label: name })),
+            ]}
+            onChange={(value) => setFilter("agent", value)}
+            className="w-44"
+            showSearch
+          />
+          <Segmented
+            value={statusFilter}
+            onChange={(value) => setFilter("status", value)}
+            options={[
+              { value: "all", label: t("common.all") },
+              ...statusKeys().map((value) => ({ value, label: statusLabel(value) })),
+            ]}
+          />
+        </div>
       </div>
       <Table<RunRecord>
         columns={columns}
@@ -89,7 +109,7 @@ export function RunsPage() {
         locale={{
           emptyText: (
             <div className="py-6 text-center">
-              <p className="text-sm text-slate-500">{t("runs.empty")}</p>
+              <p className="text-sm text-slate-500">{t("runs.emptyFiltered")}</p>
               <Link to="/" className="mt-2 inline-block text-sm text-[#B79AEC] hover:underline">
                 {t("runs.emptyCta")}
               </Link>

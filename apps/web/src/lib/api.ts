@@ -322,6 +322,11 @@ export const createComparison = (input: {
     body: JSON.stringify(input),
   });
 
+export const deleteComparison = (id: string): Promise<{ ok: boolean }> =>
+  request<{ ok: boolean }>(`/api/v1/comparisons/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+
 export const fetchComparisons = (): Promise<ComparisonSummaryRecord[]> =>
   request<ComparisonSummaryRecord[]>("/api/v1/comparisons");
 
