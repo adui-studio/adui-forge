@@ -83,11 +83,12 @@ const layoutGraph = (graph: WorkflowGraph): Map<string, { x: number; y: number }
   return positions;
 };
 
-/** 域图 → React Flow 编辑视图（agent/condition 节点 + branch 标签边）。 */
+/** 域图 → React Flow 编辑视图（agent/condition 节点 + branch 标签边）。
+ *  节点已保存过画布坐标时优先使用，否则按分层布局摆放。 */
 export const graphToFlow = (graph: WorkflowGraph): { nodes: Node[]; edges: Edge[] } => {
-  const positions = layoutGraph(graph);
+  const fallback = layoutGraph(graph);
   const nodes: Node[] = graph.nodes.map((node) => {
-    const position = positions.get(node.id) ?? { x: 80, y: 40 };
+    const position = node.position ?? fallback.get(node.id) ?? { x: 80, y: 40 };
     if (node.type === "agent") {
       return { id: node.id, type: "task", position, data: { label: node.task, task: node.task } };
     }
@@ -130,6 +131,8 @@ export const flowToGraph = (nodes: Node[], edges: Edge[]): WorkflowGraph | null 
             id: node.id,
             type: "agent" as const,
             task: nodeText(node.data),
+            // 画布坐标随定义持久化（编辑器视图提示，运行时忽略）
+            position: { x: node.position.x, y: node.position.y },
           }
         : {
             id: node.id,
@@ -138,6 +141,7 @@ export const flowToGraph = (nodes: Node[], edges: Edge[]): WorkflowGraph | null 
               node: "",
               op: "not_empty" as const,
             },
+            position: { x: node.position.x, y: node.position.y },
           },
     );
   if (domainNodes.length === 0) return null;

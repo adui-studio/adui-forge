@@ -8,6 +8,7 @@ export type {
 } from "./types.ts";
 export { WorkflowRunner } from "./runner.ts";
 export {
+  nodePositionSchema,
   evaluateCondition,
   graphToSteps,
   validateWorkflowGraph,
@@ -17,6 +18,7 @@ export {
   workflowGraphSchema,
 } from "./graph.ts";
 export type {
+  NodePosition,
   WorkflowCondition,
   WorkflowGraph,
   WorkflowGraphEdge,

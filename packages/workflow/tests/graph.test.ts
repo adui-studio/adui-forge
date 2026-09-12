@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vite-plus/test";
 import type { AgentEvent } from "@adui-forge/contracts";
 import { WorkflowRunner } from "../src/runner.ts";
-import { evaluateCondition, graphToSteps, validateWorkflowGraph } from "../src/graph.ts";
+import {
+  evaluateCondition,
+  graphToSteps,
+  validateWorkflowGraph,
+  workflowGraphSchema,
+} from "../src/graph.ts";
 import type { WorkflowGraph } from "../src/graph.ts";
 import type { WorkflowContext } from "../src/types.ts";
 
@@ -186,5 +191,35 @@ describe("evaluateCondition", () => {
     expect(
       events.filter((event) => event.name === "workflow.step.started").map((e) => e.stepId),
     ).toEqual(["n1", "n2"]);
+  });
+});
+
+describe("节点坐标持久化", () => {
+  it("position 为可选字段，带坐标的图通过校验且编译不受影响", () => {
+    const graph: WorkflowGraph = {
+      nodes: [
+        { id: "n1", type: "agent", task: "first", position: { x: 120, y: 40 } },
+        { id: "n2", type: "agent", task: "second" },
+      ],
+      edges: [{ source: "n1", target: "n2" }],
+    };
+    expect(() => validateWorkflowGraph(graph)).not.toThrow();
+    const steps = graphToSteps(graph, {
+      async run() {
+        return { status: "completed", messages: [{ content: "x" }] };
+      },
+    } as never);
+    expect(steps).toHaveLength(2);
+    // 坐标不进入运行时步骤
+    expect(JSON.stringify(steps)).not.toContain("position");
+  });
+
+  it("坐标非法（非数字）时 schema 拒绝", () => {
+    expect(() =>
+      workflowGraphSchema.parse({
+        nodes: [{ id: "n1", type: "agent", task: "x", position: { x: "a", y: 1 } }],
+        edges: [],
+      }),
+    ).toThrow();
   });
 });

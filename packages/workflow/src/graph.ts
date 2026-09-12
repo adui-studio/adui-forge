@@ -19,6 +19,14 @@ export const workflowConditionSchema = z.object({
   value: z.string().max(10_000).optional(),
 });
 
+/** 编辑器视图提示（可选）：画布坐标。运行时编译完全忽略。 */
+export const nodePositionSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+});
+
+export type NodePosition = z.infer<typeof nodePositionSchema>;
+
 export const workflowGraphNodeSchema = z.discriminatedUnion("type", [
   z.object({
     id: z
@@ -28,6 +36,7 @@ export const workflowGraphNodeSchema = z.discriminatedUnion("type", [
       .regex(/^[a-zA-Z0-9_-]+$/),
     type: z.literal("agent"),
     task: z.string().min(1).max(10_000),
+    position: nodePositionSchema.optional(),
   }),
   z.object({
     id: z
@@ -37,6 +46,7 @@ export const workflowGraphNodeSchema = z.discriminatedUnion("type", [
       .regex(/^[a-zA-Z0-9_-]+$/),
     type: z.literal("condition"),
     when: workflowConditionSchema,
+    position: nodePositionSchema.optional(),
   }),
 ]);
 

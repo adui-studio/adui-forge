@@ -76,3 +76,27 @@ describe("graph ↔ flow 双向映射", () => {
     expect(flowToGraph([], [])).toBeNull();
   });
 });
+
+describe("节点坐标持久化", () => {
+  it("graphToFlow 优先使用存储的画布坐标", () => {
+    const graph: WorkflowGraph = {
+      nodes: [
+        { id: "n1", type: "agent", task: "a", position: { x: 500, y: 300 } },
+        { id: "c1", type: "condition", when: { node: "n1", op: "not_empty" } },
+      ],
+      edges: [{ source: "n1", target: "c1" }],
+    };
+    const { nodes } = graphToFlow(graph);
+    expect(nodes[0]?.position).toEqual({ x: 500, y: 300 });
+    // 未存坐标的节点走分层布局兜底
+    expect(nodes[1]?.position).toBeDefined();
+  });
+
+  it("flowToGraph 把画布坐标写回域图", () => {
+    const nodes = [
+      { id: "n1", type: "task", position: { x: 210, y: 90 }, data: { label: "a", task: "a" } },
+    ] as Node[];
+    const graph = flowToGraph(nodes, []);
+    expect(graph?.nodes[0]?.position).toEqual({ x: 210, y: 90 });
+  });
+});
