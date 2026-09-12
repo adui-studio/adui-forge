@@ -9,6 +9,7 @@ import {
   LogOut,
   BookOpen,
   Menu as MenuIcon,
+  Wrench,
   Plug,
   Search,
   Settings,
@@ -35,6 +36,7 @@ const NAV_ITEMS = [
   { to: "/agents", labelKey: "nav.agents", icon: Users, key: "agents" },
   { to: "/workflows", labelKey: "nav.workflows", icon: Workflow, key: "workflows" },
   { to: "/mcp", labelKey: "nav.mcp", icon: Plug, key: "mcp" },
+  { to: "/tools", labelKey: "nav.tools", icon: Wrench, key: "tools" },
   {
     to: "/approvals",
     labelKey: "nav.approvals",

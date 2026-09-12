@@ -19,7 +19,7 @@ import {
   deleteAgent,
   fetchAgent,
   fetchAgentModels,
-  fetchAgentToolPool,
+  fetchTools,
   fetchSkills,
   upsertAgent,
 } from "@/lib/api.ts";
@@ -41,7 +41,7 @@ export function AgentDetailPage() {
 
   const { data: toolPool } = useQuery({
     queryKey: ["agent-tools"],
-    queryFn: fetchAgentToolPool,
+    queryFn: fetchTools,
   });
 
   const { data: modelCatalog } = useQuery({
@@ -247,8 +247,8 @@ export function AgentDetailPage() {
               placeholder={t("agentDetail.toolsPlaceholder")}
               className="w-full"
               options={(toolPool ?? agent?.availableTools ?? []).map((tool) => ({
-                value: tool,
-                label: tool,
+                value: typeof tool === "string" ? tool : tool.name,
+                label: typeof tool === "string" ? tool : tool.name,
               }))}
               onChange={(value) => setDraft({ ...draft, tools: value })}
             />

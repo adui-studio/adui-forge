@@ -155,10 +155,14 @@ export const upsertAgent = (input: {
 export const deleteAgent = (name: string): Promise<{ ok: boolean }> =>
   request<{ ok: boolean }>(`/api/v1/agents/${encodeURIComponent(name)}`, { method: "DELETE" });
 
-export const fetchAgentToolPool = async (): Promise<string[]> => {
-  const detail = await request<{ tools: string[] }>("/api/v1/agents/tools");
-  return detail.tools;
-};
+export interface ToolMetaRecord {
+  name: string;
+  description: string;
+  permission: string;
+}
+
+export const fetchTools = (): Promise<ToolMetaRecord[]> =>
+  request<{ tools: ToolMetaRecord[] }>("/api/v1/agents/tools").then((detail) => detail.tools);
 
 export interface ConversationMessageRecord {
   role: "user" | "assistant";

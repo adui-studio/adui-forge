@@ -44,7 +44,13 @@ export class AgentsController {
 
   @Get("tools")
   toolPool() {
-    return { tools: this.context.toolPool.map((tool) => tool.name) };
+    return {
+      tools: this.context.toolPool.map((tool) => ({
+        name: tool.name,
+        description: tool.description,
+        permission: tool.permission,
+      })),
+    };
   }
 
   @Get("models")

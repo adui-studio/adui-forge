@@ -42,6 +42,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
         { to: "/mcp", labelKey: "nav.mcp", keywords: "mcp servers 服务 工具桥接 mcp" },
         { to: "/approvals", labelKey: "nav.approvals", keywords: "approvals 批准 approvals" },
         { to: "/skills", labelKey: "nav.skills", keywords: "skills 技能 指令 skills" },
+        { to: "/tools", labelKey: "nav.tools", keywords: "tools 工具 权限 tools" },
         { to: "/memory", labelKey: "nav.memory", keywords: "memory 记忆 摘要 memory" },
         { to: "/settings", labelKey: "nav.settings", keywords: "settings 设置 配置 settings" },
       ].map((page) => ({
