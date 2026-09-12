@@ -217,11 +217,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <Layout className="min-h-screen">
-      {/* 桌面侧边栏 */}
+      {/* 桌面侧边栏（inline style 固定定位：antd 的 .ant-layout-sider position:relative
+          会在样式注入顺序上覆盖 Tailwind 的 fixed 工具类，导致侧栏高度塌陷） */}
       <Sider
         width={224}
-        className="fixed inset-y-0 left-0 z-20 hidden lg:block"
-        style={{ overflow: "auto" }}
+        className="hidden lg:block"
+        style={{ position: "fixed", top: 0, bottom: 0, left: 0, zIndex: 20, overflow: "auto" }}
       >
         <SiderInner onOpenPalette={() => setPaletteOpen(true)} />
       </Sider>

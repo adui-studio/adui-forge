@@ -50,3 +50,9 @@ body {
   font-size: 12px;
   line-height: 1.6;
 }
+
+/* 侧栏内容撑满高度：antd Sider 会在 children 外包一层 sider-children（默认 auto 高度），
+   导致内层 h-full 失效、Menu 的 flex:1 无法伸展，底部登录态/状态灯浮在中间。 */
+.ant-layout-sider-children {
+  height: 100%;
+}
