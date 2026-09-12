@@ -57,3 +57,16 @@ describe("WorkspaceGitService", () => {
     await expect(service.status()).rejects.toThrow("FORGE_WORKSPACE_ROOT 未配置");
   });
 });
+
+describe("WorkspaceGitService.headContent", () => {
+  it("已跟踪文件返回 HEAD 内容；未跟踪文件 tracked:false", async () => {
+    const root = makeRepo();
+    const service = new WorkspaceGitService(root);
+    const tracked = await service.headContent("a.txt");
+    expect(tracked.tracked).toBe(true);
+    expect(tracked.content).toContain("hello\n");
+    const untracked = await service.headContent("b.txt");
+    expect(untracked.tracked).toBe(false);
+    expect(untracked.content).toBe("");
+  });
+});

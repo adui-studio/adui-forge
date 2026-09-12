@@ -65,6 +65,20 @@ export class WorkspaceGitService {
     return { commit: match?.[1] ?? "" };
   }
 
+  /** 文件在 HEAD 中的内容；未跟踪文件返回 tracked:false。 */
+  async headContent(
+    relativePath: string,
+  ): Promise<{ path: string; tracked: boolean; content: string }> {
+    const root = await this.#root();
+    this.#ensureInWorkspace(root, relativePath);
+    try {
+      const content = await this.#git(root, ["show", `HEAD:${relativePath}`]);
+      return { path: relativePath, tracked: true, content };
+    } catch {
+      return { path: relativePath, tracked: false, content: "" };
+    }
+  }
+
   async #root(): Promise<string> {
     if (this.root === null || this.root === "") {
       throw new Error("FORGE_WORKSPACE_ROOT 未配置，Git 面板不可用");

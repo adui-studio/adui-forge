@@ -309,6 +309,9 @@ export const en: ZhCNTranslation = {
     gitMessagePlaceholder: "Commit message, e.g. feat: add search",
     gitCommit: "Commit all",
     gitCommitted: "Committed",
+    diffTitle: "Changes: {{path}}",
+    diffUntracked: "New file (untracked)",
+    closeDiff: "Close diff",
     loadFailed: "Failed to load the file.",
   },
   compare: {

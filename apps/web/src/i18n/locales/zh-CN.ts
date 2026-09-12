@@ -298,6 +298,9 @@ export const zhCN = {
     gitMessagePlaceholder: "提交信息，例如：feat: 新增搜索功能",
     gitCommit: "提交全部变更",
     gitCommitted: "已提交",
+    diffTitle: "变更对比：{{path}}",
+    diffUntracked: "新文件（未跟踪）",
+    closeDiff: "关闭对比",
     loadFailed: "文件加载失败。",
   },
   compare: {

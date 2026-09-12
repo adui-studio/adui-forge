@@ -52,6 +52,16 @@ export interface GitStatusRecord {
 export const fetchGitStatus = (): Promise<GitStatusRecord> =>
   workspaceRequest<GitStatusRecord>("/api/v1/workspace/git/status");
 
+export const fetchGitOriginal = (
+  path: string,
+): Promise<{ path: string; tracked: boolean; content: string }> =>
+  workspaceRequest<{ path: string; tracked: boolean; content: string }>(
+    `/api/v1/workspace/git/original?path=${encodeURIComponent(path)}`,
+  );
+
+export const fetchGitDiff = (path: string): Promise<{ diff: string }> =>
+  workspaceRequest<{ diff: string }>(`/api/v1/workspace/git/diff?path=${encodeURIComponent(path)}`);
+
 export const commitGit = (message: string, paths: string[]): Promise<{ commit: string }> =>
   workspaceRequest<{ commit: string }>("/api/v1/workspace/git/commit", {
     method: "POST",

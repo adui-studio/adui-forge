@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Editor, loader } from "@monaco-editor/react";
+import { DiffEditor, Editor, loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
 import { FolderGit2, FolderOpen, Plus, Save, X } from "lucide-react";
 import { useState } from "react";
@@ -19,6 +19,7 @@ import {
 import { FileTree } from "@/components/workspace/file-tree.tsx";
 import {
   commitGit,
+  fetchGitOriginal,
   deleteWorkspaceFile,
   fetchGitStatus,
   fetchWorkspaceFile,
@@ -75,6 +76,19 @@ export function WorkspacePage() {
     queryKey: ["workspace-git"],
     queryFn: fetchGitStatus,
     enabled: showGit,
+  });
+  const [diffPath, setDiffPath] = useState<string | null>(null);
+  const { data: diffData } = useQuery({
+    queryKey: ["workspace-git-diff", diffPath],
+    queryFn: async () => {
+      if (diffPath === null) return null;
+      const [original, current] = await Promise.all([
+        fetchGitOriginal(diffPath),
+        fetchWorkspaceFile(diffPath),
+      ]);
+      return { original: original.content, tracked: original.tracked, current: current.content };
+    },
+    enabled: diffPath !== null,
   });
 
   const { data: rootAvailable } = useQuery({
@@ -158,6 +172,7 @@ export function WorkspacePage() {
     onSuccess: () => {
       void message.success(t("workspace.gitCommitted"));
       setGitMessage("");
+      setDiffPath(null);
       void refetchGit();
     },
   });
@@ -290,8 +305,33 @@ export function WorkspacePage() {
                   )}
                 </div>
 
-                {/* 编辑器 */}
-                {activeTab !== undefined && (
+                {/* Diff 视图（点 Git 变更文件打开，关闭按钮返回编辑） */}
+                {diffPath !== null && diffData !== undefined && (
+                  <div className="flex h-full flex-col">
+                    <div className="flex items-center gap-2 border-b border-[#20242C] px-3 py-1.5">
+                      <span className="forge-code text-xs text-slate-400">
+                        {t("workspace.diffTitle", { path: diffPath })}
+                      </span>
+                      {diffData?.tracked ? null : (
+                        <Tag color="purple">{t("workspace.diffUntracked")}</Tag>
+                      )}
+                      <Button size="small" className="ml-auto" onClick={() => setDiffPath(null)}>
+                        {t("workspace.closeDiff")}
+                      </Button>
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <DiffEditor
+                        height="100%"
+                        theme="vs-dark"
+                        language={monacoLanguage(diffPath)}
+                        original={diffData?.original ?? ""}
+                        modified={diffData?.current ?? ""}
+                        options={{ readOnly: true, renderSideBySide: true, fontSize: 13 }}
+                      />
+                    </div>
+                  </div>
+                )}
+                {diffPath === null && activeTab !== undefined && (
                   <div className="flex-1 overflow-hidden">
                     <Editor
                       key={activeTab.path}
@@ -330,7 +370,13 @@ export function WorkspacePage() {
                 <>
                   <div className="flex flex-wrap gap-1.5">
                     {gitStatus.changes.map((change) => (
-                      <Tag key={change.path} className="forge-code" bordered={false}>
+                      <Tag
+                        key={change.path}
+                        className="forge-code cursor-pointer"
+                        bordered={false}
+                        color={diffPath === change.path ? "purple" : undefined}
+                        onClick={() => setDiffPath(change.path)}
+                      >
                         {change.code} {change.path}
                       </Tag>
                     ))}

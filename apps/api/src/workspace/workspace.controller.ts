@@ -64,6 +64,13 @@ export class WorkspaceController {
     return this.#call(() => this.git.status());
   }
 
+  @Get("git/original")
+  async gitOriginal(
+    @Query(new ZodValidationPipe(pathSchema)) query: { path: string },
+  ): Promise<{ path: string; tracked: boolean; content: string }> {
+    return this.#call(() => this.git.headContent(query.path));
+  }
+
   @Get("git/diff")
   async gitDiff(
     @Query(new ZodValidationPipe(pathSchema)) query: { path: string },
