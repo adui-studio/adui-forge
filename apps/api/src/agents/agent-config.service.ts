@@ -6,6 +6,7 @@ import {
   OnModuleInit,
 } from "@nestjs/common";
 import { AgentRegistry } from "@adui-forge/agent";
+import { composeSystemPrompt, resolveSkills } from "@adui-forge/skill-sdk";
 import {
   buildAgentFromDefinition,
   DEFAULT_AGENT_NAME,
@@ -17,23 +18,25 @@ import {
   type AgentConfigRecord,
   type AgentConfigStore,
 } from "./agent-config.store";
+import { SKILL_STORE, toSkill, type SkillStore } from "../skills/skill.store";
 
 export const AGENT_BUILD_CONTEXT = Symbol("AGENT_BUILD_CONTEXT");
 
-/** 自定义 Agent 服务：持久化配置 ↔ 运行时注册表的双向同步。 */
+/** 自定义 Agent 服务：持久化配置 ↔ 运行时注册表的双向同步；启用的 Skill 指令注入系统提示词。 */
 @Injectable()
 export class AgentConfigService implements OnModuleInit {
   constructor(
     @Inject(AGENT_CONFIG_STORE) private readonly store: AgentConfigStore,
     @Inject(AgentRegistry) private readonly registry: AgentRegistry,
     @Inject(AGENT_BUILD_CONTEXT) private readonly context: AgentBuildContext,
+    @Inject(SKILL_STORE) private readonly skills: SkillStore,
   ) {}
 
   /** 启动时把持久化的自定义 Agent 注册进运行时（模型未配置时显式告警跳过）。 */
   async onModuleInit(): Promise<void> {
     if (this.context.config === null) return;
     for (const record of await this.store.list()) {
-      this.#register(record);
+      await this.#register(record);
     }
   }
 
@@ -58,22 +61,19 @@ export class AgentConfigService implements OnModuleInit {
         "FORGE_MODEL_BASE_URL / FORGE_MODEL_ID 未配置，无法创建自定义 Agent",
       );
     }
-    // 先构建再落库：引用未知工具名/模型名时显式失败，不留下半生效配置
-    this.#register({
-      ...input,
-      model: input.model ?? "",
-      createdAt: new Date().toISOString(),
-    });
     const record: AgentConfigRecord = {
       name: input.name,
       description: input.description,
       systemPrompt: input.systemPrompt,
       model: input.model ?? "",
+      skills: input.skills ?? [],
       tools: input.tools,
       maxSteps: input.maxSteps,
       timeoutMs: input.timeoutMs,
       createdAt: new Date().toISOString(),
     };
+    // 先构建再落库：引用未知工具名/模型名/Skill 名时显式失败，不留下半生效配置
+    await this.#register(record);
     await this.store.upsert(record);
     return record;
   }
@@ -90,13 +90,24 @@ export class AgentConfigService implements OnModuleInit {
     this.registry.remove(name);
   }
 
-  #register(record: AgentConfigRecord): void {
+  /** Skill 变更后重建全部自定义 Agent，使新指令立即生效。 */
+  async rebuildAll(): Promise<void> {
+    for (const record of await this.store.list()) {
+      await this.#register(record);
+    }
+  }
+
+  async #register(record: AgentConfigRecord): Promise<void> {
+    const pool = (await this.skills.list()).map(toSkill);
+    // 解析选中的 Skill（未知名显式报错），把启用 Skill 的指令注入系统提示词
+    const selected = resolveSkills(record.skills ?? [], pool);
+    const systemPrompt = composeSystemPrompt(record.systemPrompt, selected);
     this.registry.upsert(
       buildAgentFromDefinition(
         {
           name: record.name,
           description: record.description,
-          systemPrompt: record.systemPrompt,
+          systemPrompt,
           model: record.model,
           tools: record.tools,
           maxSteps: record.maxSteps,

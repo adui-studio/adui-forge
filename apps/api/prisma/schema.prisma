@@ -62,6 +62,7 @@ model AgentConfig {
   description  String   @default("")
   systemPrompt String
   model        String   @default("")
+  skills       Json     @default("[]")
   tools        Json
   maxSteps     Int      @default(16)
   timeoutMs    Int      @default(300000)
@@ -69,6 +70,18 @@ model AgentConfig {
   updatedAt    DateTime @updatedAt
 
   @@map("agent_configs")
+}
+
+/// 可复用 Agent 能力（REQUIREMENTS §35：Instructions 优先，后续扩展 Tools/Knowledge）
+model Skill {
+  name         String   @id
+  description  String   @default("")
+  instructions String
+  enabled      Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("skills")
 }
 
 /// Chat 会话（消息为 Web ChatMessage 形状的 Json 列表；assistant 消息关联派生 Run）

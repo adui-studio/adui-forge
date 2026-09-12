@@ -20,6 +20,7 @@ import {
   fetchAgent,
   fetchAgentModels,
   fetchAgentToolPool,
+  fetchSkills,
   upsertAgent,
 } from "@/lib/api.ts";
 
@@ -49,11 +50,18 @@ export function AgentDetailPage() {
     staleTime: 60_000,
   });
 
+  const { data: skills } = useQuery({
+    queryKey: ["skills"],
+    queryFn: fetchSkills,
+    staleTime: 60_000,
+  });
+
   const [draft, setDraft] = useState({
     name: "",
     description: "",
     systemPrompt: "",
     model: "",
+    skills: [] as string[],
     tools: [] as string[],
     maxSteps: 16,
     timeoutMs: 300_000,
@@ -67,6 +75,7 @@ export function AgentDetailPage() {
         description: agent.description,
         systemPrompt: agent.systemPrompt,
         model: agent.model,
+        skills: agent.skills ?? [],
         tools: agent.tools,
         maxSteps: agent.loop.maxSteps,
         timeoutMs: agent.loop.timeoutMs,
@@ -82,6 +91,7 @@ export function AgentDetailPage() {
         description: draft.description.trim(),
         systemPrompt: draft.systemPrompt,
         model: draft.model,
+        skills: draft.skills,
         tools: draft.tools,
         maxSteps: draft.maxSteps,
         timeoutMs: draft.timeoutMs,
@@ -243,6 +253,25 @@ export function AgentDetailPage() {
               onChange={(value) => setDraft({ ...draft, tools: value })}
             />
             <p className="mt-1 text-xs text-slate-500">{t("agentDetail.toolsHint")}</p>
+          </div>
+          <div>
+            <label htmlFor="agent-skills" className="text-sm text-slate-300">
+              {t("skills.title")}
+            </label>
+            <Select
+              id="agent-skills"
+              mode="multiple"
+              value={draft.skills}
+              disabled={!isCustom}
+              placeholder={t("agentDetail.skillsPlaceholder")}
+              className="w-full"
+              options={(skills ?? []).map((skill) => ({
+                value: skill.name,
+                label: `${skill.name} · ${skill.description}`,
+              }))}
+              onChange={(value) => setDraft({ ...draft, skills: value })}
+            />
+            <p className="mt-1 text-xs text-slate-500">{t("agentDetail.skillsHint")}</p>
           </div>
           <div>
             <label htmlFor="agent-model" className="text-sm text-slate-300">

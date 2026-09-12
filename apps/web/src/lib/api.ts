@@ -121,6 +121,7 @@ export interface AgentDetailRecord {
   tools: string[];
   /** 命名模型；空串 = 默认模型。 */
   model: string;
+  skills?: string[];
   loop: { maxSteps: number; timeoutMs: number; tokenLimit: number | null };
   source: "builtin" | "custom";
   availableTools: string[];
@@ -140,6 +141,7 @@ export const upsertAgent = (input: {
   description: string;
   systemPrompt: string;
   tools: string[];
+  skills?: string[];
   model?: string;
   maxSteps: number;
   timeoutMs: number;
@@ -239,6 +241,39 @@ export const testMcpServer = (
     `/api/v1/mcp/servers/${encodeURIComponent(name)}/test`,
     { method: "POST", body: JSON.stringify({ name }) },
   );
+
+export interface SkillRecord {
+  name: string;
+  description: string;
+  instructions: string;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export const fetchSkills = (): Promise<SkillRecord[]> => request<SkillRecord[]>("/api/v1/skills");
+
+export const upsertSkill = (input: {
+  name: string;
+  description: string;
+  instructions: string;
+  enabled: boolean;
+}): Promise<{ ok: boolean; name: string }> =>
+  request<{ ok: boolean; name: string }>("/api/v1/skills", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+
+export const setSkillEnabled = (name: string, enabled: boolean): Promise<{ ok: boolean }> =>
+  request<{ ok: boolean }>(`/api/v1/skills/${encodeURIComponent(name)}/enabled`, {
+    method: "PATCH",
+    body: JSON.stringify({ enabled }),
+  });
+
+export const deleteSkill = (name: string): Promise<{ ok: boolean }> =>
+  request<{ ok: boolean }>(`/api/v1/skills/${encodeURIComponent(name)}`, {
+    method: "DELETE",
+  });
 
 export interface MemoryRecord {
   agentName: string;

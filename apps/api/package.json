@@ -18,6 +18,7 @@
     "@adui-forge/ai": "workspace:*",
     "@adui-forge/contracts": "workspace:*",
     "@adui-forge/mcp": "workspace:*",
+    "@adui-forge/skill-sdk": "workspace:*",
     "@adui-forge/tool-sdk": "workspace:*",
     "@adui-forge/workflow": "workspace:*",
     "@nestjs/common": "catalog:",

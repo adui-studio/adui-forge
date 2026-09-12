@@ -10,6 +10,7 @@ import { TasksModule } from "./tasks/tasks.module";
 import { MetricsModule } from "./metrics/metrics.module";
 import { OpenapiModule } from "./openapi/openapi.module";
 import { ConversationsModule } from "./conversations/conversations.module";
+import { SkillsModule } from "./skills/skills.module";
 import { RateLimitGuard } from "./common/rate-limit.guard";
 import { AuthGuard } from "./auth/auth.guard";
 
@@ -24,6 +25,7 @@ import { AuthGuard } from "./auth/auth.guard";
     MetricsModule,
     OpenapiModule,
     ConversationsModule,
+    SkillsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: RateLimitGuard },

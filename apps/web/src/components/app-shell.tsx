@@ -7,6 +7,7 @@ import {
   MessageSquare,
   LogIn,
   LogOut,
+  BookOpen,
   Menu as MenuIcon,
   Plug,
   Search,
@@ -41,6 +42,7 @@ const NAV_ITEMS = [
     key: "approvals",
     badge: true as const,
   },
+  { to: "/skills", labelKey: "nav.skills", icon: BookOpen, key: "skills" },
   { to: "/memory", labelKey: "nav.memory", icon: Brain, key: "memory" },
   { to: "/settings", labelKey: "nav.settings", icon: Settings, key: "settings" },
 ];

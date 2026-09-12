@@ -9,6 +9,8 @@ export interface AgentConfigRecord {
   systemPrompt: string;
   /** 命名模型；空串 = 默认模型。 */
   model: string;
+  /** 选中的 Skill 名单（启用者注入系统提示词）。 */
+  skills: string[];
   tools: string[];
   maxSteps: number;
   timeoutMs: number;
@@ -64,6 +66,7 @@ export class PrismaAgentConfigStore implements AgentConfigStore {
         description: record.description,
         systemPrompt: record.systemPrompt,
         model: record.model,
+        skills: record.skills,
         tools: record.tools,
         maxSteps: record.maxSteps,
         timeoutMs: record.timeoutMs,
@@ -72,6 +75,7 @@ export class PrismaAgentConfigStore implements AgentConfigStore {
         description: record.description,
         systemPrompt: record.systemPrompt,
         model: record.model,
+        skills: record.skills,
         tools: record.tools,
         maxSteps: record.maxSteps,
         timeoutMs: record.timeoutMs,
@@ -87,6 +91,7 @@ export class PrismaAgentConfigStore implements AgentConfigStore {
       description: row.description,
       systemPrompt: row.systemPrompt,
       model: row.model,
+      skills: row.skills as string[],
       tools: row.tools as string[],
       maxSteps: row.maxSteps,
       timeoutMs: row.timeoutMs,
@@ -102,6 +107,7 @@ export class PrismaAgentConfigStore implements AgentConfigStore {
       description: row.description,
       systemPrompt: row.systemPrompt,
       model: row.model,
+      skills: row.skills as string[],
       tools: row.tools as string[],
       maxSteps: row.maxSteps,
       timeoutMs: row.timeoutMs,

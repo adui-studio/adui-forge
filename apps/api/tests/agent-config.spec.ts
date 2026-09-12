@@ -4,6 +4,7 @@ import type { AgentTool, ModelAdapter, ModelTurnResult } from "@adui-forge/contr
 import { defineAgent, AgentRegistry } from "@adui-forge/agent";
 import { AgentConfigService, AGENT_BUILD_CONTEXT } from "../src/agents/agent-config.service";
 import { InMemoryAgentConfigStore, AGENT_CONFIG_STORE } from "../src/agents/agent-config.store";
+import { InMemorySkillStore } from "../src/skills/skill.store";
 import { DEFAULT_AGENT_NAME } from "../src/agents/agent.factory";
 import type { AgentBuildContext } from "../src/agents/agent.factory";
 
@@ -59,16 +60,21 @@ const buildService = () => {
     }),
   );
   const store = new InMemoryAgentConfigStore();
-  const service = new AgentConfigService(store, registry, buildContext()) as unknown as {
-    onModuleInit(): Promise<void>;
-  } & AgentConfigService;
-  return { registry, store, service };
+  const skillStore = new InMemorySkillStore();
+  const service = new AgentConfigService(
+    store,
+    registry,
+    buildContext(),
+    skillStore,
+  ) as unknown as { onModuleInit(): Promise<void> } & AgentConfigService;
+  return { registry, store, service, skillStore };
 };
 
 const baseInput = {
   name: "reviewer",
   description: "code reviewer",
   systemPrompt: "You review code.",
+  skills: [],
   tools: ["echo"],
   maxSteps: 8,
   timeoutMs: 60_000,
@@ -111,6 +117,60 @@ describe("AgentConfigService", () => {
     await service.delete("reviewer");
     expect(registry.get("reviewer")).toBeUndefined();
     await expect(service.delete("reviewer")).rejects.toThrow("unknown agent config");
+  });
+
+  it("选中的 Skill 指令注入系统提示词，禁用的不注入；未知名显式失败", async () => {
+    const { registry, service, skillStore } = buildService();
+    await skillStore.upsert({
+      name: "code-review",
+      description: "d",
+      instructions: "ALWAYS review diff before commit.",
+      enabled: true,
+      createdAt: new Date().toISOString(),
+    });
+    await skillStore.upsert({
+      name: "off-skill",
+      description: "d",
+      instructions: "disabled instructions",
+      enabled: false,
+      createdAt: new Date().toISOString(),
+    });
+
+    await service.createOrUpdate({ ...baseInput, skills: ["code-review"] });
+    const prompt = registry.get("reviewer")?.systemPrompt ?? "";
+    expect(prompt).toContain("You review code.");
+    expect(prompt).toContain("# Skills");
+    expect(prompt).toContain("## Skill: code-review");
+    expect(prompt).toContain("ALWAYS review diff before commit.");
+
+    await service.createOrUpdate({ ...baseInput, skills: ["off-skill"] });
+    expect(registry.get("reviewer")?.systemPrompt).not.toContain("off-skill");
+
+    await expect(service.createOrUpdate({ ...baseInput, skills: ["ghost"] })).rejects.toThrow(
+      'unknown skill: "ghost"',
+    );
+  });
+
+  it("Skill 指令变更后 rebuildAll 使新指令生效", async () => {
+    const { registry, service, skillStore } = buildService();
+    await skillStore.upsert({
+      name: "code-review",
+      description: "d",
+      instructions: "old instructions",
+      enabled: true,
+      createdAt: new Date().toISOString(),
+    });
+    await service.createOrUpdate({ ...baseInput, skills: ["code-review"] });
+
+    await skillStore.upsert({
+      name: "code-review",
+      description: "d",
+      instructions: "new instructions",
+      enabled: true,
+      createdAt: new Date().toISOString(),
+    });
+    await service.rebuildAll();
+    expect(registry.get("reviewer")?.systemPrompt).toContain("new instructions");
   });
 
   it("AGENT_BUILD_CONTEXT symbol 已导出（DI token）", () => {

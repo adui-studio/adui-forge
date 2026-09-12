@@ -17,6 +17,9 @@ const ApprovalsPage = lazy(() =>
 );
 const LoginPage = lazy(() => import("./pages/Login.tsx").then((m) => ({ default: m.LoginPage })));
 const McpPage = lazy(() => import("./pages/Mcp.tsx").then((m) => ({ default: m.McpPage })));
+const SkillsPage = lazy(() =>
+  import("./pages/Skills.tsx").then((m) => ({ default: m.SkillsPage })),
+);
 const MemoryPage = lazy(() =>
   import("./pages/Memory.tsx").then((m) => ({ default: m.MemoryPage })),
 );
@@ -52,6 +55,7 @@ export function App() {
           <Route path="/agents/:name" element={<AgentDetailPage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/memory" element={<MemoryPage />} />
+          <Route path="/skills" element={<SkillsPage />} />
           <Route path="/mcp" element={<McpPage />} />
           <Route path="/workflows" element={<WorkflowsPage />} />
           <Route path="/workflows/new" element={<WorkflowEditorPage isNew />} />

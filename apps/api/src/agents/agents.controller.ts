@@ -16,6 +16,7 @@ export const upsertAgentSchema = z.object({
   systemPrompt: z.string().min(1).max(20_000),
   /** 命名模型（FORGE_MODELS / 默认模型目录）；空缺 = 默认模型。 */
   model: z.string().max(64).optional(),
+  skills: z.array(z.string().min(1)).max(20).optional(),
   tools: z.array(z.string().min(1)).max(50).default([]),
   maxSteps: z.number().int().min(1).max(64).default(16),
   timeoutMs: z.number().int().min(1_000).max(600_000).default(300_000),

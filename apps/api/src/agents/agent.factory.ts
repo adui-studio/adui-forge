@@ -148,6 +148,8 @@ export interface AgentConfigDefinition {
   tools: string[];
   /** 命名模型（ForgeModelCatalog 中的 name）；空缺时使用默认模型。 */
   model?: string;
+  /** 选中的 Skill 名单（由服务层解析并注入系统提示词）。 */
+  skills?: string[];
   maxSteps: number;
   timeoutMs: number;
   tokenLimit?: number;

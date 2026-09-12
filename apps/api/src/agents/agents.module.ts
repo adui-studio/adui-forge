@@ -12,6 +12,7 @@ import {
 import { buildAgentBuildContext, registerDefaultAgent } from "./agent.factory";
 import { AgentsController } from "./agents.controller";
 import { McpController } from "./mcp.controller";
+import { InMemorySkillStore, PrismaSkillStore, SKILL_STORE } from "../skills/skill.store";
 
 /**
  * Agent 装配模块：组装构建上下文（模型 + 工具池 + 审批）并注册默认 Agent，
@@ -52,7 +53,14 @@ import { McpController } from "./mcp.controller";
           : new InMemoryAgentConfigStore(),
     },
     AgentConfigService,
+    {
+      provide: SKILL_STORE,
+      useFactory: () =>
+        process.env.DATABASE_URL !== undefined && process.env.DATABASE_URL !== ""
+          ? new PrismaSkillStore(new PrismaClient())
+          : new InMemorySkillStore(),
+    },
   ],
-  exports: [AgentRegistry],
+  exports: [AgentRegistry, SKILL_STORE],
 })
 export class AgentsModule {}

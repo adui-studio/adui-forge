@@ -1,3 +1,6 @@
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vite-plus/test";
 import i18next from "i18next";
 import { changeLanguage, detectLanguage } from "../src/i18n/index.ts";
@@ -34,5 +37,38 @@ describe("i18n", () => {
 
   it("detectLanguage 返回受支持语言", () => {
     expect(["zh-CN", "en"]).toContain(detectLanguage());
+  });
+});
+
+describe("i18n 键覆盖", () => {
+  const collectLiteralKeys = (dir: string): string[] => {
+    const keys: string[] = [];
+    const walk = (current: string): void => {
+      for (const name of readdirSync(current)) {
+        const full = join(current, name);
+        if (statSync(full).isDirectory()) {
+          if (name !== "i18n" && name !== "node_modules") walk(full);
+          continue;
+        }
+        if (!name.endsWith(".tsx") && !name.endsWith(".ts")) continue;
+        const source = readFileSync(full, "utf8");
+        for (const match of source.matchAll(
+          /(?:i18next\.)?\bt\("([a-zA-Z]+\.[a-zA-Z0-9_.]+)"\)/g,
+        )) {
+          keys.push(match[1]);
+        }
+      }
+    };
+    walk(dir);
+    return [...new Set(keys)];
+  };
+
+  it("源码中所有字面量 t() key 都存在于语言包", () => {
+    const srcDir = fileURLToPath(new URL("../src", import.meta.url));
+    const used = collectLiteralKeys(srcDir);
+    const zhKeys = new Set(collectKeys(zhCN));
+    const missing = used.filter((key) => !zhKeys.has(key));
+    expect(missing).toEqual([]);
+    expect(used.length).toBeGreaterThan(100);
   });
 });
