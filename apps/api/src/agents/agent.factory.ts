@@ -1,7 +1,7 @@
 import { Logger } from "@nestjs/common";
 import type { AgentTool } from "@adui-forge/contracts";
 import { defineAgent, type Agent, AgentRegistry } from "@adui-forge/agent";
-import { createOpenAICompatibleModelAdapter } from "@adui-forge/ai";
+import { createOpenAICompatibleModelAdapter, ModelRegistry } from "@adui-forge/ai";
 import {
   createFileTools,
   createGitTools,
@@ -20,6 +20,77 @@ export interface ForgeModelConfig {
   modelId: string;
   apiKey?: string;
 }
+
+/** FORGE_MODELS 声明的命名模型（REQUIREMENTS §31/§32：Model Registry + Provider Adapter）。 */
+export interface ForgeModelEntry extends ForgeModelConfig {
+  provider: string;
+  /** 指向存放 API Key 的环境变量名；间接引用避免 Key 进入配置与日志。 */
+  apiKeyEnv?: string;
+}
+
+/**
+ * 解析 FORGE_MODELS 环境变量（JSON 数组：name / provider / baseURL / modelId / [apiKey] / [apiKeyEnv]）。
+ * 返回空数组表示只使用 FORGE_MODEL_* 默认模型。
+ */
+export const parseForgeModels = (raw: string | undefined): ForgeModelEntry[] => {
+  if (raw === undefined || raw.trim() === "") {
+    return [];
+  }
+  const parsed: unknown = JSON.parse(raw);
+  if (!Array.isArray(parsed)) {
+    throw new Error("FORGE_MODELS must be a JSON array");
+  }
+  return parsed.map((item) => {
+    const entry = item as Partial<ForgeModelEntry>;
+    if (
+      typeof entry.name !== "string" ||
+      typeof entry.baseURL !== "string" ||
+      typeof entry.modelId !== "string"
+    ) {
+      throw new Error("FORGE_MODELS entry requires name, baseURL and modelId");
+    }
+    return {
+      name: entry.name,
+      provider: entry.provider ?? "openai-compatible",
+      baseURL: entry.baseURL,
+      modelId: entry.modelId,
+      apiKey: entry.apiKeyEnv !== undefined ? process.env[entry.apiKeyEnv] : entry.apiKey,
+      apiKeyEnv: entry.apiKeyEnv,
+    };
+  });
+};
+
+/** 命名模型注册表：默认模型（FORGE_MODEL_*）+ FORGE_MODELS 声明的多模型。 */
+export interface ForgeModelCatalog {
+  registry: ModelRegistry;
+  defaultName: string;
+  /** 供编辑器展示（不含密钥）。 */
+  models: Array<{ name: string; provider: string; modelId: string }>;
+}
+
+export const buildModelCatalog = (
+  defaultConfig: ForgeModelConfig,
+  env: NodeJS.ProcessEnv = process.env,
+): ForgeModelCatalog => {
+  const registry = new ModelRegistry();
+  const models: ForgeModelCatalog["models"] = [];
+  const register = (entry: ForgeModelConfig, provider: string): void => {
+    registry.register(entry.name, () =>
+      createOpenAICompatibleModelAdapter({
+        name: provider,
+        baseURL: entry.baseURL,
+        apiKey: entry.apiKey,
+        modelId: entry.modelId,
+      }),
+    );
+    models.push({ name: entry.name, provider, modelId: entry.modelId });
+  };
+  register(defaultConfig, "openai-compatible");
+  for (const entry of parseForgeModels(env.FORGE_MODELS)) {
+    register(entry, entry.provider);
+  }
+  return { registry, defaultName: defaultConfig.name, models };
+};
 
 /** 从环境变量读取模型配置并组装默认 Agent 的选项。 */
 export interface ToolPoolOptions {
@@ -75,14 +146,18 @@ export interface AgentConfigDefinition {
   systemPrompt: string;
   /** 从工具池中选择的工具名列表。 */
   tools: string[];
+  /** 命名模型（ForgeModelCatalog 中的 name）；空缺时使用默认模型。 */
+  model?: string;
   maxSteps: number;
   timeoutMs: number;
   tokenLimit?: number;
 }
 
-/** 构建 Agent 所需的运行时上下文（模型、工具池、审批处理器）。 */
+/** 构建 Agent 所需的运行时上下文（模型目录、工具池、审批处理器）。 */
 export interface AgentBuildContext {
   config: ForgeModelConfig | null;
+  /** 命名模型目录；config 为 null 时为 null。 */
+  models: ForgeModelCatalog | null;
   toolPool: AgentTool[];
   approvals?: {
     createPending: (request: {
@@ -103,7 +178,7 @@ const defaultAgentDescription = (sandboxMode: string, trustedLocalMode: boolean)
       : "") +
   "）";
 
-/** 由持久化定义构建可运行 Agent；引用未知工具名时显式失败。 */
+/** 由持久化定义构建可运行 Agent；引用未知工具名或未知模型名时显式失败。 */
 export const buildAgentFromDefinition = (
   definition: AgentConfigDefinition,
   context: AgentBuildContext,
@@ -116,6 +191,19 @@ export const buildAgentFromDefinition = (
     }
     tools.push(tool);
   }
+  // 模型解析：显式指定走 Model Registry，空缺走默认模型（REQUIREMENTS §31 禁止散落 Provider 依赖）
+  const model =
+    definition.model === undefined || definition.model === ""
+      ? createOpenAICompatibleModelAdapter({
+          name: context.config?.name ?? "forge-provider",
+          baseURL: context.config?.baseURL ?? "",
+          apiKey: context.config?.apiKey,
+          modelId: context.config?.modelId ?? "",
+        })
+      : (context.models?.registry.resolve(definition.model) ??
+        (() => {
+          throw new Error(`unknown model: "${definition.model}"`);
+        })());
   return defineAgent({
     name: definition.name,
     description: definition.description,
@@ -134,12 +222,7 @@ export const buildAgentFromDefinition = (
               return promise;
             },
           },
-    model: createOpenAICompatibleModelAdapter({
-      name: context.config?.name ?? "forge-provider",
-      baseURL: context.config?.baseURL ?? "",
-      apiKey: context.config?.apiKey,
-      modelId: context.config?.modelId ?? "",
-    }),
+    model,
     tools,
     loop: {
       maxSteps: definition.maxSteps,
@@ -212,7 +295,7 @@ export const buildAgentBuildContext = async (
 ): Promise<AgentBuildContext> => {
   const config = readForgeModelConfig(env);
   if (config === null) {
-    return { config: null, toolPool: [], approvals };
+    return { config: null, models: null, toolPool: [], approvals };
   }
   const trustedLocalMode = env.FORGE_TRUSTED_LOCAL_MODE === "1";
   if (trustedLocalMode) {
@@ -243,7 +326,7 @@ export const buildAgentBuildContext = async (
     sandboxImage: env.FORGE_SANDBOX_IMAGE,
     mcpTools,
   });
-  return { config, toolPool, approvals };
+  return { config, models: buildModelCatalog(config, env), toolPool, approvals };
 };
 
 /** 组装并注册默认 Agent；模型未配置时跳过注册并告警（启动不失败，Run 时显式 404）。 */

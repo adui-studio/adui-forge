@@ -19,6 +19,25 @@ const echoTool: AgentTool<{ text: string }> = {
 
 const buildContext = (): AgentBuildContext => ({
   config: { name: "p", baseURL: "http://localhost", modelId: "test-model" },
+  models: {
+    defaultName: "p",
+    registry: {
+      resolve: (name: string) => {
+        if (name !== "p" && name !== "big-model") {
+          throw new Error();
+        }
+        return {
+          async generate() {
+            return { content: "ok", toolCalls: [] };
+          },
+        };
+      },
+    },
+    models: [
+      { name: "p", provider: "openai-compatible", modelId: "test-model" },
+      { name: "big-model", provider: "deepseek", modelId: "deepseek-chat" },
+    ],
+  } as never,
   toolPool: [echoTool],
 });
 
@@ -67,7 +86,7 @@ describe("AgentConfigService", () => {
 
   it("启动时装载持久化配置到注册表", async () => {
     const { registry, store, service } = buildService();
-    await store.upsert({ ...baseInput, createdAt: new Date().toISOString() });
+    await store.upsert({ ...baseInput, model: "", createdAt: new Date().toISOString() });
     await service.onModuleInit();
     expect(registry.get("reviewer")).toBeDefined();
   });
@@ -96,5 +115,20 @@ describe("AgentConfigService", () => {
   it("AGENT_BUILD_CONTEXT symbol 已导出（DI token）", () => {
     expect(typeof AGENT_BUILD_CONTEXT).toBe("symbol");
     expect(typeof AGENT_CONFIG_STORE).toBe("symbol");
+  });
+});
+
+describe("AgentConfigService 模型选择", () => {
+  it("model 指向命名模型时持久化并用于构建", async () => {
+    const { service, store } = buildService();
+    const record = await service.createOrUpdate({ ...baseInput, model: "big-model" });
+    expect(record.model).toBe("big-model");
+    expect((await store.get("reviewer"))?.model).toBe("big-model");
+  });
+
+  it("model 为空缺省默认模型", async () => {
+    const { service } = buildService();
+    const record = await service.createOrUpdate(baseInput);
+    expect(record.model).toBe("");
   });
 });

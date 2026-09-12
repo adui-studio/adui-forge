@@ -14,6 +14,8 @@ export const upsertAgentSchema = z.object({
     .regex(/^[a-z0-9-]+$/, "仅允许小写字母、数字与连字符"),
   description: z.string().max(500).default(""),
   systemPrompt: z.string().min(1).max(20_000),
+  /** 命名模型（FORGE_MODELS / 默认模型目录）；空缺 = 默认模型。 */
+  model: z.string().max(64).optional(),
   tools: z.array(z.string().min(1)).max(50).default([]),
   maxSteps: z.number().int().min(1).max(64).default(16),
   timeoutMs: z.number().int().min(1_000).max(600_000).default(300_000),
@@ -44,6 +46,14 @@ export class AgentsController {
     return { tools: this.context.toolPool.map((tool) => tool.name) };
   }
 
+  @Get("models")
+  modelCatalog() {
+    return {
+      default: this.context.models?.defaultName ?? null,
+      models: this.context.models?.models ?? [],
+    };
+  }
+
   @Get(":name")
   async get(@Param("name") name: string) {
     const agent = this.agents.get(name);
@@ -56,6 +66,7 @@ export class AgentsController {
       description: agent.description,
       systemPrompt: agent.systemPrompt,
       tools: agent.tools.map((tool) => tool.name),
+      model: custom?.model ?? "",
       loop: {
         maxSteps: agent.loop.maxSteps,
         timeoutMs: agent.loop.timeoutMs,
@@ -63,6 +74,7 @@ export class AgentsController {
       },
       source: custom === null ? ("builtin" as const) : ("custom" as const),
       availableTools: this.context.toolPool.map((tool) => tool.name),
+      modelCatalog: this.context.models?.models ?? [],
     };
   }
 

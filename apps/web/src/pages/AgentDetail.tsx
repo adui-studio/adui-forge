@@ -14,7 +14,13 @@ import {
   Spin,
   Tag,
 } from "antd";
-import { deleteAgent, fetchAgent, fetchAgentToolPool, upsertAgent } from "@/lib/api.ts";
+import {
+  deleteAgent,
+  fetchAgent,
+  fetchAgentModels,
+  fetchAgentToolPool,
+  upsertAgent,
+} from "@/lib/api.ts";
 
 /** Agent 详情：内置 Agent 只读展示，自定义 Agent 可编辑（name/systemPrompt/tools/loop）。 */
 export function AgentDetailPage() {
@@ -35,10 +41,17 @@ export function AgentDetailPage() {
     queryFn: fetchAgentToolPool,
   });
 
+  const { data: modelCatalog } = useQuery({
+    queryKey: ["agent-models"],
+    queryFn: fetchAgentModels,
+    staleTime: 60_000,
+  });
+
   const [draft, setDraft] = useState({
     name: "",
     description: "",
     systemPrompt: "",
+    model: "",
     tools: [] as string[],
     maxSteps: 16,
     timeoutMs: 300_000,
@@ -51,6 +64,7 @@ export function AgentDetailPage() {
         name: agent.name,
         description: agent.description,
         systemPrompt: agent.systemPrompt,
+        model: agent.model,
         tools: agent.tools,
         maxSteps: agent.loop.maxSteps,
         timeoutMs: agent.loop.timeoutMs,
@@ -65,6 +79,7 @@ export function AgentDetailPage() {
         name: draft.name.trim(),
         description: draft.description.trim(),
         systemPrompt: draft.systemPrompt,
+        model: draft.model,
         tools: draft.tools,
         maxSteps: draft.maxSteps,
         timeoutMs: draft.timeoutMs,
@@ -227,6 +242,34 @@ export function AgentDetailPage() {
             />
             <p className="mt-1 text-xs text-slate-500">
               shell_exec / git 写入类工具为 approval 权限，执行时会触发人工审批。
+            </p>
+          </div>
+          <div>
+            <label htmlFor="agent-model" className="text-sm text-slate-300">
+              模型
+            </label>
+            <Select
+              id="agent-model"
+              value={draft.model === "" ? (modelCatalog?.default ?? undefined) : draft.model}
+              disabled={!isCustom}
+              className="mt-1 w-96"
+              options={[
+                ...(modelCatalog?.default !== null && modelCatalog?.default !== undefined
+                  ? [{ value: modelCatalog.default, label: `默认（${modelCatalog.default}）` }]
+                  : []),
+                ...(modelCatalog?.models ?? [])
+                  .filter((model) => model.name !== modelCatalog?.default)
+                  .map((model) => ({
+                    value: model.name,
+                    label: `${model.name} · ${model.provider} / ${model.modelId}`,
+                  })),
+              ]}
+              onChange={(value) =>
+                setDraft({ ...draft, model: value === modelCatalog?.default ? "" : value })
+              }
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              通过 FORGE_MODELS 环境变量声明更多命名模型。
             </p>
           </div>
           <div className="flex flex-wrap gap-4">

@@ -107,24 +107,39 @@ export const createTask = (input: {
     body: JSON.stringify(input),
   });
 
+export interface AgentModelInfo {
+  name: string;
+  provider: string;
+  modelId: string;
+}
+
 export interface AgentDetailRecord {
   name: string;
   description: string;
   systemPrompt: string;
   tools: string[];
+  /** 命名模型；空串 = 默认模型。 */
+  model: string;
   loop: { maxSteps: number; timeoutMs: number; tokenLimit: number | null };
   source: "builtin" | "custom";
   availableTools: string[];
+  modelCatalog: AgentModelInfo[];
 }
 
 export const fetchAgent = (name: string): Promise<AgentDetailRecord> =>
   request<AgentDetailRecord>(`/api/v1/agents/${encodeURIComponent(name)}`);
+
+export const fetchAgentModels = async (): Promise<{
+  default: string | null;
+  models: AgentModelInfo[];
+}> => request<{ default: string | null; models: AgentModelInfo[] }>("/api/v1/agents/models");
 
 export const upsertAgent = (input: {
   name: string;
   description: string;
   systemPrompt: string;
   tools: string[];
+  model?: string;
   maxSteps: number;
   timeoutMs: number;
   tokenLimit?: number;

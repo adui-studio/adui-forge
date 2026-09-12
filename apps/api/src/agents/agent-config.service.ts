@@ -58,15 +58,17 @@ export class AgentConfigService implements OnModuleInit {
         "FORGE_MODEL_BASE_URL / FORGE_MODEL_ID 未配置，无法创建自定义 Agent",
       );
     }
-    // 先构建再落库：引用未知工具名时显式失败，不留下半生效配置
+    // 先构建再落库：引用未知工具名/模型名时显式失败，不留下半生效配置
     this.#register({
       ...input,
+      model: input.model ?? "",
       createdAt: new Date().toISOString(),
     });
     const record: AgentConfigRecord = {
       name: input.name,
       description: input.description,
       systemPrompt: input.systemPrompt,
+      model: input.model ?? "",
       tools: input.tools,
       maxSteps: input.maxSteps,
       timeoutMs: input.timeoutMs,
@@ -95,6 +97,7 @@ export class AgentConfigService implements OnModuleInit {
           name: record.name,
           description: record.description,
           systemPrompt: record.systemPrompt,
+          model: record.model,
           tools: record.tools,
           maxSteps: record.maxSteps,
           timeoutMs: record.timeoutMs,
