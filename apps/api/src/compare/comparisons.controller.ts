@@ -33,6 +33,11 @@ export class ComparisonsController {
     return this.comparisons.list();
   }
 
+  @Get("stats")
+  stats() {
+    return this.comparisons.stats();
+  }
+
   @Get(":id")
   get(@Param("id") id: string) {
     return this.comparisons.get(id);

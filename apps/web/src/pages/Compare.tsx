@@ -11,6 +11,8 @@ import {
   fetchAgents,
   fetchComparison,
   fetchComparisons,
+  fetchComparisonStats,
+  type ComparisonStatsRecord,
   streamRunEvents,
 } from "@/lib/api.ts";
 import {
@@ -47,6 +49,10 @@ export function ComparePage() {
   const { data: history } = useQuery({
     queryKey: ["comparisons"],
     queryFn: fetchComparisons,
+  });
+  const { data: stats } = useQuery({
+    queryKey: ["comparison-stats"],
+    queryFn: fetchComparisonStats,
   });
 
   useRunNotifications(undefined);
@@ -189,6 +195,39 @@ export function ComparePage() {
             </Popconfirm>
           )}
         </div>
+      )}
+
+      {stats !== undefined && stats.length > 0 && (
+        <Card className="mb-6" size="small" title={t("compare.statsTitle")}>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs text-slate-500">
+                <th className="pb-2 pr-4 font-medium">{t("runs.colAgent")}</th>
+                <th className="pb-2 pr-4 font-medium">{t("compare.statsBatches")}</th>
+                <th className="pb-2 pr-4 font-medium">{t("compare.statsCompleted")}</th>
+                <th className="pb-2 pr-4 font-medium">{t("compare.statsFailed")}</th>
+                <th className="pb-2 pr-4 font-medium">{t("compare.statsAvg")}</th>
+                <th className="pb-2 font-medium">{t("compare.statsWins")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stats.map((entry: ComparisonStatsRecord) => (
+                <tr key={entry.agentName} className="border-t border-[#20242C]">
+                  <td className="py-2 pr-4 forge-code text-slate-100">{entry.agentName}</td>
+                  <td className="py-2 pr-4 text-slate-300">{entry.batches}</td>
+                  <td className="py-2 pr-4 text-slate-300">{entry.completed}</td>
+                  <td className="py-2 pr-4 text-slate-300">{entry.failed}</td>
+                  <td className="py-2 pr-4 forge-code text-slate-300">
+                    {entry.avgDurationMs === null
+                      ? "—"
+                      : `${(entry.avgDurationMs / 1000).toFixed(1)}s`}
+                  </td>
+                  <td className="py-2 forge-code text-[#6CFF00]">{entry.fastestWins}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
       )}
 
       <Card className="mb-6" title={t("compare.setup")}>

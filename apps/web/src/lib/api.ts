@@ -327,6 +327,18 @@ export const deleteComparison = (id: string): Promise<{ ok: boolean }> =>
     method: "DELETE",
   });
 
+export interface ComparisonStatsRecord {
+  agentName: string;
+  batches: number;
+  completed: number;
+  failed: number;
+  avgDurationMs: number | null;
+  fastestWins: number;
+}
+
+export const fetchComparisonStats = (): Promise<ComparisonStatsRecord[]> =>
+  request<ComparisonStatsRecord[]>("/api/v1/comparisons/stats");
+
 export const fetchComparisons = (): Promise<ComparisonSummaryRecord[]> =>
   request<ComparisonSummaryRecord[]>("/api/v1/comparisons");
 

@@ -89,4 +89,66 @@ export class ComparisonService {
       throw new NotFoundException(`unknown comparison: "${id}"`);
     }
   }
+
+  /** 跨批次统计：每个 Agent 的参与数、完成/失败、平均耗时与最快胜出次数。 */
+  async stats(): Promise<
+    Array<{
+      agentName: string;
+      batches: number;
+      completed: number;
+      failed: number;
+      avgDurationMs: number | null;
+      fastestWins: number;
+    }>
+  > {
+    const batches = await this.store.list();
+    const acc = new Map<
+      string,
+      { batches: number; completed: number; failed: number; durations: number[]; wins: number }
+    >();
+    for (const batch of batches) {
+      const { results } = await this.get(batch.id);
+      // 最快胜出：该批次中已完成的列里耗时最短者（并列各计一次）
+      const completedDurations = results.filter(
+        (result) => result.status === "completed" && result.durationMs !== null,
+      ) as Array<ComparisonItemResult & { durationMs: number }>;
+      const fastest =
+        completedDurations.length > 0
+          ? Math.min(...completedDurations.map((result) => result.durationMs))
+          : null;
+      for (const result of results) {
+        const entry = acc.get(result.agentName) ?? {
+          batches: 0,
+          completed: 0,
+          failed: 0,
+          durations: [],
+          wins: 0,
+        };
+        entry.batches += 1;
+        if (result.status === "completed") {
+          entry.completed += 1;
+          if (result.durationMs !== null) entry.durations.push(result.durationMs);
+          if (fastest !== null && result.durationMs === fastest) entry.wins += 1;
+        } else if (result.status === "failed") {
+          entry.failed += 1;
+        }
+        acc.set(result.agentName, entry);
+      }
+    }
+    return [...acc.entries()]
+      .map(([agentName, entry]) => ({
+        agentName,
+        batches: entry.batches,
+        completed: entry.completed,
+        failed: entry.failed,
+        avgDurationMs:
+          entry.durations.length > 0
+            ? Math.round(
+                entry.durations.reduce((sum, value) => sum + value, 0) / entry.durations.length,
+              )
+            : null,
+        fastestWins: entry.wins,
+      }))
+      .sort((a, b) => b.fastestWins - a.fastestWins || a.agentName.localeCompare(b.agentName));
+  }
 }

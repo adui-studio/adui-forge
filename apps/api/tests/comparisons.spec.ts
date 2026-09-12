@@ -82,3 +82,61 @@ describe("ComparisonService", () => {
     expect(results[0]?.text).toBe("");
   });
 });
+
+describe("ComparisonService 跨批次统计", () => {
+  it("汇总各 Agent 参与数/完成/失败/平均耗时/最快胜出", async () => {
+    const { runStore, service } = buildService();
+    // 批次 1：a 快于 b
+    const r1 = await service["runs"].createRun({ agentName: "forge-dev", task: "t" });
+    const r2 = await service["runs"].createRun({ agentName: "forge-dev", task: "t" });
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    await runStore.update(r1.id, {
+      status: "completed",
+      startedAt: new Date(Date.now() - 2000).toISOString(),
+      finishedAt: new Date().toISOString(),
+    });
+    await runStore.update(r2.id, {
+      status: "completed",
+      startedAt: new Date(Date.now() - 5000).toISOString(),
+      finishedAt: new Date().toISOString(),
+    });
+    await service.create({
+      task: "t",
+      items: [
+        { agentName: "agent-a", runId: r1.id },
+        { agentName: "agent-b", runId: r2.id },
+      ],
+    });
+    // 批次 2：b 胜，a 失败
+    const r3 = await service["runs"].createRun({ agentName: "forge-dev", task: "t" });
+    const r4 = await service["runs"].createRun({ agentName: "forge-dev", task: "t" });
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    await runStore.update(r3.id, {
+      status: "failed",
+      startedAt: new Date().toISOString(),
+      finishedAt: new Date().toISOString(),
+      error: "boom",
+    });
+    await runStore.update(r4.id, {
+      status: "completed",
+      startedAt: new Date(Date.now() - 1000).toISOString(),
+      finishedAt: new Date().toISOString(),
+    });
+    await service.create({
+      task: "t",
+      items: [
+        { agentName: "agent-a", runId: r3.id },
+        { agentName: "agent-b", runId: r4.id },
+      ],
+    });
+
+    const stats = await service.stats();
+    const a = stats.find((entry) => entry.agentName === "agent-a");
+    const b = stats.find((entry) => entry.agentName === "agent-b");
+    expect(a).toMatchObject({ batches: 2, completed: 1, failed: 1, fastestWins: 1 });
+    expect(b).toMatchObject({ batches: 2, completed: 2, failed: 0, fastestWins: 1 });
+    expect(a?.avgDurationMs).not.toBeNull();
+    // 并列（各 1 胜）时按名称排序
+    expect(stats.map((entry) => entry.agentName)).toEqual(["agent-a", "agent-b"]);
+  });
+});
