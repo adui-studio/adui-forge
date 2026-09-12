@@ -1,12 +1,29 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Editor, loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
-import { FolderOpen, Plus, Save, X } from "lucide-react";
+import { FolderGit2, FolderOpen, Plus, Save, X } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { App as AntApp, Button, Card, Empty, Form, Input, Modal, Popconfirm } from "antd";
+import {
+  App as AntApp,
+  Button,
+  Card,
+  Empty,
+  Form,
+  Input,
+  Modal,
+  Popconfirm,
+  Spin,
+  Tag,
+} from "antd";
 import { FileTree } from "@/components/workspace/file-tree.tsx";
-import { deleteWorkspaceFile, fetchWorkspaceFile, writeWorkspaceFile } from "@/lib/workspace.ts";
+import {
+  commitGit,
+  deleteWorkspaceFile,
+  fetchGitStatus,
+  fetchWorkspaceFile,
+  writeWorkspaceFile,
+} from "@/lib/workspace.ts";
 import { authHeader } from "@/lib/auth.ts";
 
 // 用 new URL(specifier, import.meta.url) 绕开 monaco exports 通配符与 ?worker 的解析冲突；
@@ -51,6 +68,14 @@ export function WorkspacePage() {
   const [tabs, setTabs] = useState<EditorTab[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [newFileOpen, setNewFileOpen] = useState(false);
+  const [showGit, setShowGit] = useState(false);
+  const [gitMessage, setGitMessage] = useState("");
+
+  const { data: gitStatus, refetch: refetchGit } = useQuery({
+    queryKey: ["workspace-git"],
+    queryFn: fetchGitStatus,
+    enabled: showGit,
+  });
 
   const { data: rootAvailable } = useQuery({
     queryKey: ["workspace-available"],
@@ -125,6 +150,18 @@ export function WorkspacePage() {
     },
   });
 
+  const commit = useMutation({
+    mutationFn: () => {
+      const paths = (gitStatus?.changes ?? []).map((change) => change.path);
+      return commitGit(gitMessage, paths);
+    },
+    onSuccess: () => {
+      void message.success(t("workspace.gitCommitted"));
+      setGitMessage("");
+      void refetchGit();
+    },
+  });
+
   return (
     <>
       <div className="mb-4 flex items-center gap-2">
@@ -133,6 +170,13 @@ export function WorkspacePage() {
         <Button
           size="small"
           className="ml-auto"
+          icon={<FolderGit2 className="h-3.5 w-3.5" />}
+          onClick={() => setShowGit((open) => !open)}
+        >
+          Git
+        </Button>
+        <Button
+          size="small"
           icon={<Plus className="h-3.5 w-3.5" />}
           onClick={() => setNewFileOpen(true)}
         >
@@ -268,6 +312,51 @@ export function WorkspacePage() {
             )}
           </div>
         </div>
+      )}
+
+      {showGit && rootAvailable === true && (
+        <Card className="mt-4" size="small" title={t("workspace.gitTitle")}>
+          {gitStatus === undefined ? (
+            <Spin />
+          ) : (
+            <div className="flex flex-col gap-3">
+              <p className="forge-code text-xs text-slate-500">
+                {t("workspace.gitBranch")}: {gitStatus.branch} · {t("workspace.gitChanges")}:{" "}
+                {gitStatus.changes.length}
+              </p>
+              {gitStatus.changes.length === 0 ? (
+                <p className="text-sm text-slate-500">{t("workspace.gitClean")}</p>
+              ) : (
+                <>
+                  <div className="flex flex-wrap gap-1.5">
+                    {gitStatus.changes.map((change) => (
+                      <Tag key={change.path} className="forge-code" bordered={false}>
+                        {change.code} {change.path}
+                      </Tag>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={gitMessage}
+                      placeholder={t("workspace.gitMessagePlaceholder")}
+                      className="max-w-md"
+                      onChange={(event) => setGitMessage(event.target.value)}
+                    />
+                    <Button
+                      type="primary"
+                      size="small"
+                      disabled={gitMessage.trim() === "" || commit.isPending}
+                      loading={commit.isPending}
+                      onClick={() => commit.mutate()}
+                    >
+                      {t("workspace.gitCommit")}
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </Card>
       )}
 
       <NewFileModal

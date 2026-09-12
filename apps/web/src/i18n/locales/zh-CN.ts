@@ -291,6 +291,13 @@ export const zhCN = {
     newFileExtra: "父目录必须已存在；单文件上限 1 MiB。",
     closeTab: "关闭标签页",
     deleteFileTitle: "删除文件 {{path}}？",
+    gitTitle: "Git 变更",
+    gitBranch: "分支",
+    gitChanges: "变更数",
+    gitClean: "工作区干净，没有未提交变更。",
+    gitMessagePlaceholder: "提交信息，例如：feat: 新增搜索功能",
+    gitCommit: "提交全部变更",
+    gitCommitted: "已提交",
     loadFailed: "文件加载失败。",
   },
   compare: {

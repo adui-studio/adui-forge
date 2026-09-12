@@ -302,6 +302,13 @@ export const en: ZhCNTranslation = {
     newFileExtra: "Parent directory must exist; 1 MiB per file.",
     closeTab: "Close tab",
     deleteFileTitle: "Delete file {{path}}?",
+    gitTitle: "Git changes",
+    gitBranch: "Branch",
+    gitChanges: "Changes",
+    gitClean: "Working tree clean.",
+    gitMessagePlaceholder: "Commit message, e.g. feat: add search",
+    gitCommit: "Commit all",
+    gitCommitted: "Committed",
     loadFailed: "Failed to load the file.",
   },
   compare: {

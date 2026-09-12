@@ -39,6 +39,25 @@ export const deleteWorkspaceFile = (path: string): Promise<void> =>
     method: "DELETE",
   });
 
+export interface GitChangeRecord {
+  code: string;
+  path: string;
+}
+
+export interface GitStatusRecord {
+  branch: string;
+  changes: GitChangeRecord[];
+}
+
+export const fetchGitStatus = (): Promise<GitStatusRecord> =>
+  workspaceRequest<GitStatusRecord>("/api/v1/workspace/git/status");
+
+export const commitGit = (message: string, paths: string[]): Promise<{ commit: string }> =>
+  workspaceRequest<{ commit: string }>("/api/v1/workspace/git/commit", {
+    method: "POST",
+    body: JSON.stringify({ message, paths }),
+  });
+
 export const writeWorkspaceFile = (path: string, content: string): Promise<WorkspaceFileRecord> =>
   workspaceRequest<WorkspaceFileRecord>("/api/v1/workspace/file", {
     method: "PUT",
