@@ -11,11 +11,8 @@ import {
 } from "@nestjs/common";
 import { z } from "zod";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
-import {
-  WorkspaceService,
-  type WorkspaceEntry,
-  type WorkspaceFileContent,
-} from "./workspace.service";
+import { WorkspaceService } from "./workspace.service";
+import type { WorkspaceEntry, WorkspaceFileContent } from "@adui-forge/tool-sdk";
 import { WorkspaceGitService, type GitStatusResult } from "./workspace-git.service";
 
 const pathSchema = z.object({ path: z.string().min(1).max(500) });

@@ -1,6 +1,15 @@
 export { defineTool, type ToolDefinition } from "./define.ts";
 export { ToolRegistry } from "./registry.ts";
 export { resolveInWorkspace } from "./fs/boundary.ts";
+export {
+  MAX_WRITE_BYTES,
+  deleteWorkspaceTextFile,
+  listWorkspaceDir,
+  readWorkspaceTextFile,
+  writeWorkspaceTextFile,
+  type WorkspaceEntry,
+  type WorkspaceFileContent,
+} from "./workspace-files.ts";
 export { createReadFileTool, type ReadFileToolOptions } from "./fs/read-file.ts";
 export { createListFilesTool, type ListFilesToolOptions } from "./fs/list-files.ts";
 export { createSearchFilesTool, type SearchFilesToolOptions } from "./fs/search-files.ts";
