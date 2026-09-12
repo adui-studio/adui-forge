@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@adui-forge/contracts": "workspace:*",
+    "@adui-forge/workflow": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@xyflow/react": "catalog:",
     "antd": "catalog:",

@@ -110,7 +110,9 @@ export interface WorkflowDefinitionRecord {
 export const registerWorkflow = async (input: {
   name: string;
   description: string;
-  tasks: string[];
+  /** 线性定义与图定义二选一；graph 存在时优先生效。 */
+  tasks?: string[];
+  graph?: import("@adui-forge/workflow").WorkflowGraph;
 }): Promise<{ ok: boolean; name: string }> => {
   const response = await fetch("/api/v1/workflows", {
     method: "POST",

@@ -424,6 +424,9 @@ importers:
       '@adui-forge/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@adui-forge/workflow':
+        specifier: workspace:*
+        version: link:../../packages/workflow
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.102.8(react@19.2.8)

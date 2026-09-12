@@ -1,7 +1,11 @@
+import type { WorkflowGraph } from "@adui-forge/workflow";
+
 export interface WorkflowDefinitionRecord {
   name: string;
   description: string;
+  /** graph 定义时为拓扑序 agent 任务文本（兼容展示）。 */
   tasks: string[];
+  graph?: WorkflowGraph;
 }
 
 export const fetchWorkflows = async (): Promise<WorkflowDefinitionRecord[]> => {
