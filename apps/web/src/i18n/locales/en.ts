@@ -294,6 +294,9 @@ export const en: ZhCNTranslation = {
     title: "Skills",
     subtitle:
       "A skill is a reusable agent capability above tools: its instructions are injected into the system prompt of agents that select it.",
+    import: "Import from SKILL.md",
+    importDone: "Imported {{count}} skill(s)",
+    importFail: "Import failed",
     newSkill: "New skill",
     editTitle: "Edit skill: {{name}}",
     empty: "No skills yet — create the first instruction entry",

@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vite-plus/test";
-import { composeSystemPrompt, resolveSkills, skillSchema, type Skill } from "../src/index.ts";
+import {
+  composeSystemPrompt,
+  parseSkillMarkdown,
+  resolveSkills,
+  skillSchema,
+  type Skill,
+} from "../src/index.ts";
 
 const baseSkill: Skill = {
   name: "bug-fixing",
@@ -54,5 +60,35 @@ describe("composeSystemPrompt", () => {
     ]);
     expect(prompt).toContain("## Skill: bug-fixing");
     expect(prompt).toContain("## Skill: testing");
+  });
+});
+
+describe("parseSkillMarkdown", () => {
+  it("解析 frontmatter 的 name/description，正文作为 instructions", () => {
+    const raw = `---
+name: plan
+description: 先规划后动手
+---
+
+# Plan
+
+先理解需求再动手。`;
+    const parsed = parseSkillMarkdown(raw);
+    expect(parsed.name).toBe("plan");
+    expect(parsed.description).toBe("先规划后动手");
+    expect(parsed.instructions).toContain("# Plan");
+    expect(parsed.instructions).toContain("先理解需求再动手。");
+  });
+
+  it("无 frontmatter 时整篇作为 instructions", () => {
+    const parsed = parseSkillMarkdown("# 只有一段指令\n内容");
+    expect(parsed.name).toBeUndefined();
+    expect(parsed.instructions).toContain("只有一段指令");
+  });
+
+  it("处理 CRLF 行尾", () => {
+    const parsed = parseSkillMarkdown("---\r\nname: x\r\n---\r\n\r\nbody");
+    expect(parsed.name).toBe("x");
+    expect(parsed.instructions).toBe("body");
   });
 });

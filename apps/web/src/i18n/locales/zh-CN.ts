@@ -282,6 +282,9 @@ export const zhCN = {
   skills: {
     title: "Skills",
     subtitle: "Skill 是高于 Tool 的可复用 Agent 能力：指令文本会注入选中它的 Agent 系统提示词。",
+    import: "从 SKILL.md 导入",
+    importDone: "导入完成：{{count}} 个 Skill",
+    importFail: "导入失败",
     newSkill: "新建 Skill",
     editTitle: "编辑 Skill：{{name}}",
     empty: "还没有 Skill——创建第一个指令库条目",

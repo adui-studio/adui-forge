@@ -3,5 +3,7 @@ export {
   composeSystemPrompt,
   resolveSkills,
   skillSchema,
+  parseSkillMarkdown,
+  SKILL_FILE_NAME,
 } from "./skill.ts";
-export type { Skill } from "./skill.ts";
+export type { ParsedSkillMarkdown, Skill } from "./skill.ts";

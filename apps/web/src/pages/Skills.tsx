@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Plus, Save } from "lucide-react";
+import { BookOpen, FolderInput, Plus, Save } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { App as AntApp, Button, Card, Empty, Form, Input, Spin, Switch, Tag } from "antd";
-import { deleteSkill, fetchSkills, setSkillEnabled, upsertSkill } from "@/lib/api.ts";
+import { App as AntApp, Button, Card, Empty, Form, Input, Space, Spin, Switch, Tag } from "antd";
+import { deleteSkill, fetchSkills, importSkills, setSkillEnabled, upsertSkill } from "@/lib/api.ts";
 
 /** Skills 管理页（REQUIREMENTS §35）：指令库的增删改查与启停；启用的 Skill 注入选中它的 Agent。 */
 export function SkillsPage() {
@@ -31,6 +31,18 @@ export function SkillsPage() {
     },
   });
 
+  const importFromDir = useMutation({
+    mutationFn: () => importSkills(),
+    onSuccess: (result) => {
+      void queryClient.invalidateQueries({ queryKey: ["skills"] });
+      if (result.ok) {
+        void message.success(t("skills.importDone", { count: result.imported?.length ?? 0 }));
+      } else {
+        void message.warning(result.message ?? t("skills.importFail"));
+      }
+    },
+  });
+
   const remove = useMutation({
     mutationFn: (name: string) => deleteSkill(name),
     onSuccess: () => {
@@ -46,13 +58,22 @@ export function SkillsPage() {
           <BookOpen className="h-5 w-5 text-brand-300" />
           <h1 className="text-xl font-semibold text-slate-100">{t("skills.title")}</h1>
         </div>
-        <Button
-          type="primary"
-          icon={<Plus className="h-3.5 w-3.5" />}
-          onClick={() => setEditing(null)}
-        >
-          {t("skills.newSkill")}
-        </Button>
+        <Space>
+          <Button
+            icon={<FolderInput className="h-3.5 w-3.5" />}
+            loading={importFromDir.isPending}
+            onClick={() => importFromDir.mutate()}
+          >
+            {t("skills.import")}
+          </Button>
+          <Button
+            type="primary"
+            icon={<Plus className="h-3.5 w-3.5" />}
+            onClick={() => setEditing(null)}
+          >
+            {t("skills.newSkill")}
+          </Button>
+        </Space>
       </div>
       <p className="mb-4 text-sm text-slate-400">{t("skills.subtitle")}</p>
 
@@ -114,6 +135,11 @@ export function SkillsPage() {
       {toggle.isError && (
         <p role="alert" className="mt-3 text-sm text-red-600">
           {String(toggle.error)}
+        </p>
+      )}
+      {importFromDir.isError && (
+        <p role="alert" className="mt-3 text-sm text-red-600">
+          {String(importFromDir.error)}
         </p>
       )}
       {remove.isError && (

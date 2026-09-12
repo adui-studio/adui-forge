@@ -4,6 +4,7 @@ import { skillSchema } from "@adui-forge/skill-sdk";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { AgentConfigService } from "../agents/agent-config.service";
 import { SKILL_STORE, type SkillRecord, type SkillStore } from "./skill.store";
+import { importSkillsFromDir } from "./skill.import";
 
 export const upsertSkillSchema = skillSchema;
 export type UpsertSkillInput = z.infer<typeof upsertSkillSchema>;
@@ -42,6 +43,22 @@ export class SkillsController {
     // 指令变更立即生效：重建引用它的自定义 Agent
     await this.agents.rebuildAll();
     return { ok: true, name: record.name };
+  }
+
+  @Post("import")
+  async importFromDir() {
+    const dir = process.env.FORGE_SKILLS_DIR;
+    if (dir === undefined || dir.trim() === "") {
+      return {
+        ok: false as const,
+        message: "未配置 FORGE_SKILLS_DIR，无法导入 SKILL.md（服务端目录，不接受客户端路径）",
+      };
+    }
+    const result = await importSkillsFromDir(dir, {
+      store: this.store,
+      rebuild: () => this.agents.rebuildAll(),
+    });
+    return { ok: true as const, ...result };
   }
 
   @Patch(":name/enabled")

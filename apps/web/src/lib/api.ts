@@ -274,6 +274,16 @@ export const setSkillEnabled = (name: string, enabled: boolean): Promise<{ ok: b
     body: JSON.stringify({ enabled }),
   });
 
+export interface SkillImportResult {
+  ok: boolean;
+  imported?: string[];
+  skipped?: Array<{ name: string; reason: string }>;
+  message?: string;
+}
+
+export const importSkills = (): Promise<SkillImportResult> =>
+  request<SkillImportResult>("/api/v1/skills/import", { method: "POST" });
+
 export const deleteSkill = (name: string): Promise<{ ok: boolean }> =>
   request<{ ok: boolean }>(`/api/v1/skills/${encodeURIComponent(name)}`, {
     method: "DELETE",

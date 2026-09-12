@@ -60,3 +60,5 @@ describe("MCP Server 观测", () => {
     expect(result.ok).toBe(false);
   }, 15_000);
 });
+
+// 说明：Skill 导入测试见 skills-import.spec.ts
