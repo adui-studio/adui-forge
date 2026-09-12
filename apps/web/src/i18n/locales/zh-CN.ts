@@ -301,6 +301,8 @@ export const zhCN = {
     diffTitle: "变更对比：{{path}}",
     diffUntracked: "新文件（未跟踪）",
     closeDiff: "关闭对比",
+    runnerLaunchHint: "桌面模式：指定本地工作区目录并启动 Local Runner",
+    runnerStart: "启动 Local Runner",
     loadFailed: "文件加载失败。",
   },
   compare: {

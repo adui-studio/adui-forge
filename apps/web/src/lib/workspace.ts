@@ -1,4 +1,15 @@
 import { authHeader } from "./auth.ts";
+import { getPlatformAdapter } from "../platform/adapter.ts";
+
+/** Desktop 下请求路由到本地 Runner（ADR-005 同形 REST）；web 返回云端相对路径。 */
+const workspaceBase = async (): Promise<{ base: string; headers: Record<string, string> }> => {
+  const adapter = getPlatformAdapter();
+  const runner = await adapter.getRunnerInfo();
+  if (runner?.running === true && runner.baseUrl !== null) {
+    return { base: runner.baseUrl, headers: { authorization: `Bearer ${runner.token ?? ""}` } };
+  }
+  return { base: "", headers: {} };
+};
 
 /** Workspace 文件 API（ADR-004 阶段 1/2 契约）。 */
 
@@ -15,8 +26,9 @@ export interface WorkspaceFileRecord {
 }
 
 const workspaceRequest = async <T>(path: string, init?: RequestInit): Promise<T> => {
-  const response = await fetch(path, {
-    headers: { "content-type": "application/json", ...authHeader() },
+  const { base, headers } = await workspaceBase();
+  const response = await fetch(`${base}/api/v1/workspace/${path}`, {
+    headers: { "content-type": "application/json", ...authHeader(), ...headers },
     ...init,
   });
   if (!response.ok) {
@@ -27,15 +39,13 @@ const workspaceRequest = async <T>(path: string, init?: RequestInit): Promise<T>
 };
 
 export const fetchWorkspaceTree = (path: string): Promise<WorkspaceEntryRecord[]> =>
-  workspaceRequest<WorkspaceEntryRecord[]>(
-    `/api/v1/workspace/tree?path=${encodeURIComponent(path)}`,
-  );
+  workspaceRequest<WorkspaceEntryRecord[]>(`tree?path=${encodeURIComponent(path)}`);
 
 export const fetchWorkspaceFile = (path: string): Promise<WorkspaceFileRecord> =>
-  workspaceRequest<WorkspaceFileRecord>(`/api/v1/workspace/file?path=${encodeURIComponent(path)}`);
+  workspaceRequest<WorkspaceFileRecord>(`file?path=${encodeURIComponent(path)}`);
 
 export const deleteWorkspaceFile = (path: string): Promise<void> =>
-  workspaceRequest<void>(`/api/v1/workspace/file?path=${encodeURIComponent(path)}`, {
+  workspaceRequest<void>(`file?path=${encodeURIComponent(path)}`, {
     method: "DELETE",
   });
 
@@ -69,7 +79,7 @@ export const commitGit = (message: string, paths: string[]): Promise<{ commit: s
   });
 
 export const writeWorkspaceFile = (path: string, content: string): Promise<WorkspaceFileRecord> =>
-  workspaceRequest<WorkspaceFileRecord>("/api/v1/workspace/file", {
+  workspaceRequest<WorkspaceFileRecord>("file", {
     method: "PUT",
     body: JSON.stringify({ path, content }),
   });

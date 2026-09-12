@@ -312,6 +312,8 @@ export const en: ZhCNTranslation = {
     diffTitle: "Changes: {{path}}",
     diffUntracked: "New file (untracked)",
     closeDiff: "Close diff",
+    runnerLaunchHint: "Desktop mode: pick a local workspace directory and start the Local Runner",
+    runnerStart: "Start Local Runner",
     loadFailed: "Failed to load the file.",
   },
   compare: {

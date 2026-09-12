@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DiffEditor, Editor, loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
 import { FolderGit2, FolderOpen, Plus, Save, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   App as AntApp,
@@ -25,7 +25,8 @@ import {
   fetchWorkspaceFile,
   writeWorkspaceFile,
 } from "@/lib/workspace.ts";
-import { authHeader } from "@/lib/auth.ts";
+import { getPlatformAdapter, type RunnerInfo } from "@/platform/adapter.ts";
+import { fetchWorkspaceTree } from "@/lib/workspace.ts";
 
 // 用 new URL(specifier, import.meta.url) 绕开 monaco exports 通配符与 ?worker 的解析冲突；
 // 路径相对本文件指回 web 层 node_modules 的本地安装（ADR-004：不走 CDN）。
@@ -91,16 +92,55 @@ export function WorkspacePage() {
     enabled: diffPath !== null,
   });
 
-  const { data: rootAvailable } = useQuery({
-    queryKey: ["workspace-available"],
+  const [runner, setRunner] = useState<RunnerInfo | null>(null);
+  const [runnerRoot, setRunnerRoot] = useState(
+    () => globalThis.localStorage?.getItem("forge.runnerRoot") ?? "",
+  );
+  const [platform, setPlatform] = useState<"web" | "desktop">("web");
+  useEffect(() => {
+    void getPlatformAdapter()
+      .getPlatformInfo()
+      .then((info) => setPlatform(info.platform));
+    void getPlatformAdapter()
+      .getRunnerInfo()
+      .then((info) => setRunner(info));
+  }, []);
+
+  // 可用性探测：桌面端先看 Runner（路由经 lib/workspace 的 workspaceBase），云端走 API
+  const { data: rootAvailable, refetch: refetchAvailable } = useQuery({
+    queryKey: ["workspace-available", runner?.baseUrl],
     queryFn: async (): Promise<boolean> => {
-      const response = await fetch("/api/v1/workspace/tree?path=.", {
-        headers: { ...authHeader() },
-      });
-      return response.ok;
+      const info = await getPlatformAdapter().getRunnerInfo();
+      if (info?.running === true && info.baseUrl !== null) {
+        setRunner(info);
+      }
+      try {
+        await fetchWorkspaceTree(".");
+        return true;
+      } catch {
+        return false;
+      }
     },
-    staleTime: 30_000,
+    staleTime: 5_000,
   });
+
+  const startRunner = async (): Promise<void> => {
+    globalThis.localStorage?.setItem("forge.runnerRoot", runnerRoot);
+    // dev 接线：runner_cwd 与 entry 由桌面端 localStorage 提供（ADR-005 阶段 3 dev 约定）
+    const runnerCwd = globalThis.localStorage?.getItem("forge.runnerCwd") ?? "apps/runner";
+    const entry = globalThis.localStorage?.getItem("forge.runnerEntry") ?? "src/index.ts";
+    await getPlatformAdapter().startRunner(runnerRoot, runnerCwd, entry);
+    // 端口经 stdout 异步解析：轮询至就绪（上限 ~5s）
+    for (let attempt = 0; attempt < 10; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const info = await getPlatformAdapter().getRunnerInfo();
+      if (info?.running === true && info.baseUrl !== null) {
+        setRunner(info);
+        break;
+      }
+    }
+    await refetchAvailable();
+  };
 
   const openFile = async (path: string): Promise<void> => {
     const existing = tabs.findIndex((tab) => tab.path === path);
@@ -217,12 +257,30 @@ export function WorkspacePage() {
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             description={
               <span className="text-slate-500">
-                {t("workspace.unavailable")}
-                <br />
-                <code className="forge-code text-[#B79AEC]">FORGE_WORKSPACE_ROOT</code>
+                {platform === "desktop"
+                  ? t("workspace.runnerLaunchHint")
+                  : t("workspace.unavailable")}
               </span>
             }
-          />
+          >
+            {platform === "desktop" && (
+              <div className="mt-3 flex items-center justify-center gap-2">
+                <Input
+                  value={runnerRoot}
+                  placeholder="D:/projects/my-app"
+                  className="max-w-sm"
+                  onChange={(event) => setRunnerRoot(event.target.value)}
+                />
+                <Button
+                  type="primary"
+                  disabled={runnerRoot.trim().length === 0}
+                  onClick={() => void startRunner()}
+                >
+                  {t("workspace.runnerStart")}
+                </Button>
+              </div>
+            )}
+          </Empty>
         </Card>
       ) : (
         <div className="flex h-[calc(100vh-12rem)] gap-4">
