@@ -17,6 +17,9 @@ const ApprovalsPage = lazy(() =>
 );
 const LoginPage = lazy(() => import("./pages/Login.tsx").then((m) => ({ default: m.LoginPage })));
 const McpPage = lazy(() => import("./pages/Mcp.tsx").then((m) => ({ default: m.McpPage })));
+const ComparePage = lazy(() =>
+  import("./pages/Compare.tsx").then((m) => ({ default: m.ComparePage })),
+);
 const ToolsPage = lazy(() => import("./pages/Tools.tsx").then((m) => ({ default: m.ToolsPage })));
 const SkillsPage = lazy(() =>
   import("./pages/Skills.tsx").then((m) => ({ default: m.SkillsPage })),
@@ -58,6 +61,7 @@ export function App() {
           <Route path="/memory" element={<MemoryPage />} />
           <Route path="/skills" element={<SkillsPage />} />
           <Route path="/tools" element={<ToolsPage />} />
+          <Route path="/compare" element={<ComparePage />} />
           <Route path="/mcp" element={<McpPage />} />
           <Route path="/workflows" element={<WorkflowsPage />} />
           <Route path="/workflows/new" element={<WorkflowEditorPage isNew />} />

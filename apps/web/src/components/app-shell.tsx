@@ -13,6 +13,7 @@ import {
   Plug,
   Search,
   Settings,
+  Split,
   Users,
   Workflow,
 } from "lucide-react";
@@ -37,6 +38,7 @@ const NAV_ITEMS = [
   { to: "/workflows", labelKey: "nav.workflows", icon: Workflow, key: "workflows" },
   { to: "/mcp", labelKey: "nav.mcp", icon: Plug, key: "mcp" },
   { to: "/tools", labelKey: "nav.tools", icon: Wrench, key: "tools" },
+  { to: "/compare", labelKey: "nav.compare", icon: Split, key: "compare" },
   {
     to: "/approvals",
     labelKey: "nav.approvals",
