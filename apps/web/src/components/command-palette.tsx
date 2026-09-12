@@ -44,6 +44,11 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
         { to: "/skills", labelKey: "nav.skills", keywords: "skills 技能 指令 skills" },
         { to: "/tools", labelKey: "nav.tools", keywords: "tools 工具 权限 tools" },
         { to: "/compare", labelKey: "nav.compare", keywords: "compare 对比 A/B compare" },
+        {
+          to: "/workspace",
+          labelKey: "nav.workspace",
+          keywords: "workspace 工作区 文件 编辑器 ide",
+        },
         { to: "/memory", labelKey: "nav.memory", keywords: "memory 记忆 摘要 memory" },
         { to: "/settings", labelKey: "nav.settings", keywords: "settings 设置 配置 settings" },
       ].map((page) => ({

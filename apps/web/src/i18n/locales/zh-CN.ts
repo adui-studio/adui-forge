@@ -10,6 +10,7 @@ export const zhCN = {
     mcp: "MCP",
     tools: "工具",
     compare: "对比",
+    workspace: "工作区",
     skills: "Skills",
     approvals: "审批",
     memory: "记忆",
@@ -273,6 +274,16 @@ export const zhCN = {
     testTooltip: "重新连接测试（不影响运行中的工具池）",
     testOk: "连接成功，桥接 {{count}} 个工具",
     testFail: "连接失败：{{error}}",
+  },
+  workspace: {
+    title: "工作区",
+    subtitle:
+      "浏览与编辑 FORGE_WORKSPACE_ROOT 下的文件（ADR-004：边界内读写，单文件 1 MiB 上限）。",
+    explorer: "文件",
+    pickFile: "从左侧选择一个文件打开编辑。",
+    unavailable: "Workspace 未启用：请在 API 环境配置",
+    openFile: "打开文件",
+    loadFailed: "文件加载失败。",
   },
   compare: {
     title: "Agent 运行对比",

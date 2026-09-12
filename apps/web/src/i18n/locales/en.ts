@@ -12,6 +12,7 @@ export const en: ZhCNTranslation = {
     mcp: "MCP",
     tools: "Tools",
     compare: "Compare",
+    workspace: "Workspace",
     skills: "Skills",
     approvals: "Approvals",
     memory: "Memory",
@@ -284,6 +285,16 @@ export const en: ZhCNTranslation = {
     testTooltip: "Reconnect for testing (does not touch the live tool pool)",
     testOk: "Connected, {{count}} tools bridged",
     testFail: "Connection failed: {{error}}",
+  },
+  workspace: {
+    title: "Workspace",
+    subtitle:
+      "Browse and edit files under FORGE_WORKSPACE_ROOT (ADR-004: boundary-checked, 1 MiB per file).",
+    explorer: "Files",
+    pickFile: "Pick a file on the left to edit.",
+    unavailable: "Workspace is disabled: configure in the API environment",
+    openFile: "Open file",
+    loadFailed: "Failed to load the file.",
   },
   compare: {
     title: "Agent run comparison",

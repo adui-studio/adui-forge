@@ -1,6 +1,7 @@
 import {
   Brain,
   ClipboardCheck,
+  FolderOpen,
   Gauge,
   LayoutList,
   ListTodo,
@@ -39,6 +40,7 @@ const NAV_ITEMS = [
   { to: "/mcp", labelKey: "nav.mcp", icon: Plug, key: "mcp" },
   { to: "/tools", labelKey: "nav.tools", icon: Wrench, key: "tools" },
   { to: "/compare", labelKey: "nav.compare", icon: Split, key: "compare" },
+  { to: "/workspace", labelKey: "nav.workspace", icon: FolderOpen, key: "workspace" },
   {
     to: "/approvals",
     labelKey: "nav.approvals",
