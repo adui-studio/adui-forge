@@ -12,6 +12,7 @@ struct RunnerProcess {
   child: Child,
   port: u16,
   token: String,
+  trusted: bool,
 }
 
 struct RunnerState {
@@ -24,6 +25,7 @@ struct RunnerInfo {
   #[serde(rename = "baseUrl")]
   base_url: Option<String>,
   token: Option<String>,
+  trusted: bool,
 }
 
 /// 生成一次性 token（时间 + pid 熵足够防本机进程碰撞，不落盘）。
@@ -54,6 +56,7 @@ fn spawn_runner(
   workspace_root: String,
   runner_cwd: String,
   entry: String,
+  trusted_local_mode: bool,
 ) -> Result<RunnerInfo, String> {
   let mut guard = state.process.lock().map_err(|_| "runner state poisoned")?;
   if let Some(existing) = guard.as_ref() {
@@ -62,6 +65,7 @@ fn spawn_runner(
       running: true,
       base_url: Some(format!("http://127.0.0.1:{}", existing.port)),
       token: Some(existing.token.clone()),
+      trusted: trusted_local_mode,
     });
   }
 
@@ -74,6 +78,7 @@ fn spawn_runner(
     .env("FORGE_WORKSPACE_ROOT", &workspace_root)
     .env("RUNNER_TOKEN", &token)
     .env("RUNNER_PORT", "0")
+    .env("FORGE_TRUSTED_LOCAL_MODE", if trusted_local_mode { "1" } else { "0" })
     .stdout(Stdio::piped())
     .spawn()
     .map_err(|error| format!("failed to spawn runner: {error}"))?;
@@ -103,12 +108,14 @@ fn spawn_runner(
     child,
     port: 0,
     token: token.clone(),
+    trusted: trusted_local_mode,
   });
 
   Ok(RunnerInfo {
     running: true,
     base_url: None,
     token: Some(token),
+    trusted: trusted_local_mode,
   })
 }
 
@@ -120,11 +127,13 @@ fn runner_status(state: tauri::State<'_, RunnerState>) -> RunnerInfo {
       running: true,
       base_url: Some(format!("http://127.0.0.1:{}", process.port)),
       token: Some(process.token.clone()),
+      trusted: process.trusted,
     },
     _ => RunnerInfo {
       running: false,
       base_url: None,
       token: None,
+      trusted: false,
     },
   }
 }

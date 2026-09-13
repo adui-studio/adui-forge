@@ -310,6 +310,12 @@ export const zhCN = {
     agentPanelPlaceholder: "例如：给 main.ts 补充错误处理",
     agentContext: "附带当前文件",
     agentPanelHint: "Ctrl + Enter 发送",
+    approvalTitle: "等待审批",
+    trustTitle: "开启 Trusted Local Mode？",
+    trustDesc:
+      "开启后本地 Agent 可执行 Shell 命令与 Git 写入（无沙箱隔离，仅凭你的信任）。高风险操作仍会弹出审批卡等待你批准。",
+    trustOk: "信任并重启",
+    trustToggle: "Trusted",
     loadFailed: "文件加载失败。",
   },
   compare: {

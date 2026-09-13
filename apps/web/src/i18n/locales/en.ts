@@ -322,6 +322,12 @@ export const en: ZhCNTranslation = {
     agentPanelPlaceholder: "e.g. add error handling to main.ts",
     agentContext: "Attach current file",
     agentPanelHint: "Ctrl + Enter to send",
+    approvalTitle: "Waiting for approval",
+    trustTitle: "Enable Trusted Local Mode?",
+    trustDesc:
+      "The local agent will be able to run shell commands and git writes (no sandbox isolation, only your trust). High-risk operations will still pause for your approval.",
+    trustOk: "Trust & restart",
+    trustToggle: "Trusted",
     loadFailed: "Failed to load the file.",
   },
   compare: {

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DiffEditor, Editor, loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
-import { Bot, FilePen, FolderGit2, FolderOpen, Plus, Save, X } from "lucide-react";
+import { Bot, FilePen, FolderGit2, FolderOpen, Plus, Save, ShieldAlert, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -98,6 +98,9 @@ export function WorkspacePage() {
   const [runnerRoot, setRunnerRoot] = useState(
     () => globalThis.localStorage?.getItem("forge.runnerRoot") ?? "",
   );
+  const [trustedLocalMode, setTrustedLocalMode] = useState(
+    () => globalThis.localStorage?.getItem("forge.trustedMode") === "1",
+  );
   const [platform, setPlatform] = useState<"web" | "desktop">("web");
   useEffect(() => {
     void getPlatformAdapter()
@@ -128,10 +131,11 @@ export function WorkspacePage() {
 
   const startRunner = async (): Promise<void> => {
     globalThis.localStorage?.setItem("forge.runnerRoot", runnerRoot);
+    globalThis.localStorage?.setItem("forge.trustedMode", trustedLocalMode ? "1" : "0");
     // dev 接线：runner_cwd 与 entry 由桌面端 localStorage 提供（ADR-005 阶段 3 dev 约定）
     const runnerCwd = globalThis.localStorage?.getItem("forge.runnerCwd") ?? "apps/runner";
     const entry = globalThis.localStorage?.getItem("forge.runnerEntry") ?? "src/index.ts";
-    await getPlatformAdapter().startRunner(runnerRoot, runnerCwd, entry);
+    await getPlatformAdapter().startRunner(runnerRoot, runnerCwd, entry, trustedLocalMode);
     // 端口经 stdout 异步解析：轮询至就绪（上限 ~5s）
     for (let attempt = 0; attempt < 10; attempt++) {
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -141,6 +145,15 @@ export function WorkspacePage() {
         break;
       }
     }
+    await refetchAvailable();
+  };
+
+  /** 切换信任模式需要重建 Runner 进程（env 注入 FORGE_TRUSTED_LOCAL_MODE）。 */
+  const restartRunner = async (): Promise<void> => {
+    await getPlatformAdapter().stopRunner();
+    const runnerCwd = globalThis.localStorage?.getItem("forge.runnerCwd") ?? "apps/runner";
+    const entry = globalThis.localStorage?.getItem("forge.runnerEntry") ?? "src/index.ts";
+    await getPlatformAdapter().startRunner(runnerRoot, runnerCwd, entry, trustedLocalMode);
     await refetchAvailable();
   };
 
@@ -234,6 +247,27 @@ export function WorkspacePage() {
         >
           {t("workspace.agentPanelTitle")}
         </Button>
+        {platform === "desktop" && runner?.running === true && (
+          <Popconfirm
+            title={t("workspace.trustTitle")}
+            description={t("workspace.trustDesc")}
+            okText={t("workspace.trustOk")}
+            cancelText={t("common.cancel")}
+            onConfirm={() => {
+              setTrustedLocalMode(!trustedLocalMode);
+              void restartRunner();
+            }}
+          >
+            <Button
+              size="small"
+              icon={<ShieldAlert className="h-3.5 w-3.5" />}
+              variant={trustedLocalMode ? "solid" : "outlined"}
+              color={trustedLocalMode ? "gold" : "default"}
+            >
+              {t("workspace.trustToggle")}
+            </Button>
+          </Popconfirm>
+        )}
         <Button
           size="small"
           icon={<FolderGit2 className="h-3.5 w-3.5" />}

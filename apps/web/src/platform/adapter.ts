@@ -20,14 +20,23 @@ export interface RunnerInfo {
   running: boolean;
   baseUrl: string | null;
   token: string | null;
+  /** ADR-006：Trusted Local Mode（Shell/Git 工具经 HostSandbox 装配）。 */
+  trusted: boolean;
 }
 
 export interface PlatformAdapter {
   getPlatformInfo(): Promise<PlatformInfo>;
   /** Local Runner（ADR-005）：desktop 实现；web 恒为 null。 */
   getRunnerInfo(): Promise<RunnerInfo | null>;
+  /** 停止本地 Runner（desktop 实现；web noop）。 */
+  stopRunner(): Promise<void>;
   /** 启动本地 Runner；web 不支持（返回 null）。 */
-  startRunner(workspaceRoot: string, runnerCwd: string, entry: string): Promise<RunnerInfo | null>;
+  startRunner(
+    workspaceRoot: string,
+    runnerCwd: string,
+    entry: string,
+    trustedMode: boolean,
+  ): Promise<RunnerInfo | null>;
   /** 打开外部链接（浏览器新窗口 / 系统默认浏览器）。 */
   openExternal(url: string): Promise<void>;
   /** 系统通知（DesktopGuidelines §155：窗口后台时 Run 状态变化提醒）。 */
@@ -67,6 +76,9 @@ export const createWebPlatformAdapter = (): PlatformAdapter => ({
   async getRunnerInfo() {
     return null;
   },
+  async stopRunner() {
+    return;
+  },
   async startRunner() {
     return null;
   },
@@ -92,12 +104,17 @@ export const createDesktopPlatformAdapter = (): PlatformAdapter => ({
     if (!hasTauriInvoke()) return null;
     return (await tauriInvoke("runner_status")) as RunnerInfo;
   },
-  async startRunner(workspaceRoot: string, runnerCwd: string, entry: string) {
+  async stopRunner() {
+    if (!hasTauriInvoke()) return;
+    await tauriInvoke("runner_stop");
+  },
+  async startRunner(workspaceRoot: string, runnerCwd: string, entry: string, trustedMode: boolean) {
     if (!hasTauriInvoke()) return null;
     return (await tauriInvoke("spawn_runner", {
       workspaceRoot,
       runnerCwd,
       entry,
+      trustedLocalMode: trustedMode,
     })) as RunnerInfo;
   },
   // 经 tauri-plugin-notification(capability: notification:default)发系统通知

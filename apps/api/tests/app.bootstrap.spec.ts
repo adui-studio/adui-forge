@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, it } from "vite-plus/test";
 
 /**
  * 容器装配冒烟：以真实进程启动 API（PORT=3999），断言健康检查可用。
