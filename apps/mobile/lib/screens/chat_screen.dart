@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../api_client.dart';
 import '../providers.dart';
 
-/// 消息气泡的极简模型（MVP：本地内存，不做会话持久化）。
+/// 消息气泡的极简模型。
 class _ChatMessage {
   _ChatMessage.user(this.text)
       : role = 'user',
@@ -25,8 +25,8 @@ class _ChatMessage {
 
 enum _MessageState { pending, done, failed }
 
-/// Chat 屏（MVP）：每条消息一个独立 Run；发送后轮询至终态并展示模型输出。
-/// 与 Web 端不同，移动端暂用轮询而非 SSE，会话持久化由后续版本接入。
+/// Chat 屏：每条消息一个独立 Run；发送后轮询至终态并展示模型输出。
+/// 会话经 conversations API 持久化——与 Web 端共享同一份会话数据。
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
 
@@ -38,6 +38,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final List<_ChatMessage> _messages = [];
   final TextEditingController _input = TextEditingController();
   final ScrollController _scroll = ScrollController();
+  String? _conversationId;
   bool _busy = false;
 
   @override
@@ -60,6 +61,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     try {
       final client = ref.read(apiClientProvider);
+      // 会话持久化：首条消息时创建会话（标题由后端取前 30 字）
+      _conversationId ??= (await client.createConversation('forge-dev')).id;
+      await client.appendConversationMessage(
+          _conversationId!, ChatMessageRecord(role: 'user', text: text));
       final run = await client.createRun(text);
       // 轮询至终态（2s 间隔，最多 5 分钟）
       RunRecord current = run;
@@ -69,13 +74,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         if (current.isTerminal) break;
       }
       if (!mounted) return;
+      final assistantText = current.status == 'completed'
+          ? (current.output.isEmpty ? '（无文本输出）' : current.output)
+          : '';
+      // 回复落库（runId 关联派生 Run）
+      await client.appendConversationMessage(
+          _conversationId!,
+          ChatMessageRecord(
+            role: 'assistant',
+            text: assistantText,
+            runId: run.id,
+            status: current.status,
+            error: current.error,
+          ));
+      if (!mounted) return;
       setState(() {
         _messages.removeLast();
         if (current.status == 'completed') {
-          _messages.add(_ChatMessage.assistant(
-            current.output.isEmpty ? '（无文本输出）' : current.output,
-            _MessageState.done,
-          ));
+          _messages.add(_ChatMessage.assistant(assistantText, _MessageState.done));
         } else {
           _messages.add(_ChatMessage.assistant(
             current.status == 'cancelled' ? '已取消。' : '',
@@ -98,6 +114,49 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
+  /// 历史会话：底部弹层列出最近会话，选择后加载消息。
+  Future<void> _showHistorySheet() async {
+    final client = ref.read(apiClientProvider);
+    final list = await client.listConversations();
+    if (!mounted || list.isEmpty) return;
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: ListView(
+          children: [
+            for (final conversation in list.take(30))
+              ListTile(
+                leading: const Icon(Icons.forum_outlined),
+                title: Text(
+                    conversation.title.isEmpty ? '（未命名会话）' : conversation.title),
+                subtitle: Text('${conversation.messageCount} 条消息'),
+                onTap: () => Navigator.of(sheetContext).pop(conversation.id),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (selected == null || !mounted) return;
+    final detail = await client.fetchConversation(selected);
+    if (!mounted) return;
+    setState(() {
+      _conversationId = detail.id;
+      _busy = false;
+      _messages
+        ..clear()
+        ..addAll(detail.messages.map((message) => message.role == 'user'
+            ? _ChatMessage.user(message.text)
+            : _ChatMessage.assistant(
+                message.text,
+                message.status == 'failed'
+                    ? _MessageState.failed
+                    : _MessageState.done,
+                error: message.error,
+              )));
+    });
+    _scrollToBottom();
+  }
+
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) {
@@ -116,6 +175,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       appBar: AppBar(
         title: const Text('Chat'),
         actions: [
+          IconButton(
+            tooltip: '历史会话',
+            icon: const Icon(Icons.history),
+            onPressed: _busy ? null : _showHistorySheet,
+          ),
           IconButton(
             tooltip: 'Runs',
             icon: const Icon(Icons.list_alt),
@@ -139,9 +203,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             child: _messages.isEmpty
                 ? Center(
                     child: Text(
-                      '向 Agent 提问或下达指令。\n每条消息作为一个独立 Run 执行。',
+                      '向 Agent 提问或下达指令。\n每条消息作为一个独立 Run 执行，会话自动保存。',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.45)),
+                      style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.45)),
                     ),
                   )
                 : ListView.builder(

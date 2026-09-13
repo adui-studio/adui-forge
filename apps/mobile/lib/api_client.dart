@@ -142,6 +142,32 @@ class ForgeApiClient {
     return RunRecord.fromJson(response.data!);
   }
 
+  Future<List<ConversationSummary>> listConversations() async {
+    final response = await _dio.get<List<dynamic>>('/conversations',
+        options: await _auth());
+    return response.data!
+        .map((item) => ConversationSummary.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<ConversationRecord> createConversation(String agentName) async {
+    final response = await _dio.post<Map<String, dynamic>>('/conversations',
+        data: {'agentName': agentName}, options: await _auth());
+    return ConversationRecord.fromJson(response.data!);
+  }
+
+  Future<ConversationRecord> fetchConversation(String id) async {
+    final response = await _dio.get<Map<String, dynamic>>('/conversations/$id',
+        options: await _auth());
+    return ConversationRecord.fromJson(response.data!);
+  }
+
+  Future<void> appendConversationMessage(
+      String id, ChatMessageRecord message) async {
+    await _dio.post('/conversations/$id/messages',
+        data: message.toJson(), options: await _auth());
+  }
+
   Future<List<PendingApproval>> listPendingApprovals() async {
     final response = await _dio.get<List<dynamic>>('/approvals/pending',
         options: await _auth());
@@ -155,4 +181,90 @@ class ForgeApiClient {
         data: {'decision': approved ? 'approved' : 'rejected'},
         options: await _auth());
   }
+}
+
+/// Chat 会话消息（与 apps/api conversations 存储形状对齐）。
+class ChatMessageRecord {
+  ChatMessageRecord({
+    required this.role,
+    required this.text,
+    this.runId,
+    this.status = 'completed',
+    this.error,
+    this.tools = const [],
+  });
+
+  final String role;
+  final String text;
+  final String? runId;
+  final String status;
+  final String? error;
+  final List<String> tools;
+
+  factory ChatMessageRecord.fromJson(Map<String, dynamic> json) =>
+      ChatMessageRecord(
+        role: json['role'] as String,
+        text: json['text'] as String,
+        runId: json['runId'] as String?,
+        status: (json['status'] as String?) ?? 'completed',
+        error: json['error'] as String?,
+        tools: ((json['tools'] as List<dynamic>?) ?? const [])
+            .map((tool) => tool as String)
+            .toList(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'role': role,
+        'text': text,
+        if (runId != null) 'runId': runId,
+        'status': status,
+        if (error != null) 'error': error,
+        'tools': tools,
+      };
+}
+
+class ConversationRecord {
+  ConversationRecord({
+    required this.id,
+    required this.title,
+    required this.agentName,
+    required this.messages,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String title;
+  final String agentName;
+  final List<ChatMessageRecord> messages;
+  final String createdAt;
+
+  factory ConversationRecord.fromJson(Map<String, dynamic> json) =>
+      ConversationRecord(
+        id: json['id'] as String,
+        title: (json['title'] as String?) ?? '',
+        agentName: (json['agentName'] as String?) ?? 'forge-dev',
+        messages: ((json['messages'] as List<dynamic>?) ?? const [])
+            .map((item) => ChatMessageRecord.fromJson(item as Map<String, dynamic>))
+            .toList(),
+        createdAt: json['createdAt'] as String,
+      );
+}
+
+class ConversationSummary {
+  ConversationSummary({
+    required this.id,
+    required this.title,
+    required this.messageCount,
+  });
+
+  final String id;
+  final String title;
+  final int messageCount;
+
+  factory ConversationSummary.fromJson(Map<String, dynamic> json) =>
+      ConversationSummary(
+        id: json['id'] as String,
+        title: (json['title'] as String?) ?? '',
+        messageCount: (json['messageCount'] as int?) ?? 0,
+      );
 }
