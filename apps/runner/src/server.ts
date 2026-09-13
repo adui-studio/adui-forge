@@ -172,6 +172,25 @@ export const buildServer = (options: RunnerOptions): FastifyInstance => {
     return reply;
   });
 
+  server.post("/api/v1/runs/:id/retry", async (request, reply) => {
+    if (options.runs === undefined) {
+      return await reply
+        .code(503)
+        .send({ message: "local runs unavailable: FORGE_MODEL_* not configured" });
+    }
+    const { id } = request.params as { id: string };
+    const previous = options.runs.get(id);
+    if (previous === undefined) {
+      return await reply.code(404).send({ message: `unknown run: ` });
+    }
+    // 重试 = 以原任务/原 Agent 新建 Run（与云端语义一致）
+    try {
+      return options.runs.create({ task: previous.task, agentName: previous.agentName });
+    } catch (error) {
+      return await reply.code(404).send({ message: errorMessage(error) });
+    }
+  });
+
   server.post("/api/v1/runs/:id/cancel", async (request, reply) => {
     const { id } = request.params as { id: string };
     const record = options.runs?.cancel(id);

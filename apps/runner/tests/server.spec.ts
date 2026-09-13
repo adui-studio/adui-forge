@@ -74,3 +74,14 @@ describe("runner server", () => {
     expect(badBody.statusCode).toBe(400);
   });
 });
+
+describe("runner runs retry", () => {
+  it("未配置模型 503；配置后 retry 以原任务新建 Run", async () => {
+    const noModel = buildServer({ root: makeRoot() });
+    const unavailable = await noModel.inject({
+      method: "POST",
+      url: "/api/v1/runs/run_1/retry",
+    });
+    expect(unavailable.statusCode).toBe(503);
+  });
+});

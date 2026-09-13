@@ -1,6 +1,45 @@
 # Changelog
 
-> 版本与里程碑提交对齐：v0.2.0 → 063fb01，v0.3.0 → 6ec475b，v0.4.0 → 43b5043，v0.5.0 → efc6faf。
+> 版本与里程碑提交对齐：v0.2.0 → 063fb01，v0.3.0 → 6ec475b，v0.4.0 → 43b5043，v0.5.0 → efc6faf，v0.6.0 → 里程碑提交（见下）。
+
+## 0.6.0 — 2026-09-13
+
+### Workspace IDE（ADR-004/005，docs/decisions）
+
+- **文件 API**：`/workspace/{tree,file}` tree/read/write/delete，复用 tool-sdk 三层边界
+  （路径遍历 / symlink 逃逸 / 1 MiB 写上限 / 二进制拒绝）
+- **工作区页**：文件树 + Monaco 编辑器（本地打包不走 CDN）+ 多 Tab + 新建/删除文件 +
+  脏标记保存
+- **Git 面板**：status / diff / commit（execFile 无 shell 拼接）+ Monaco DiffEditor
+  对比 HEAD 与当前内容
+
+### 本地运行闭环（Local Runner）
+
+- **Runner 应用（apps/runner）**：Fastify 同形 REST（workspace + runs + SSE + cancel +
+  retry），token Bearer/查询参数握手，仅监听 127.0.0.1
+- **本地 Agent**：FORGE_MODEL_* 模型 + Workspace 文件工具（无进程执行工具，Sandbox First）
+- **桌面分发**：Tauri spawn/stop/status 命令 + PlatformAdapter 路由——工作区与 Runs
+  请求在桌面端自动指向本地 Runner，云端 API 与本地对页面透明
+
+### 平台能力
+
+- **Skill 系统**：packages/skill-sdk（schema / resolveSkills / composeSystemPrompt）、
+  Skill 管理 API 与页面、Agent 指令注入与即时重建、SKILL.md 导入/导出双向闭环
+- **Model Registry**：FORGE_MODELS 命名模型目录，自定义 Agent 可指定模型
+- **Workflow 图定义**：可序列化条件分支（graph 校验/编译/执行），编辑器自由连线 +
+  条件节点 + 画布坐标持久化
+- **会话持久化**：conversations 存储 + REST + Chat 历史会话/重命名/删除/失败重试
+- **对比分析**：多 Agent 并排流式对比 + 批次持久化 + 跨批次胜负统计
+
+### 工程与体验
+
+- **i18n**：i18next 双语言（zh-CN/en）全页面迁移、antd locale 跟随、语言切换持久化、
+  键覆盖守卫测试
+- **交互惯例修复**：侧栏导航、URL 深链接（Runs/Tasks 筛选）、破坏性操作确认、
+  路由级 code-splitting
+- **任务台账页**（Tasks）：新建派生 Run、实时状态回填
+
+---
 
 ## 0.5.0 — 2026-09-05
 
