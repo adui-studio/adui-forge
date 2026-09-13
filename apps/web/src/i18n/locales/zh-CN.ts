@@ -316,6 +316,11 @@ export const zhCN = {
       "开启后本地 Agent 可执行 Shell 命令与 Git 写入（无沙箱隔离，仅凭你的信任）。高风险操作仍会弹出审批卡等待你批准。",
     trustOk: "信任并重启",
     trustToggle: "Trusted",
+    terminalTitle: "终端",
+    closeTerminal: "关闭终端",
+    terminalBunLimited:
+      "当前构建（Bun sidecar）暂不支持终端——请以开发模式（node/tsx）运行 Runner 使用终端。",
+    terminalConnecting: "正在连接本地 Runner…",
     loadFailed: "文件加载失败。",
   },
   compare: {

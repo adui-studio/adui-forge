@@ -32,7 +32,7 @@ if (runs === undefined) {
   console.warn("FORGE_MODEL_* not configured; local runs disabled (workspace-only mode)");
 }
 
-const server = buildServer({ root, token, runs, approvals });
+const server = await buildServer({ root, token, runs, approvals });
 server.listen({ host: "127.0.0.1", port }, (error, address) => {
   if (error !== null) {
     console.error(`runner failed to start: ${error.message}`);

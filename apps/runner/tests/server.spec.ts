@@ -8,7 +8,7 @@ const makeRoot = (): string => mkdtempSync(join(tmpdir(), "runner-"));
 
 describe("runner server", () => {
   it("health 豁免鉴权；无 token 的业务请求 401", async () => {
-    const server = buildServer({ root: makeRoot(), token: "secret" });
+    const server = await buildServer({ root: makeRoot(), token: "secret" });
     const health = await server.inject({ method: "GET", url: "/health" });
     expect(health.statusCode).toBe(200);
     expect(health.json()).toMatchObject({ status: "ok", runner: true });
@@ -28,7 +28,7 @@ describe("runner server", () => {
     const root = makeRoot();
     mkdirSync(join(root, "src"));
     writeFileSync(join(root, "a.txt"), "hello\n");
-    const server = buildServer({ root });
+    const server = await buildServer({ root });
     const headers = { "content-type": "application/json" };
 
     const tree = await server.inject({ method: "GET", url: "/api/v1/workspace/tree?path=." });
@@ -58,7 +58,7 @@ describe("runner server", () => {
   });
 
   it("路径遍历返回 404；非法请求体 400", async () => {
-    const server = buildServer({ root: makeRoot() });
+    const server = await buildServer({ root: makeRoot() });
     const traversal = await server.inject({
       method: "GET",
       url: "/api/v1/workspace/file?path=../outside.txt",
@@ -77,7 +77,7 @@ describe("runner server", () => {
 
 describe("runner runs retry", () => {
   it("未配置模型 503；配置后 retry 以原任务新建 Run", async () => {
-    const noModel = buildServer({ root: makeRoot() });
+    const noModel = await buildServer({ root: makeRoot() });
     const unavailable = await noModel.inject({
       method: "POST",
       url: "/api/v1/runs/run_1/retry",

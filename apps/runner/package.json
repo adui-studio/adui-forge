@@ -16,6 +16,7 @@
     "@adui-forge/ai": "workspace:*",
     "@adui-forge/contracts": "workspace:*",
     "@adui-forge/tool-sdk": "workspace:*",
+    "@fastify/websocket": "catalog:",
     "fastify": "catalog:",
     "zod": "catalog:"
   },

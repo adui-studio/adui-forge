@@ -1,7 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DiffEditor, Editor, loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
-import { Bot, FilePen, FolderGit2, FolderOpen, Plus, Save, ShieldAlert, X } from "lucide-react";
+import {
+  Bot,
+  FilePen,
+  FolderGit2,
+  FolderOpen,
+  Plus,
+  Save,
+  ShieldAlert,
+  SquareTerminal,
+  X,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -17,6 +27,7 @@ import {
   Tag,
 } from "antd";
 import { AgentPanel } from "@/components/workspace/agent-panel.tsx";
+import { TerminalPanel } from "@/components/workspace/terminal-panel.tsx";
 import { FileTree } from "@/components/workspace/file-tree.tsx";
 import {
   commitGit,
@@ -73,6 +84,7 @@ export function WorkspacePage() {
   const [newFileOpen, setNewFileOpen] = useState(false);
   const [showGit, setShowGit] = useState(false);
   const [showAgentPanel, setShowAgentPanel] = useState(false);
+  const [showTerminal, setShowTerminal] = useState(false);
   const [gitMessage, setGitMessage] = useState("");
 
   const { data: gitStatus, refetch: refetchGit } = useQuery({
@@ -263,6 +275,17 @@ export function WorkspacePage() {
             </Button>
           </Popconfirm>
         )}
+        {platform === "desktop" && runner?.running === true && (
+          <Button
+            size="small"
+            variant={showTerminal ? "solid" : "outlined"}
+            color={showTerminal ? "primary" : "default"}
+            icon={<SquareTerminal className="h-3.5 w-3.5" />}
+            onClick={() => setShowTerminal((open) => !open)}
+          >
+            {t("workspace.terminalTitle")}
+          </Button>
+        )}
         <Button
           size="small"
           icon={<FolderGit2 className="h-3.5 w-3.5" />}
@@ -323,7 +346,11 @@ export function WorkspacePage() {
           </Empty>
         </Card>
       ) : (
-        <div className="flex h-[calc(100vh-12rem)] gap-4">
+        <div
+          className={
+            showTerminal ? "flex h-[calc(100vh-27rem)] gap-4" : "flex h-[calc(100vh-12rem)] gap-4"
+          }
+        >
           {/* Explorer */}
           <div className="w-64 shrink-0 overflow-y-auto rounded-lg border border-[#20242C] bg-[#0D0F13] py-2">
             <p className="px-2 pb-1 text-[10px] font-semibold tracking-wider text-slate-600 uppercase">
@@ -460,6 +487,11 @@ export function WorkspacePage() {
               </div>
             )}
           </div>
+          {showTerminal && platform === "desktop" && (
+            <div className="mt-4 h-56">
+              <TerminalPanel onClose={() => setShowTerminal(false)} />
+            </div>
+          )}
         </div>
       )}
 

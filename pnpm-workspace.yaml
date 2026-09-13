@@ -7,6 +7,7 @@ allowBuilds:
   "@prisma/client": true
   "@prisma/engines": true
   esbuild: true
+  node-pty: true
   prisma: true
   sharp: true
 
@@ -57,6 +58,10 @@ catalog:
   vite-plus: 0.2.9
   void: ^0.10.12
   zod: ^4.5.2
+  node-pty: ^1.1.0
+  "@fastify/websocket": ^11.3.0
+  "@xterm/xterm": ^6.0.0
+  "@xterm/addon-fit": ^0.11.0
 overrides:
   vite: "catalog:"
 peerDependencyRules:
@@ -66,3 +71,5 @@ peerDependencyRules:
     vite: "*"
 minimumReleaseAgeExclude:
   - zod@4.5.2
+onlyBuiltDependencies:
+  - node-pty

@@ -1,4 +1,6 @@
 import Fastify, { type FastifyInstance } from "fastify";
+import fastifyWebsocket from "@fastify/websocket";
+import { spawn } from "node:child_process";
 import { z } from "zod";
 import type { AgentEvent } from "@adui-forge/contracts";
 import type { RunnerApprovalService } from "./approvals.ts";
@@ -26,6 +28,11 @@ const writeFileSchema = z.object({
   path: z.string().min(1).max(500),
   content: z.string().max(1024 * 1024),
 });
+const createRunSchema = z.object({
+  task: z.string().min(1).max(10_000),
+  agentName: z.string().min(1).optional(),
+});
+const decisionSchema = z.object({ decision: z.enum(["approved", "rejected"]) });
 
 /** Runner 错误 → HTTP 状态码（与云端 API 的 Error Contract 语义一致）。 */
 const statusCodeFor = (message: string): number => {
@@ -39,14 +46,15 @@ const statusCodeFor = (message: string): number => {
 };
 
 /** 构建 Runner 服务实例（不监听端口，供 inject 测试与 start 共用）。 */
-export const buildServer = (options: RunnerOptions): FastifyInstance => {
+export const buildServer = async (options: RunnerOptions): Promise<FastifyInstance> => {
   const server = Fastify({ logger: false });
+  await server.register(fastifyWebsocket);
 
   // Token 握手（ADR-005 §3）：/health 豁免供 Shell 存活探测
   server.addHook("onRequest", async (request, reply) => {
     if (options.token === undefined || options.token === "") return;
     if (request.url.startsWith("/health")) return;
-    // EventSource 无法携带 Header：SSE 等场景允许 ?token= 查询参数（仅本机回环）
+    // EventSource/WS 无法携带 Header：允许 ?token= 查询参数（仅本机回环）
     const queryToken = (request.query as { token?: string }).token;
     const header = request.headers.authorization;
     const authorized = header === `Bearer ${options.token}` || queryToken === options.token;
@@ -55,7 +63,10 @@ export const buildServer = (options: RunnerOptions): FastifyInstance => {
     }
   });
 
-  server.get("/health", async () => ({ status: "ok", runner: true }));
+  const runtime = typeof (globalThis as { Bun?: unknown }).Bun !== "undefined" ? "bun" : "node";
+  server.get("/health", async () => ({ status: "ok", runner: true, runtime }));
+
+  // —— Workspace（ADR-004 阶段 1/2）——
 
   server.get("/api/v1/workspace/tree", async (request, reply) => {
     const parsed = pathQuerySchema.safeParse(request.query);
@@ -131,12 +142,7 @@ export const buildServer = (options: RunnerOptions): FastifyInstance => {
         .code(503)
         .send({ message: "local runs unavailable: FORGE_MODEL_* not configured" });
     }
-    const parsed = z
-      .object({
-        task: z.string().min(1).max(10_000),
-        agentName: z.string().min(1).optional(),
-      })
-      .safeParse(request.body);
+    const parsed = createRunSchema.safeParse(request.body);
     if (!parsed.success) {
       return await reply.code(400).send({ message: "invalid body" });
     }
@@ -184,7 +190,7 @@ export const buildServer = (options: RunnerOptions): FastifyInstance => {
     const { id } = request.params as { id: string };
     const previous = options.runs.get(id);
     if (previous === undefined) {
-      return await reply.code(404).send({ message: `unknown run: ` });
+      return await reply.code(404).send({ message: `unknown run: "${id}"` });
     }
     // 重试 = 以原任务/原 Agent 新建 Run（与云端语义一致）
     try {
@@ -221,15 +227,76 @@ export const buildServer = (options: RunnerOptions): FastifyInstance => {
         .send({ message: "approvals unavailable: trusted local mode disabled" });
     }
     const { id } = request.params as { id: string };
-    const parsed = z.object({ decision: z.enum(["approved", "rejected"]) }).safeParse(request.body);
+    const parsed = decisionSchema.safeParse(request.body);
     if (!parsed.success) {
       return await reply.code(400).send({ message: "invalid body" });
     }
     const item = options.approvals.decide(id, parsed.data.decision);
     if (item === undefined) {
-      return await reply.code(404).send({ message: `unknown approval: ` });
+      return await reply.code(404).send({ message: `unknown approval: "${id}"` });
     }
     return { ok: true, item };
+  });
+
+  // —— 终端（IDE 用户本人的 shell，非 Agent 工具：不经 Sandbox、无审批）——
+  // 管道模式（非 PTY）：node-pty 在 Windows/Bun 下 conpty agent 不兼容（ADR-007 备注）。
+  // 限制：无全屏 TUI 程序；基本命令与输出可用。
+
+  server.get("/api/v1/terminal/ws", { websocket: true }, (socket, _request) => {
+    // Bun 编译产物下 ws 消息事件与 Node 行为不一致（client→stdin 断链）：
+    // 终端在 sidecar 模式显式降级；dev（tsx/Node）完整可用（ADR-007 备注）。
+    if (typeof (globalThis as { Bun?: unknown }).Bun !== "undefined") {
+      socket.on("open", () => {
+        socket.send(
+          "terminal is unavailable in the bundled sidecar (Bun runtime limitation); run the runner under Node/tsx for terminal support.",
+        );
+        socket.close();
+      });
+      return;
+    }
+    const isWindows = process.platform === "win32";
+    const shell = isWindows ? "powershell.exe" : (process.env.SHELL ?? "bash");
+    const child = spawn(shell, [], {
+      cwd: options.root,
+      env: process.env,
+      stdio: "pipe",
+    });
+    let lineBuffer = "";
+    const send = (text: string): void => {
+      try {
+        socket.send(text);
+      } catch {
+        // socket 已关闭
+      }
+    };
+    child.stdout?.on("data", (chunk: Buffer) => {
+      lineBuffer += chunk.toString();
+      const parts = lineBuffer.split("\n");
+      lineBuffer = parts.pop() ?? "";
+      for (const line of parts) send(line + "\r\n");
+    });
+    child.stderr?.on("data", (chunk: Buffer) => {
+      send(chunk.toString());
+    });
+    child.on("exit", () => socket.close());
+    socket.on("message", (data: unknown) => {
+      // ws message 事件首参即帧数据；文本帧统一归一为字符串
+      const text = typeof data === "string" ? data : Buffer.from(data as Uint8Array).toString();
+      if (text.startsWith("{")) {
+        try {
+          const message = JSON.parse(text) as { __input__?: string };
+          if (typeof message.__input__ === "string") {
+            child.stdin?.write(message.__input__ + "\n");
+            return;
+          }
+        } catch {
+          // 非 JSON：忽略
+        }
+      }
+    });
+    socket.on("close", () => {
+      child.kill();
+    });
   });
 
   return server;

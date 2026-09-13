@@ -328,6 +328,11 @@ export const en: ZhCNTranslation = {
       "The local agent will be able to run shell commands and git writes (no sandbox isolation, only your trust). High-risk operations will still pause for your approval.",
     trustOk: "Trust & restart",
     trustToggle: "Trusted",
+    terminalTitle: "Terminal",
+    closeTerminal: "Close terminal",
+    terminalBunLimited:
+      "Terminal is not supported in this build (Bun sidecar) — run the runner under Node/tsx for terminal support.",
+    terminalConnecting: "Connecting to local runner…",
     loadFailed: "Failed to load the file.",
   },
   compare: {
