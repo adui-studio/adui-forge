@@ -1,6 +1,31 @@
 # Changelog
 
-> 版本与里程碑提交对齐：v0.2.0 → 063fb01，v0.3.0 → 6ec475b，v0.4.0 → 43b5043，v0.5.0 → efc6faf，v0.6.0 → c1937dc，v0.6.1 → 补丁提交（见下）。
+> 版本与里程碑提交对齐：v0.2.0 → 063fb01，v0.3.0 → 6ec475b，v0.4.0 → 43b5043，v0.5.0 → efc6faf，v0.6.0 → c1937dc，v0.6.1 → ddd285b，v0.7.0 → 里程碑提交（见下）。
+
+## 0.7.0 — 2026-09-13
+
+### 本地 Agent 能力升级（ADR-006，docs/decisions）
+
+- **Trusted Local Mode**：用户显式信任后，本地 Agent 经 HostSandbox 装配
+  `shell_exec` / `git_*` 工具（全部 approval 级）；默认关闭，能力上限仍为文件读写
+- **本地审批闭环**：Runner 内置审批服务（与云端 ApprovalService 同语义）——
+  approval 级工具触发 → `approval.required` 经 SSE 推送到 Agent 面板 → 批准/拒绝
+  → Loop 继续/中止；端点 `GET /approvals/pending` + `POST /approvals/:id/decision`
+- **桌面信任开关**：工作区页一键切换（确认卡说明风险），Runner 进程带
+  `FORGE_TRUSTED_LOCAL_MODE` 重启生效
+- **Runner retry 端点**：`POST /runs/:id/retry` 以原任务/原 Agent 新建 Run
+
+### 流水线修复（此前 CI 与 Release 全红的根因）
+
+- `frontendDist` 相对 src-tauri 解析，`../web/dist` 从未指向正确产物——Release
+  Desktop 打包自首个 tag 起即失败；修正为 `../../web/dist` 并在全新 clone 复现验证
+- CI Linux 补齐 Tauri 系统依赖（webkit2gtk 等），desktop cargo check 恢复
+- workflow 编辑器测试固定 zh-CN（CI navigator 语言是 en-US）
+- Release Flutter 安装修复被吞的 `$RUNNER_TEMP` 变量并加克隆重试
+- AgentsModule 补导出 AgentConfigService（Linux 下 SkillsController DI 启动崩溃）
+- bootstrap 冒烟测试：轮询放宽至 120s、早退即时失败并带出 stdout/stderr 诊断
+
+---
 
 ## 0.6.1 — 2026-09-13
 
