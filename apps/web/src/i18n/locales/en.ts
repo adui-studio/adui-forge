@@ -319,6 +319,7 @@ export const en: ZhCNTranslation = {
       "Ask the agent or assign a task right inside the workspace (runs via the local Runner on desktop).",
     agentPanelInput: "Agent panel input",
     agentPanelPlaceholder: "e.g. add error handling to main.ts",
+    agentContext: "Attach current file",
     agentPanelHint: "Ctrl + Enter to send",
     loadFailed: "Failed to load the file.",
   },

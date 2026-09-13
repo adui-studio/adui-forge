@@ -83,3 +83,22 @@ export const writeWorkspaceFile = (path: string, content: string): Promise<Works
     method: "PUT",
     body: JSON.stringify({ path, content }),
   });
+
+/** 附带文件内容的上限（字符）：超出截断并注明，避免任务文本失控。 */
+export const AGENT_CONTEXT_MAX_CHARS = 20_000;
+
+/**
+ * 组装 Agent 面板的任务文本：用户输入 + 可选的当前文件上下文。
+ * 无上下文时原样返回；文件内容超限截断并注明省略。
+ */
+export const composeAgentTask = (
+  userText: string,
+  context: { path: string; content: string } | null,
+): string => {
+  if (context === null || context.content === "") return userText;
+  const truncated =
+    context.content.length > AGENT_CONTEXT_MAX_CHARS
+      ? `${context.content.slice(0, AGENT_CONTEXT_MAX_CHARS)}\n… (truncated)`
+      : context.content;
+  return `${userText}\n\n[Current file: ${context.path}]\n\`\`\`\n${truncated}\n\`\`\``;
+};

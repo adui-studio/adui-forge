@@ -422,7 +422,12 @@ export function WorkspacePage() {
             {/* Agent 面板列（编辑器右侧，主容器内） */}
             {showAgentPanel && (
               <div className="w-80 shrink-0 overflow-hidden rounded-lg border border-[#20242C] bg-[#0D0F13]">
-                <AgentPanel />
+                <AgentPanel
+                  contextPath={activeTab?.path ?? null}
+                  contextContent={
+                    activeTab === undefined ? null : (activeTab.draft ?? activeTab.saved)
+                  }
+                />
               </div>
             )}
           </div>

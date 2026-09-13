@@ -5,22 +5,36 @@ import { useTranslation } from "react-i18next";
 import { Button, Tag } from "antd";
 import { createRun, streamRunEvents } from "@/lib/api.ts";
 import { chatReducer, initialChatState } from "@/lib/chat.ts";
+import { composeAgentTask } from "@/lib/workspace.ts";
 
 /**
  * 工作区 Agent 面板（ADR-004 阶段 4）：嵌入 IDE 布局的对话视图。
  * 数据源经 lib/api 的 runsRequest 分发——桌面端自动指向本地 Runner。
  */
-export function AgentPanel() {
+export function AgentPanel({
+  contextPath,
+  contextContent,
+}: {
+  /** 当前打开的文件路径（null = 无编辑器上下文） */
+  contextPath: string | null;
+  /** 当前编辑器实时内容（draft 优先） */
+  contextContent: string | null;
+}) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [state, dispatch] = useReducer(chatReducer, initialChatState);
   const [input, setInput] = useState("");
+  const [useContextFile, setUseContextFile] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const send = useMutation({
     mutationFn: async (text: string) => {
+      const composed =
+        useContextFile && contextPath !== null && contextContent !== null
+          ? composeAgentTask(text, { path: contextPath, content: contextContent })
+          : text;
       dispatch({ type: "send", text });
-      const record = await createRun(text);
+      const record = await createRun(composed);
       dispatch({ type: "run-created", runId: record.id });
       return record;
     },
@@ -92,6 +106,20 @@ export function AgentPanel() {
 
       {/* 输入区（§60：Enter 换行，Ctrl/Cmd+Enter 发送） */}
       <div className="border-t border-[#20242C] p-2">
+        {contextPath !== null && (
+          <button
+            type="button"
+            onClick={() => setUseContextFile((on) => !on)}
+            className={
+              useContextFile
+                ? "mb-1.5 inline-flex items-center gap-1 rounded border border-[#8B51A6] bg-[#241B2E] px-1.5 py-0.5 text-[10px] text-[#D9C7F0] forge-code"
+                : "mb-1.5 inline-flex items-center gap-1 rounded border border-[#292E39] px-1.5 py-0.5 text-[10px] text-slate-500 forge-code"
+            }
+            title={contextPath}
+          >
+            {useContextFile ? "✓" : "✗"} {t("workspace.agentContext")}: {contextPath}
+          </button>
+        )}
         <textarea
           value={input}
           aria-label={t("workspace.agentPanelInput")}

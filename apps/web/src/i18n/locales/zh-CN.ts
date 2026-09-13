@@ -307,6 +307,7 @@ export const zhCN = {
     agentPanelEmpty: "在工作区内直接向 Agent 提问或下达任务（桌面端经本地 Runner 执行）。",
     agentPanelInput: "Agent 面板输入",
     agentPanelPlaceholder: "例如：给 main.ts 补充错误处理",
+    agentContext: "附带当前文件",
     agentPanelHint: "Ctrl + Enter 发送",
     loadFailed: "文件加载失败。",
   },
