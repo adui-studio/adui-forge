@@ -132,10 +132,7 @@ export function WorkspacePage() {
   const startRunner = async (): Promise<void> => {
     globalThis.localStorage?.setItem("forge.runnerRoot", runnerRoot);
     globalThis.localStorage?.setItem("forge.trustedMode", trustedLocalMode ? "1" : "0");
-    // dev 接线：runner_cwd 与 entry 由桌面端 localStorage 提供（ADR-005 阶段 3 dev 约定）
-    const runnerCwd = globalThis.localStorage?.getItem("forge.runnerCwd") ?? "apps/runner";
-    const entry = globalThis.localStorage?.getItem("forge.runnerEntry") ?? "src/index.ts";
-    await getPlatformAdapter().startRunner(runnerRoot, runnerCwd, entry, trustedLocalMode);
+    await getPlatformAdapter().startRunner(runnerRoot, trustedLocalMode);
     // 端口经 stdout 异步解析：轮询至就绪（上限 ~5s）
     for (let attempt = 0; attempt < 10; attempt++) {
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -151,9 +148,7 @@ export function WorkspacePage() {
   /** 切换信任模式需要重建 Runner 进程（env 注入 FORGE_TRUSTED_LOCAL_MODE）。 */
   const restartRunner = async (): Promise<void> => {
     await getPlatformAdapter().stopRunner();
-    const runnerCwd = globalThis.localStorage?.getItem("forge.runnerCwd") ?? "apps/runner";
-    const entry = globalThis.localStorage?.getItem("forge.runnerEntry") ?? "src/index.ts";
-    await getPlatformAdapter().startRunner(runnerRoot, runnerCwd, entry, trustedLocalMode);
+    await getPlatformAdapter().startRunner(runnerRoot, trustedLocalMode);
     await refetchAvailable();
   };
 

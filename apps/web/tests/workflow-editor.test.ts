@@ -6,7 +6,7 @@ import type { WorkflowGraph } from "@adui-forge/workflow";
 import { flowToGraph, graphToFlow, tasksToGraph } from "../src/lib/workflow-editor.ts";
 
 // 断言依赖 zh-CN 文案；CI 的 navigator 语言是 en-US，需显式固定语言
-await changeLanguage("zh-CN");
+changeLanguage("zh-CN");
 
 describe("tasksToGraph", () => {
   it("builds a Start → tasks → End chain", () => {

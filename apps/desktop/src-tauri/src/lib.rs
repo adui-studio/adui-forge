@@ -54,8 +54,6 @@ fn spawn_runner(
   app: tauri::AppHandle,
   state: tauri::State<'_, RunnerState>,
   workspace_root: String,
-  runner_cwd: String,
-  entry: String,
   trusted_local_mode: bool,
 ) -> Result<RunnerInfo, String> {
   let mut guard = state.process.lock().map_err(|_| "runner state poisoned")?;
@@ -70,11 +68,26 @@ fn spawn_runner(
   }
 
   let token = generate_token();
-  let mut child = Command::new("node")
-    .arg("--import")
-    .arg("tsx/esm")
-    .arg(&entry)
-    .current_dir(&runner_cwd)
+
+  // 解析 sidecar 可执行文件（ADR-007）：覆盖 env → 主程序旁（externalBin 安装位）
+  let sidecar = std::env::var("FORGE_RUNNER_BIN").unwrap_or_else(|_| {
+    std::env::current_exe()
+      .ok()
+      .and_then(|exe| exe.parent().map(|dir| dir.to_path_buf()))
+      .map(|dir| {
+        let name = if cfg!(windows) { "forge-runner.exe" } else { "forge-runner" };
+        dir.join(name)
+      })
+      .map(|path| path.to_string_lossy().to_string())
+      .unwrap_or_default()
+  });
+  if sidecar.is_empty() || !std::path::Path::new(&sidecar).exists() {
+    return Err(format!(
+      "runner sidecar not found at {sidecar}; run scripts/build-runner.mjs first"
+    ));
+  }
+
+  let mut child = Command::new(&sidecar)
     .env("FORGE_WORKSPACE_ROOT", &workspace_root)
     .env("RUNNER_TOKEN", &token)
     .env("RUNNER_PORT", "0")

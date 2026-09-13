@@ -14,3 +14,4 @@
 *.otf -text
 *.apk -text
 *.exe -text
+apps/desktop/src-tauri/binaries/*.exe binary

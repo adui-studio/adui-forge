@@ -39,6 +39,12 @@ jobs:
       - name: 构建 Web 资源（Tauri frontendDist）
         run: pnpm --filter @adui-forge/web build
 
+      - name: 安装 Bun
+        uses: oven-sh/setup-bun@b0b732eec8ebf5d9e2fbe4d68d4c9c198d6f18ce # v2
+
+      - name: 构建 Runner sidecar（Bun compile，ADR-007）
+        run: node scripts/build-runner.mjs windows-x64
+
       - name: 打包 Desktop 安装程序
         run: pnpm --filter @adui-forge/desktop bundle
 

@@ -31,12 +31,7 @@ export interface PlatformAdapter {
   /** 停止本地 Runner（desktop 实现；web noop）。 */
   stopRunner(): Promise<void>;
   /** 启动本地 Runner；web 不支持（返回 null）。 */
-  startRunner(
-    workspaceRoot: string,
-    runnerCwd: string,
-    entry: string,
-    trustedMode: boolean,
-  ): Promise<RunnerInfo | null>;
+  startRunner(workspaceRoot: string, trustedMode: boolean): Promise<RunnerInfo | null>;
   /** 打开外部链接（浏览器新窗口 / 系统默认浏览器）。 */
   openExternal(url: string): Promise<void>;
   /** 系统通知（DesktopGuidelines §155：窗口后台时 Run 状态变化提醒）。 */
@@ -108,12 +103,10 @@ export const createDesktopPlatformAdapter = (): PlatformAdapter => ({
     if (!hasTauriInvoke()) return;
     await tauriInvoke("runner_stop");
   },
-  async startRunner(workspaceRoot: string, runnerCwd: string, entry: string, trustedMode: boolean) {
+  async startRunner(workspaceRoot: string, trustedMode: boolean) {
     if (!hasTauriInvoke()) return null;
     return (await tauriInvoke("spawn_runner", {
       workspaceRoot,
-      runnerCwd,
-      entry,
       trustedLocalMode: trustedMode,
     })) as RunnerInfo;
   },
