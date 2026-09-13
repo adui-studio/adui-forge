@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DiffEditor, Editor, loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
-import { FolderGit2, FolderOpen, Plus, Save, X } from "lucide-react";
+import { Bot, FolderGit2, FolderOpen, Plus, Save, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -16,6 +16,7 @@ import {
   Spin,
   Tag,
 } from "antd";
+import { AgentPanel } from "@/components/workspace/agent-panel.tsx";
 import { FileTree } from "@/components/workspace/file-tree.tsx";
 import {
   commitGit,
@@ -71,6 +72,7 @@ export function WorkspacePage() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [newFileOpen, setNewFileOpen] = useState(false);
   const [showGit, setShowGit] = useState(false);
+  const [showAgentPanel, setShowAgentPanel] = useState(false);
   const [gitMessage, setGitMessage] = useState("");
 
   const { data: gitStatus, refetch: refetchGit } = useQuery({
@@ -225,6 +227,15 @@ export function WorkspacePage() {
         <Button
           size="small"
           className="ml-auto"
+          variant={showAgentPanel ? "solid" : "outlined"}
+          color={showAgentPanel ? "primary" : "default"}
+          icon={<Bot className="h-3.5 w-3.5" />}
+          onClick={() => setShowAgentPanel((open) => !open)}
+        >
+          {t("workspace.agentPanelTitle")}
+        </Button>
+        <Button
+          size="small"
           icon={<FolderGit2 className="h-3.5 w-3.5" />}
           onClick={() => setShowGit((open) => !open)}
         >
@@ -407,6 +418,12 @@ export function WorkspacePage() {
                   </div>
                 )}
               </>
+            )}
+            {/* Agent 面板列（编辑器右侧，主容器内） */}
+            {showAgentPanel && (
+              <div className="w-80 shrink-0 overflow-hidden rounded-lg border border-[#20242C] bg-[#0D0F13]">
+                <AgentPanel />
+              </div>
             )}
           </div>
         </div>

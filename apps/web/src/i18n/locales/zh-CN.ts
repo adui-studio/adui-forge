@@ -303,6 +303,11 @@ export const zhCN = {
     closeDiff: "关闭对比",
     runnerLaunchHint: "桌面模式：指定本地工作区目录并启动 Local Runner",
     runnerStart: "启动 Local Runner",
+    agentPanelTitle: "Agent",
+    agentPanelEmpty: "在工作区内直接向 Agent 提问或下达任务（桌面端经本地 Runner 执行）。",
+    agentPanelInput: "Agent 面板输入",
+    agentPanelPlaceholder: "例如：给 main.ts 补充错误处理",
+    agentPanelHint: "Ctrl + Enter 发送",
     loadFailed: "文件加载失败。",
   },
   compare: {

@@ -314,6 +314,12 @@ export const en: ZhCNTranslation = {
     closeDiff: "Close diff",
     runnerLaunchHint: "Desktop mode: pick a local workspace directory and start the Local Runner",
     runnerStart: "Start Local Runner",
+    agentPanelTitle: "Agent",
+    agentPanelEmpty:
+      "Ask the agent or assign a task right inside the workspace (runs via the local Runner on desktop).",
+    agentPanelInput: "Agent panel input",
+    agentPanelPlaceholder: "e.g. add error handling to main.ts",
+    agentPanelHint: "Ctrl + Enter to send",
     loadFailed: "Failed to load the file.",
   },
   compare: {
