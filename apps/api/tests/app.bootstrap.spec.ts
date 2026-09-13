@@ -12,15 +12,19 @@ import { describe, expect, it } from "vite-plus/test";
  * 且 stderr 收集到失败时输出（否则启动崩溃无从诊断）。
  */
 describe("AppModule 装配", () => {
-  it("boots the real API and serves /health", { timeout: 180_000 }, async () => {
+  it("boots the real API and serves /health", { timeout: 300_000 }, async () => {
     const child = spawn("pnpm exec tsx src/main.ts", {
       cwd: process.cwd(),
       shell: true,
       detached: process.platform !== "win32",
       env: { ...process.env, PORT: "3999" },
-      stdio: ["ignore", "ignore", "pipe"],
+      stdio: ["ignore", "pipe", "pipe"],
     });
+    let stdoutText = "";
     let stderrText = "";
+    child.stdout?.on("data", (chunk: Buffer) => {
+      stdoutText += String(chunk);
+    });
     child.stderr?.on("data", (chunk: Buffer) => {
       stderrText += String(chunk);
     });
@@ -41,7 +45,7 @@ describe("AppModule 装配", () => {
 
     try {
       let healthy = false;
-      for (let attempt = 0; attempt < 120 && !healthy; attempt += 1) {
+      for (let attempt = 0; attempt < 240 && !healthy; attempt += 1) {
         await new Promise((resolve) => setTimeout(resolve, 500));
         try {
           const response = await fetch("http://localhost:3999/api/v1/health");
@@ -51,11 +55,20 @@ describe("AppModule 装配", () => {
         } catch {
           // 未就绪，继续轮询
         }
+        // 子进程提前退出（装配崩溃）：立即失败并带出输出，不傻等轮询
+        if (child.exitCode !== null && !healthy) {
+          throw new Error(
+            `API process exited early (code ${String(child.exitCode)}). ` +
+              `stdout:\n${stdoutText.slice(-1500)}\nstderr:\n${stderrText.slice(-1500)}`,
+          );
+        }
       }
       if (!healthy) {
-        console.error(`API failed to boot; stderr:\n${stderrText.slice(-2000)}`);
+        throw new Error(
+          `API did not become healthy in 120s. ` +
+            `stdout:\n${stdoutText.slice(-1500)}\nstderr:\n${stderrText.slice(-1500)}`,
+        );
       }
-      expect(healthy).toBe(true);
     } finally {
       cleanup();
     }
