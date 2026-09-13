@@ -8,15 +8,21 @@ import { describe, expect, it } from "vite-plus/test";
  *
  * CI 教训：shell:true 下 child.kill() 只杀 shell,tsx 孙进程变孤儿
  * 持有 stdio/端口 —— POSIX 需按进程组树杀(必须 detached 才有独立组)。
+ * CI 冷启动慢（pnpm exec tsx 解析 + Nest bootstrap 可超 30s），轮询窗口放宽到 60s，
+ * 且 stderr 收集到失败时输出（否则启动崩溃无从诊断）。
  */
 describe("AppModule 装配", () => {
-  it("boots the real API and serves /health", { timeout: 120_000 }, async () => {
+  it("boots the real API and serves /health", { timeout: 180_000 }, async () => {
     const child = spawn("pnpm exec tsx src/main.ts", {
       cwd: process.cwd(),
       shell: true,
       detached: process.platform !== "win32",
       env: { ...process.env, PORT: "3999" },
-      stdio: "ignore",
+      stdio: ["ignore", "ignore", "pipe"],
+    });
+    let stderrText = "";
+    child.stderr?.on("data", (chunk: Buffer) => {
+      stderrText += String(chunk);
     });
 
     const cleanup = (): void => {
@@ -35,7 +41,7 @@ describe("AppModule 装配", () => {
 
     try {
       let healthy = false;
-      for (let attempt = 0; attempt < 60 && !healthy; attempt += 1) {
+      for (let attempt = 0; attempt < 120 && !healthy; attempt += 1) {
         await new Promise((resolve) => setTimeout(resolve, 500));
         try {
           const response = await fetch("http://localhost:3999/api/v1/health");
@@ -45,6 +51,9 @@ describe("AppModule 装配", () => {
         } catch {
           // 未就绪，继续轮询
         }
+      }
+      if (!healthy) {
+        console.error(`API failed to boot; stderr:\n${stderrText.slice(-2000)}`);
       }
       expect(healthy).toBe(true);
     } finally {

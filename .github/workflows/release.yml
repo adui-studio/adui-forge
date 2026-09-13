@@ -65,10 +65,18 @@ jobs:
           java-version: 17
 
       # flutter-action(Rust 实现)在 CI 上 panic(exit 101)，且 @main 为可变引用；改用 git 克隆 stable
-      - name: 克隆 Flutter 3.41.7
+      - name: 克隆 Flutter 3.41.7（仓库大，失败重试 3 次）
         run: |
-          git clone --depth 1 -b 3.41.7 https://github.com/flutter/flutter.git "/flutter-sdk"
-          echo "/flutter-sdk/bin" >>
+          for attempt in 1 2 3; do
+            if git clone --depth 1 -b 3.41.7 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter-sdk"; then
+              break
+            fi
+            rm -rf "$RUNNER_TEMP/flutter-sdk"
+            if [ "$attempt" = "3" ]; then exit 1; fi
+            sleep 15
+          done
+          echo "$RUNNER_TEMP/flutter-sdk/bin" >> "$GITHUB_PATH"
+
       - name: Flutter bootstrap
         run: flutter --version
 
