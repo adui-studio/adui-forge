@@ -88,13 +88,15 @@ describe("RunnerRunService", () => {
 
 describe("buildLocalAgents", () => {
   it("未配置 FORGE_MODEL_* 时返回 null", () => {
-    expect(buildLocalAgents(join(tmpdir(), "x"), {})).toBeNull();
+    expect(
+      buildLocalAgents({ workspaceRoot: join(tmpdir(), "x"), trustedLocalMode: false }, {}),
+    ).toBeNull();
   });
 
-  it("配置模型后装配默认 Agent，工具限定 workspace root", () => {
+  it("配置模型后装配默认 Agent，非信任模式无进程工具", () => {
     const root = mkdtempSync(join(tmpdir(), "runner-agents-"));
     writeFileSync(join(root, "README.md"), "hi\n");
-    const registry = buildLocalAgents(root, {
+    const registry = buildLocalAgents({ workspaceRoot: root, trustedLocalMode: false }, {
       FORGE_MODEL_BASE_URL: "http://localhost:1",
       FORGE_MODEL_ID: "m1",
     } as unknown as NodeJS.ProcessEnv);
@@ -102,5 +104,23 @@ describe("buildLocalAgents", () => {
     const agent = registry?.get("forge-local");
     expect(agent?.tools.map((tool) => tool.name)).toContain("read_file");
     expect(agent?.tools.some((tool) => tool.name === "shell_exec")).toBe(false);
+  });
+
+  it("Trusted Local Mode 装配 Shell/Git（approval 级）", () => {
+    const root = mkdtempSync(join(tmpdir(), "runner-trusted-"));
+    const registry = buildLocalAgents(
+      {
+        workspaceRoot: root,
+        trustedLocalMode: true,
+        createPending: () => ({ promise: Promise.resolve("approved") }),
+      },
+      {
+        FORGE_MODEL_BASE_URL: "http://localhost:1",
+        FORGE_MODEL_ID: "m1",
+      } as unknown as NodeJS.ProcessEnv,
+    );
+    const agent = registry?.get("forge-local");
+    expect(agent?.tools.some((tool) => tool.name === "shell_exec")).toBe(true);
+    expect(agent?.tools.some((tool) => tool.name === "git_add")).toBe(true);
   });
 });

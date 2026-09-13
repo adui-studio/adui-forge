@@ -1,6 +1,7 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import { z } from "zod";
 import type { AgentEvent } from "@adui-forge/contracts";
+import type { RunnerApprovalService } from "./approvals.ts";
 import type { RunnerRunService } from "./runs.ts";
 import {
   deleteWorkspaceTextFile,
@@ -14,6 +15,8 @@ export interface RunnerOptions {
   root: string;
   /** 本地 Runs 服务（FORGE_MODEL_* 已配置时才有；未配置时 runs 端点显式降级）。 */
   runs?: RunnerRunService;
+  /** 本地审批服务（Trusted Local Mode 时才有）。 */
+  approvals?: RunnerApprovalService;
   /** Tauri 启动时注入的一次性 token（ADR-005 §3）；为空时跳过鉴权（仅测试用）。 */
   token?: string;
 }
@@ -198,6 +201,35 @@ export const buildServer = (options: RunnerOptions): FastifyInstance => {
       return await reply.code(404).send({ message: `unknown run: "${id}"` });
     }
     return record;
+  });
+
+  // —— 审批（Trusted Local Mode；approvals === undefined 时显式降级）——
+
+  server.get("/api/v1/approvals/pending", async (_request, reply) => {
+    if (options.approvals === undefined) {
+      return await reply
+        .code(503)
+        .send({ message: "approvals unavailable: trusted local mode disabled" });
+    }
+    return options.approvals.pending();
+  });
+
+  server.post("/api/v1/approvals/:id/decision", async (request, reply) => {
+    if (options.approvals === undefined) {
+      return await reply
+        .code(503)
+        .send({ message: "approvals unavailable: trusted local mode disabled" });
+    }
+    const { id } = request.params as { id: string };
+    const parsed = z.object({ decision: z.enum(["approved", "rejected"]) }).safeParse(request.body);
+    if (!parsed.success) {
+      return await reply.code(400).send({ message: "invalid body" });
+    }
+    const item = options.approvals.decide(id, parsed.data.decision);
+    if (item === undefined) {
+      return await reply.code(404).send({ message: `unknown approval: ` });
+    }
+    return { ok: true, item };
   });
 
   return server;
