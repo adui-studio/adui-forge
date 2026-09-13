@@ -5,7 +5,7 @@
   "identifier": "com.aduistudio.forge",
   "build": {
     "devUrl": "http://localhost:5175",
-    "frontendDist": "../web/dist"
+    "frontendDist": "../../web/dist"
   },
   "app": {
     "windows": [

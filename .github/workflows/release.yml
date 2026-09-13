@@ -64,8 +64,13 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: 安装 Flutter
-        uses: subosito/flutter-action@4cab68ce0f1c7c924f688bff4792e044f1aeb30c # main
+      # flutter-action(Rust 实现)在 CI 上 panic(exit 101)，且 @main 为可变引用；改用 git 克隆 stable
+      - name: 克隆 Flutter 3.41.7
+        run: |
+          git clone --depth 1 -b 3.41.7 https://github.com/flutter/flutter.git "/flutter-sdk"
+          echo "/flutter-sdk/bin" >>
+      - name: Flutter bootstrap
+        run: flutter --version
 
       - name: 构建 APK
         working-directory: apps/mobile
