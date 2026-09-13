@@ -302,6 +302,7 @@ export const en: ZhCNTranslation = {
     newFileExtra: "Parent directory must exist; 1 MiB per file.",
     closeTab: "Close tab",
     deleteFileTitle: "Delete file {{path}}?",
+    openInEditor: "Open {{path}} in editor",
     gitTitle: "Git changes",
     gitBranch: "Branch",
     gitChanges: "Changes",

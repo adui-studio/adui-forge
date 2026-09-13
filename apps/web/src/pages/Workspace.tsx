@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DiffEditor, Editor, loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
-import { Bot, FolderGit2, FolderOpen, Plus, Save, X } from "lucide-react";
+import { Bot, FilePen, FolderGit2, FolderOpen, Plus, Save, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -450,15 +450,25 @@ export function WorkspacePage() {
                 <>
                   <div className="flex flex-wrap gap-1.5">
                     {gitStatus.changes.map((change) => (
-                      <Tag
-                        key={change.path}
-                        className="forge-code cursor-pointer"
-                        bordered={false}
-                        color={diffPath === change.path ? "purple" : undefined}
-                        onClick={() => setDiffPath(change.path)}
-                      >
-                        {change.code} {change.path}
-                      </Tag>
+                      <span key={change.path} className="inline-flex items-center gap-0.5">
+                        <Tag
+                          className="forge-code cursor-pointer"
+                          bordered={false}
+                          color={diffPath === change.path ? "purple" : undefined}
+                          onClick={() => setDiffPath(change.path)}
+                        >
+                          {change.code} {change.path}
+                        </Tag>
+                        <button
+                          type="button"
+                          aria-label={t("workspace.openInEditor", { path: change.path })}
+                          title={t("workspace.openInEditor", { path: change.path })}
+                          className="rounded p-0.5 text-slate-500 hover:bg-white/5 hover:text-slate-200"
+                          onClick={() => void openFile(change.path)}
+                        >
+                          <FilePen className="h-3 w-3" />
+                        </button>
+                      </span>
                     ))}
                   </div>
                   <div className="flex items-center gap-2">

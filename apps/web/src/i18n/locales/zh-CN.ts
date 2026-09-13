@@ -291,6 +291,7 @@ export const zhCN = {
     newFileExtra: "父目录必须已存在；单文件上限 1 MiB。",
     closeTab: "关闭标签页",
     deleteFileTitle: "删除文件 {{path}}？",
+    openInEditor: "在编辑器打开 {{path}}",
     gitTitle: "Git 变更",
     gitBranch: "分支",
     gitChanges: "变更数",
