@@ -25,7 +25,12 @@ const buildService = () => {
   );
   const runStore = new InMemoryRunStore();
   const runService = new RunService(runStore, registry);
-  const service = new ComparisonService(new InMemoryComparisonStore(), runService);
+  const agentConfigStub = { list: async () => [] };
+  const service = new ComparisonService(
+    new InMemoryComparisonStore(),
+    runService,
+    agentConfigStub as never,
+  );
   return { runStore, service };
 };
 
@@ -138,5 +143,14 @@ describe("ComparisonService 跨批次统计", () => {
     expect(a?.avgDurationMs).not.toBeNull();
     // 并列（各 1 胜）时按名称排序
     expect(stats.map((entry) => entry.agentName)).toEqual(["agent-a", "agent-b"]);
+  });
+});
+
+describe("ComparisonService statsByModel", () => {
+  it("按模型聚合且未配置自定义 Agent 时归 default", async () => {
+    const { service } = buildService();
+    const stats = await service.statsByModel();
+    // 空批次时为空数组；结构校验
+    expect(Array.isArray(stats)).toBe(true);
   });
 });

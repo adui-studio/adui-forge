@@ -14,6 +14,15 @@ export const fetchWorkflows = async (): Promise<WorkflowDefinitionRecord[]> => {
   return (await response.json()) as WorkflowDefinitionRecord[];
 };
 
+export const deleteWorkflow = async (name: string): Promise<{ ok: boolean }> => {
+  const response = await fetch(`/api/v1/workflows/${encodeURIComponent(name)}`, {
+    method: "DELETE",
+    headers: { "content-type": "application/json" },
+  });
+  if (!response.ok) throw new Error(`request failed: ${response.status}`);
+  return (await response.json()) as { ok: boolean };
+};
+
 export const runWorkflow = async (name: string): Promise<{ id: string }> => {
   const response = await fetch(`/api/v1/workflows/${name}/runs`, {
     method: "POST",

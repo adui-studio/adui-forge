@@ -1,6 +1,7 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import type { RunRecord } from "../runs/run.types";
 import { RunService } from "../runs/run.service";
+import { AgentConfigService } from "../agents/agent-config.service";
 import {
   COMPARISON_STORE,
   type ComparisonItem,
@@ -54,6 +55,7 @@ export class ComparisonService {
   constructor(
     @Inject(COMPARISON_STORE) private readonly store: ComparisonStore,
     private readonly runs: RunService,
+    private readonly agentConfigs: AgentConfigService,
   ) {}
 
   async create(input: { task: string; items: ComparisonItem[] }): Promise<ComparisonRecord> {
@@ -150,5 +152,73 @@ export class ComparisonService {
         fastestWins: entry.wins,
       }))
       .sort((a, b) => b.fastestWins - a.fastestWins || a.agentName.localeCompare(b.agentName));
+  }
+
+  /** 跨批次按模型聚合：同一结构，key 为模型名（自定义 Agent 取其配置，默认/内置归 default）。 */
+  async statsByModel(): Promise<
+    Array<{
+      model: string;
+      batches: number;
+      completed: number;
+      failed: number;
+      avgDurationMs: number | null;
+      fastestWins: number;
+    }>
+  > {
+    // agentName → 模型名
+    const modelByAgent = new Map<string, string>();
+    for (const config of await this.agentConfigs.list()) {
+      modelByAgent.set(config.name, config.model === "" ? "default" : config.model);
+    }
+
+    const batches = await this.store.list();
+    const acc = new Map<
+      string,
+      { batches: number; completed: number; failed: number; durations: number[]; wins: number }
+    >();
+    for (const batch of batches) {
+      const { results } = await this.get(batch.id);
+      const completedDurations = results.filter(
+        (result) => result.status === "completed" && result.durationMs !== null,
+      ) as Array<ComparisonItemResult & { durationMs: number }>;
+      const fastest =
+        completedDurations.length > 0
+          ? Math.min(...completedDurations.map((result) => result.durationMs))
+          : null;
+      for (const result of results) {
+        const model = modelByAgent.get(result.agentName) ?? "default";
+        const entry = acc.get(model) ?? {
+          batches: 0,
+          completed: 0,
+          failed: 0,
+          durations: [],
+          wins: 0,
+        };
+        entry.batches += 1;
+        if (result.status === "completed") {
+          entry.completed += 1;
+          if (result.durationMs !== null) entry.durations.push(result.durationMs);
+          if (fastest !== null && result.durationMs === fastest) entry.wins += 1;
+        } else if (result.status === "failed") {
+          entry.failed += 1;
+        }
+        acc.set(model, entry);
+      }
+    }
+    return [...acc.entries()]
+      .map(([model, entry]) => ({
+        model,
+        batches: entry.batches,
+        completed: entry.completed,
+        failed: entry.failed,
+        avgDurationMs:
+          entry.durations.length > 0
+            ? Math.round(
+                entry.durations.reduce((sum, value) => sum + value, 0) / entry.durations.length,
+              )
+            : null,
+        fastestWins: entry.wins,
+      }))
+      .sort((a, b) => b.fastestWins - a.fastestWins || a.model.localeCompare(b.model));
   }
 }

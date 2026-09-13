@@ -38,6 +38,11 @@ export class ComparisonsController {
     return this.comparisons.stats();
   }
 
+  @Get("stats/by-model")
+  statsByModel() {
+    return this.comparisons.statsByModel();
+  }
+
   @Get(":id")
   get(@Param("id") id: string) {
     return this.comparisons.get(id);

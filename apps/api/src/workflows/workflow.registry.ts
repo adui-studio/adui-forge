@@ -17,6 +17,7 @@ export type StoredWorkflowDefinition = { tasks: string[] } | { graph: WorkflowGr
 
 export interface WorkflowsRegistryContract {
   register(definition: WorkflowDefinitionRecord): void | Promise<void>;
+  delete(name: string): boolean | Promise<boolean>;
   get(name: string): WorkflowDefinitionRecord | Promise<WorkflowDefinitionRecord>;
   list(): WorkflowDefinitionRecord[] | Promise<WorkflowDefinitionRecord[]>;
 }
@@ -71,5 +72,11 @@ export class WorkflowsRegistry implements WorkflowsRegistryContract {
     return [...this.#definitions.entries()].map(([name, stored]) =>
       fromStored(name, this.#descriptions.get(name) ?? "", stored),
     );
+  }
+
+  delete(name: string): boolean {
+    const deleted = this.#definitions.delete(name);
+    this.#descriptions.delete(name);
+    return deleted;
   }
 }

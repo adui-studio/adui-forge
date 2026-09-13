@@ -117,22 +117,37 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   /// 历史会话：底部弹层列出最近会话，选择后加载消息。
   Future<void> _showHistorySheet() async {
     final client = ref.read(apiClientProvider);
-    final list = await client.listConversations();
+    var list = await client.listConversations();
     if (!mounted || list.isEmpty) return;
     final selected = await showModalBottomSheet<String>(
       context: context,
-      builder: (sheetContext) => SafeArea(
-        child: ListView(
-          children: [
-            for (final conversation in list.take(30))
-              ListTile(
-                leading: const Icon(Icons.forum_outlined),
-                title: Text(
-                    conversation.title.isEmpty ? '（未命名会话）' : conversation.title),
-                subtitle: Text('${conversation.messageCount} 条消息'),
-                onTap: () => Navigator.of(sheetContext).pop(conversation.id),
-              ),
-          ],
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) => SafeArea(
+          child: ListView(
+            children: [
+              for (final conversation in list.take(30))
+                ListTile(
+                  leading: const Icon(Icons.forum_outlined),
+                  title: Text(conversation.title.isEmpty
+                      ? '（未命名会话）'
+                      : conversation.title),
+                  subtitle: Text('${conversation.messageCount} 条消息'),
+                  onTap: () => Navigator.of(sheetContext).pop(conversation.id),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    tooltip: '删除',
+                    onPressed: () async {
+                      await client.deleteConversation(conversation.id);
+                      setSheetState(() {
+                        list = list
+                            .where((item) => item.id != conversation.id)
+                            .toList();
+                      });
+                    },
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -156,7 +171,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     });
     _scrollToBottom();
   }
-
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) {

@@ -162,6 +162,10 @@ class ForgeApiClient {
     return ConversationRecord.fromJson(response.data!);
   }
 
+  Future<void> deleteConversation(String id) async {
+    await _dio.delete('/conversations/', options: await _auth());
+  }
+
   Future<void> appendConversationMessage(
       String id, ChatMessageRecord message) async {
     await _dio.post('/conversations/$id/messages',

@@ -380,6 +380,18 @@ export interface ComparisonStatsRecord {
 export const fetchComparisonStats = (): Promise<ComparisonStatsRecord[]> =>
   request<ComparisonStatsRecord[]>("/api/v1/comparisons/stats");
 
+export interface ComparisonModelStatsRecord {
+  model: string;
+  batches: number;
+  completed: number;
+  failed: number;
+  avgDurationMs: number | null;
+  fastestWins: number;
+}
+
+export const fetchComparisonStatsByModel = (): Promise<ComparisonModelStatsRecord[]> =>
+  request<ComparisonModelStatsRecord[]>("/api/v1/comparisons/stats/by-model");
+
 export const fetchComparisons = (): Promise<ComparisonSummaryRecord[]> =>
   request<ComparisonSummaryRecord[]>("/api/v1/comparisons");
 

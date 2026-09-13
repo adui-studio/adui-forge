@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Inject, Param, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Inject, Param, Post } from "@nestjs/common";
 import { z } from "zod";
 import { validateWorkflowGraph, workflowGraphSchema } from "@adui-forge/workflow";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
@@ -59,6 +59,15 @@ export class WorkflowsRegistryController {
     };
     this.registry.register(record);
     return { ok: true, name: record.name };
+  }
+
+  @Delete(":name")
+  async remove(@Param("name") name: string) {
+    const deleted = await Promise.resolve(this.registry.delete(name));
+    if (!deleted) {
+      return { ok: false };
+    }
+    return { ok: true, name };
   }
 
   @Post(":name/runs")

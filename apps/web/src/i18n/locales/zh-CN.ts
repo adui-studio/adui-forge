@@ -219,6 +219,7 @@ export const zhCN = {
     tasksLabel: "任务列表（每行一条，顺序执行）",
     tasksPlaceholder: "审查代码改动\n补充缺失的测试\n输出评审结论",
     tasksRequired: "至少填写一条任务",
+    deleteTitle: '删除 Workflow "{{name}}"？',
     tasksTooMany: "最多 10 条任务",
   },
   workflowEditor: {
@@ -335,7 +336,9 @@ export const zhCN = {
     deleteTitle: "删除该对比批次？",
     historyLabel: "历史对比",
     historyPlaceholder: "选择一个历史对比回看结果",
+    modelStatsTitle: "模型胜负统计（跨批次）",
     statsTitle: "Agent 胜负统计（跨批次）",
+    statsModel: "按模型",
     statsBatches: "参与批次",
     statsCompleted: "完成",
     statsFailed: "失败",

@@ -3,8 +3,8 @@ import { Play, Plus, Workflow as WorkflowIcon } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Button, Card, Empty, Form, Input, Spin, Steps } from "antd";
-import { fetchWorkflows, runWorkflow } from "@/lib/workflows.ts";
+import { Button, Card, Empty, Form, Input, Popconfirm, Spin, Steps } from "antd";
+import { deleteWorkflow, fetchWorkflows, runWorkflow } from "@/lib/workflows.ts";
 import type { WorkflowDefinitionRecord } from "@/lib/workflows.ts";
 import { registerWorkflow } from "@/lib/api.ts";
 
@@ -20,6 +20,13 @@ export function WorkflowsPage() {
   } = useQuery<WorkflowDefinitionRecord[], Error>({
     queryKey: ["workflows"],
     queryFn: fetchWorkflows,
+  });
+
+  const remove = useMutation({
+    mutationFn: (name: string) => deleteWorkflow(name),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["workflows"] });
+    },
   });
 
   const run = useMutation({
@@ -80,15 +87,26 @@ export function WorkflowsPage() {
                 status: index === 0 ? "process" : "wait",
               }))}
             />
-            <Button
-              size="small"
-              className="mt-3"
-              disabled={run.isPending}
-              onClick={() => run.mutate(workflow.name)}
-            >
-              <Play className="mr-1 inline h-3.5 w-3.5" />
-              {run.isPending ? t("workflows.starting") : t("workflows.run")}
-            </Button>
+            <div className="mt-3 flex items-center gap-2">
+              <Button
+                size="small"
+                disabled={run.isPending}
+                onClick={() => run.mutate(workflow.name)}
+              >
+                <Play className="mr-1 inline h-3.5 w-3.5" />
+                {run.isPending ? t("workflows.starting") : t("workflows.run")}
+              </Button>
+              <Popconfirm
+                title={t("workflows.deleteTitle", { name: workflow.name })}
+                okText={t("common.delete")}
+                cancelText={t("common.cancel")}
+                onConfirm={() => remove.mutate(workflow.name)}
+              >
+                <Button danger size="small">
+                  {t("common.delete")}
+                </Button>
+              </Popconfirm>
+            </div>
           </Card>
         ))}
       </div>

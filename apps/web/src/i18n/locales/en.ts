@@ -229,6 +229,7 @@ export const en: ZhCNTranslation = {
     tasksLabel: "Tasks (one per line, executed in order)",
     tasksPlaceholder: "Review code changes\nAdd missing tests\nWrite the review summary",
     tasksRequired: "At least one task is required",
+    deleteTitle: 'Delete workflow "{{name}}"?',
     tasksTooMany: "At most 10 tasks",
   },
   workflowEditor: {
@@ -347,7 +348,9 @@ export const en: ZhCNTranslation = {
     deleteTitle: "Delete this comparison?",
     historyLabel: "History",
     historyPlaceholder: "Pick a past comparison to review",
+    modelStatsTitle: "Model stats (across batches)",
     statsTitle: "Agent stats (across batches)",
+    statsModel: "By model",
     statsBatches: "Batches",
     statsCompleted: "Completed",
     statsFailed: "Failed",

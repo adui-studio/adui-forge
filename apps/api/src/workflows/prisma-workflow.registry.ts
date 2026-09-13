@@ -37,6 +37,11 @@ export class PrismaWorkflowsRegistry implements WorkflowsRegistryContract {
     return fromStored(row.name, row.description, row.definition);
   }
 
+  async delete(name: string): Promise<boolean> {
+    const result = await this.#prisma.workflow.deleteMany({ where: { name } });
+    return result.count > 0;
+  }
+
   async list(): Promise<WorkflowDefinitionRecord[]> {
     const rows = await this.#prisma.workflow.findMany({ orderBy: { name: "asc" } });
     return rows.map((row) => fromStored(row.name, row.description, row.definition));

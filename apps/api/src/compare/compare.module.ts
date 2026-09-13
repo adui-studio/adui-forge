@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { PrismaClient } from "../../generated/prisma-client";
 import { RunsModule } from "../runs/runs.module";
+import { AgentsModule } from "../agents/agents.module";
 import { ComparisonService } from "./comparison.service";
 import {
   COMPARISON_STORE,
@@ -11,7 +12,7 @@ import { ComparisonsController } from "./comparisons.controller";
 
 /** 对比批次模块：配置 DATABASE_URL 时 PostgreSQL 持久化，否则内存降级（显式、不静默）。 */
 @Module({
-  imports: [RunsModule],
+  imports: [RunsModule, AgentsModule],
   controllers: [ComparisonsController],
   providers: [
     {
