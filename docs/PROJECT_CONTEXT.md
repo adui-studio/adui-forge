@@ -1,7 +1,7 @@
 # ADui Forge — PROJECT_CONTEXT.md
 
 > 给任何新加入的 Agent / 开发者的项目上下文快照。
-> 最后更新：2026-08-29
+> 最后更新：2026-09-13（v0.7.0）
 
 ---
 
@@ -31,7 +31,7 @@ Human Approval → Deliver
 
 # 2. 当前阶段
 
-**P0 — 可运行的领域核心骨架（已完成）。**
+**v0.7.0 — Workspace IDE 与本地 Agent 闭环已发布（CI / Release 全绿）。**
 
 P0 目标：建立领域核心与最小可运行闭环的骨架，验收标准为 `pnpm run ready`（check / test / build）全绿。
 
@@ -119,6 +119,29 @@ P0 目标：建立领域核心与最小可运行闭环的骨架，验收标准�
 | MVP-59 | Agents 页 + 登录态侧栏区块 | ✅ 完成 |
 | MVP-60 | Release 流水线（Desktop 包 + Mobile APK → GitHub Release） | ✅ 完成 |
 | MVP-61 | v0.5.0：CHANGELOG / 版本号 / tag | ✅ 完成 |
+
+---
+
+# 2.2 Workspace IDE 与本地闭环阶段（✅ v0.6.0 – v0.7.0 —— 2026-09-13）
+
+| 里程碑 | 内容                                                                                       | 状态 |
+| ------ | ------------------------------------------------------------------------------------------ | ---- |
+| W-1    | Skill 系统：packages/skill-sdk、管理 API/页面、Agent 指令注入、SKILL.md 双向闭环           | ✅   |
+| W-2    | Model Registry：FORGE_MODELS 命名模型目录，自定义 Agent 可指定模型                         | ✅   |
+| W-3    | Workflow 可序列化条件分支图（校验/编译/执行）+ 编辑器自由连线/条件节点/坐标持久化          | ✅   |
+| W-4    | Workspace 文件 API（三层边界）+ 工作区页（文件树/Monaco 多 Tab/新建删除）                  | ✅   |
+| W-5    | Local Runner（ADR-005）：Fastify 同形 REST、token 握手、Bun sidecar 分发（ADR-007）        | ✅   |
+| W-6    | Git 面板：status/diff/commit（execFile 无 shell）+ DiffEditor + 编辑器联动                 | ✅   |
+| W-7    | Trusted Local Mode + 本地审批闭环（ADR-006）：Runner 审批服务/端点 + 信任开关 + 面板审批卡 | ✅   |
+| W-8    | 终端集成：管道模式 shell WebSocket + xterm.js（Bun sidecar 下显式降级）                    | ✅   |
+| W-9    | 会话持久化 + Chat 历史会话/重命名/删除/失败重试/上下文注入                                 | ✅   |
+| W-10   | 对比分析：并排流式对比 + 批次持久化 + 跨批次胜负统计                                       | ✅   |
+| W-11   | i18n 双语言（zh-CN/en）+ antd locale 跟随 + 键覆盖守卫测试                                 | ✅   |
+| W-12   | 交互惯例修复：侧栏导航、URL 深链接、破坏性操作确认、路由级 code-splitting                  | ✅   |
+| W-13   | CI/Release 流水线修复：frontendDist 路径、Linux 依赖、测试语言依赖、Flutter 克隆重试       | ✅   |
+
+> v0.7.0 起 Desktop 安装包（含 Bun sidecar Runner）开箱可用；Bun 运行时限制
+> （终端降级）记录于 ADR-007。
 
 ---
 

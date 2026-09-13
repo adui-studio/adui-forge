@@ -95,12 +95,13 @@ Flutter APP，定位是"随时随地查看、控制、审批正在执行的 Agen
 # 3. Monorepo 布局
 
 ```text
-apps/       应用层：web / desktop / mobile / api / worker / runner / docs
-packages/   共享包层：领域核心、协议契约、UI 与工具
-crates/     Rust：desktop-runtime
-infra/      docker / compose / scripts
-scripts/    工程脚本
-docs/       需求、架构、项目上下文、代码库地图、ADR
+apps/       应用层：api / web / desktop / mobile / runner / docs
+            （api=NestJS 云端；runner=Bun sidecar 本地运行器，同形 REST）
+packages/   共享包层：agent / agent-runtime / ai / contracts / mcp /
+            skill-sdk / tool-sdk / workflow / shared
+infra/      docker / compose（PostgreSQL / Redis 开发实例）
+scripts/    工程脚本（build-runner sidecar、SKILL.md 导入等）
+docs/       需求、架构、项目上下文、代码库地图、ADR（001~007）
 .agents/skills/  仓库级 Agent Skill（指导 Agent 在本仓库工作）
 evals/      Agent 行为评估用例与 Harness
 ```
