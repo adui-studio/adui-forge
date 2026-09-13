@@ -61,6 +61,6 @@ import { InMemorySkillStore, PrismaSkillStore, SKILL_STORE } from "../skills/ski
           : new InMemorySkillStore(),
     },
   ],
-  exports: [AgentRegistry, SKILL_STORE],
+  exports: [AgentRegistry, SKILL_STORE, AgentConfigService],
 })
 export class AgentsModule {}
