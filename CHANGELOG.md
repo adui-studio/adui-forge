@@ -1,6 +1,25 @@
 # Changelog
 
-> 版本与里程碑提交对齐：v0.2.0 → 063fb01，v0.3.0 → 6ec475b，v0.4.0 → 43b5043，v0.5.0 → efc6faf，v0.6.0 → c1937dc，v0.6.1 → ddd285b，v0.7.0 → e633c58，v0.7.2 → be0bc39，v0.8.0 → 里程碑提交（见下）。
+> 版本与里程碑提交对齐：v0.2.0 → 063fb01，v0.3.0 → 6ec475b，v0.4.0 → 43b5043，v0.5.0 → efc6faf，v0.6.0 → c1937dc，v0.6.1 → ddd285b，v0.7.0 → e633c58，v0.7.2 → be0bc39，v0.8.0 → 3170c17，v0.9.0 → 里程碑提交（见下）。
+
+## 0.9.0 — 2026-09-14
+
+### 文档站国际化（apps/docs）
+
+- **zh-CN / en 双语**：内容重构为双语言根（Rspress 2 locales 约定：目录名 = lang），
+  导航栏自动出现语言切换；部署后 <https://adui-studio.github.io/adui-forge/> 按浏览器
+  语言自动跳转
+- **全部 8 篇指南双语对照**：核心概念、快速开始、架构、API 参考、配置、安全模型、
+  部署、Desktop 与 Mobile——内容更新至 v0.8.0（含自定义 Agent / 命名模型 / Skill /
+  Workspace IDE / Local Runner / 对比分析 / 会话持久化等全部新能力）
+- API 参考补齐 v0.8.0 全部新端点（agents CRUD、comparisons、conversations、skills、
+  workspace、git 面板）；配置参考补 `FORGE_MODELS` / `FORGE_SKILLS_DIR`
+
+### Web
+
+- **404 路由**：catch-all 兜底页（i18n 文案 + 回控制台入口）
+
+---
 
 ## 0.8.0 — 2026-09-14
 
