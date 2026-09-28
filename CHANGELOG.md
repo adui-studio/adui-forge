@@ -1,6 +1,19 @@
 # Changelog
 
-> 版本与里程碑提交对齐：v0.2.0 → 063fb01，v0.3.0 → 6ec475b，v0.4.0 → 43b5043，v0.5.0 → efc6faf，v0.6.0 → c1937dc，v0.6.1 → ddd285b，v0.7.0 → e633c58，v0.7.2 → be0bc39，v0.8.0 → 3170c17，v0.9.0 → 里程碑提交（见下）。
+> 版本与里程碑提交对齐：v0.2.0 → 063fb01，v0.3.0 → 6ec475b，v0.4.0 → 43b5043，v0.5.0 → efc6faf，v0.6.0 → c1937dc，v0.6.1 → ddd285b，v0.7.0 → e633c58，v0.7.2 → be0bc39，v0.8.0 → 3170c17，v0.9.0 → 33fa989，v0.9.1 → 里程碑提交（见下）。
+
+## 0.9.1 — 2026-09-14
+
+### 本地沙箱（ADR-008，docs/decisions）
+
+- **JobObjectSandbox（Windows）**：Trusted Local Mode 下 Shell/Git 执行经 Windows
+  Job Object——整树终止（超时/abort/会话结束不留孤儿）、koffi FFI（纯 npm 依赖）
+- Runner 沙箱选择：Windows + 信任模式自动选用，koffi 加载失败显式降级 HostSandbox
+  并警告；POSIX 沿用进程组语义
+- 诚实边界：Job Object 提供进程树生命周期与限制，不做文件系统/网络隔离——那些由
+  三层文件边界 + 审批 + Workspace 根约束
+
+---
 
 ## 0.9.0 — 2026-09-14
 
