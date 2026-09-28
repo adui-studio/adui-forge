@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@adui-forge/contracts": "workspace:*",
+    "koffi": "^3.3.2",
     "zod": "catalog:"
   },
   "devDependencies": {

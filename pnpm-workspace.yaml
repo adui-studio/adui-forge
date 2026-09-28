@@ -7,6 +7,7 @@ allowBuilds:
   "@prisma/client": true
   "@prisma/engines": true
   esbuild: true
+  koffi: true
   node-pty: true
   prisma: true
   sharp: true
@@ -71,5 +72,26 @@ peerDependencyRules:
     vite: "*"
 minimumReleaseAgeExclude:
   - zod@4.5.2
+  - "@koromix/koffi-android-arm64@3.3.2"
+  - "@koromix/koffi-android-x64@3.3.2"
+  - "@koromix/koffi-darwin-arm64@3.3.2"
+  - "@koromix/koffi-darwin-x64@3.3.2"
+  - "@koromix/koffi-freebsd-arm64@3.3.2"
+  - "@koromix/koffi-freebsd-ia32@3.3.2"
+  - "@koromix/koffi-freebsd-x64@3.3.2"
+  - "@koromix/koffi-linux-arm64@3.3.2"
+  - "@koromix/koffi-linux-arm@3.3.2"
+  - "@koromix/koffi-linux-ia32@3.3.2"
+  - "@koromix/koffi-linux-loong64@3.3.2"
+  - "@koromix/koffi-linux-ppc64@3.3.2"
+  - "@koromix/koffi-linux-riscv64@3.3.2"
+  - "@koromix/koffi-linux-x64@3.3.2"
+  - "@koromix/koffi-openbsd-arm64@3.3.2"
+  - "@koromix/koffi-openbsd-ia32@3.3.2"
+  - "@koromix/koffi-openbsd-x64@3.3.2"
+  - "@koromix/koffi-win32-arm64@3.3.2"
+  - "@koromix/koffi-win32-ia32@3.3.2"
+  - "@koromix/koffi-win32-x64@3.3.2"
+  - koffi@3.3.2
 onlyBuiltDependencies:
   - node-pty

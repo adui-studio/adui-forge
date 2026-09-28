@@ -1,11 +1,13 @@
 import { createOpenAICompatibleModelAdapter } from "@adui-forge/ai";
 import { defineAgent, AgentRegistry, type Agent } from "@adui-forge/agent";
 import type { AgentTool } from "@adui-forge/contracts";
+import type { Sandbox } from "@adui-forge/tool-sdk";
 import {
   createFileTools,
   createGitTools,
   createShellExecTool,
   HostSandbox,
+  JobObjectSandbox,
 } from "@adui-forge/tool-sdk";
 
 /** 默认本地 Agent 的名字（与云端 API 一致）。 */
@@ -63,8 +65,17 @@ export const buildLocalAgents = (
 
   const tools: AgentTool[] = [...createFileTools({ root: options.workspaceRoot })];
   if (options.trustedLocalMode) {
-    // HostSandbox 无隔离边界，仅因用户显式信任而存在（ADR-006 §1/§2）
-    const sandbox = new HostSandbox();
+    // 沙箱选择（ADR-008）：Windows 用 Job Object（整树终止），加载失败显式降级 Host
+    let sandbox: Sandbox;
+    try {
+      sandbox = new JobObjectSandbox();
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      console.warn(
+        `JobObjectSandbox unavailable (${reason}); falling back to HostSandbox (no isolation)`,
+      );
+      sandbox = new HostSandbox();
+    }
     tools.push(
       ...createGitTools({ sandbox, workspaceRoot: options.workspaceRoot }),
       createShellExecTool({ sandbox, workspaceRoot: options.workspaceRoot }),

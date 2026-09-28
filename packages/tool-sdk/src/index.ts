@@ -70,3 +70,4 @@ export {
   type ExecResult,
 } from "./sandbox/sandbox.ts";
 export { DockerSandbox, type DockerSandboxOptions } from "./sandbox/docker-sandbox.ts";
+export { JobObjectSandbox, type JobObjectSandboxOptions } from "./sandbox/job-object.ts";
