@@ -17,6 +17,9 @@ const ApprovalsPage = lazy(() =>
 );
 const LoginPage = lazy(() => import("./pages/Login.tsx").then((m) => ({ default: m.LoginPage })));
 const McpPage = lazy(() => import("./pages/Mcp.tsx").then((m) => ({ default: m.McpPage })));
+const NotFoundPage = lazy(() =>
+  import("./pages/NotFound.tsx").then((m) => ({ default: m.NotFoundPage })),
+);
 const WorkspacePage = lazy(() =>
   import("./pages/Workspace.tsx").then((m) => ({ default: m.WorkspacePage })),
 );
@@ -66,6 +69,7 @@ export function App() {
           <Route path="/tools" element={<ToolsPage />} />
           <Route path="/compare" element={<ComparePage />} />
           <Route path="/workspace" element={<WorkspacePage />} />
+          <Route path="*" element={<NotFoundPage />} />
           <Route path="/mcp" element={<McpPage />} />
           <Route path="/workflows" element={<WorkflowsPage />} />
           <Route path="/workflows/new" element={<WorkflowEditorPage isNew />} />

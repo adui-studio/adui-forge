@@ -20,7 +20,7 @@ docker compose -f infra/docker-compose.yml up -d
 ```
 
 - Web 容器由 Nginx 托管静态产物并反代 `/api`（SSE 已关闭缓冲）；
-- API 容器注入 `FORGE_*` 环境变量（见 [配置参考](/guide/configuration.html)）；
+- API 容器注入 `FORGE_*` 环境变量（见 [配置参考](/zh-CN/guide/configuration.html)）；
 - 首次启动后执行 `pnpm --filter @adui-forge/api db:migrate` 建表。
 
 ## Desktop（Tauri 2）

@@ -440,6 +440,10 @@ export const zhCN = {
     hintExecute: "↵ 执行",
     hintClose: "ESC 关闭",
   },
+  notFound: {
+    backHome: "回到控制台",
+    title: "页面不存在或已被移动。",
+  },
   notifications: {
     runCompleted: "✓ Run 已完成",
     runFailed: "✕ Run 失败",

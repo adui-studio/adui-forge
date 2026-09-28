@@ -454,6 +454,10 @@ export const en: ZhCNTranslation = {
     hintExecute: "↵ to run",
     hintClose: "ESC to close",
   },
+  notFound: {
+    backHome: "Back to dashboard",
+    title: "This page does not exist or has moved.",
+  },
   notifications: {
     runCompleted: "✓ Run completed",
     runFailed: "✕ Run failed",

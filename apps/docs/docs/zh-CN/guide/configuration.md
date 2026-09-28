@@ -15,12 +15,13 @@ title: 配置参考
 
 ## 模型
 
-| 变量                   | 说明                                                              |
-| ---------------------- | ----------------------------------------------------------------- |
-| `FORGE_MODEL_BASE_URL` | OpenAI Compatible 端点（未配置时默认 Agent 不注册，Run 请求 404） |
-| `FORGE_MODEL_ID`       | 模型 ID（业务代码不硬编码模型名）                                 |
-| `FORGE_MODEL_API_KEY`  | 模型 API Key                                                      |
-| `FORGE_MODEL_NAME`     | Provider 名称（默认 forge-provider）                              |
+| 变量                   | 说明                                                                   |
+| ---------------------- | ---------------------------------------------------------------------- |
+| `FORGE_MODEL_BASE_URL` | OpenAI Compatible 端点（未配置时默认 Agent 不注册，Run 请求 404）      |
+| `FORGE_MODEL_ID`       | 模型 ID（业务代码不硬编码模型名）                                      |
+| `FORGE_MODEL_API_KEY`  | 模型 API Key                                                           |
+| `FORGE_MODEL_NAME`     | Provider 名称（默认 forge-provider）                                   |
+| `FORGE_MODELS`         | 命名模型 JSON 数组（自定义 Agent 可选；支持 `apiKeyEnv` 间接引用密钥） |
 
 ## Agent Loop 与沙箱
 
@@ -39,5 +40,6 @@ title: 配置参考
 | 变量                  | 说明                                                                    |
 | --------------------- | ----------------------------------------------------------------------- |
 | `FORGE_MCP_SERVERS`   | JSON 数组 `[{name, command, args?, env?}]`，启动时 stdio 连接并桥接工具 |
+| `FORGE_SKILLS_DIR`    | SKILL.md 导入目录（服务端指定，不接受客户端路径）                       |
 | `FORGE_JWT_SECRET`    | JWT 签名密钥（认证必需）                                                |
 | `FORGE_AUTH_REQUIRED` | `1` 时全局启用 Bearer 校验                                              |

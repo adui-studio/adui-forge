@@ -21,7 +21,21 @@ title: API 参考
 | `/tasks`                       | GET / POST | 任务台账（创建即派生 Run）                    |
 | `/workflows`                   | GET / POST | Workflow 定义列表与注册                       |
 | `/workflows/{name}/runs`       | POST       | 运行 Workflow                                 |
-| `/memory`                      | GET        | Session Memory 摘要                           |
-| `/metrics`                     | GET        | 运行指标                                      |
+
+| `/agents` / `/agents/{name}` | GET/POST/DEL | 自定义 Agent CRUD（含模型/工具/Skill 配置） |
+| `/agents/models` | GET | 命名模型目录 |
+| `/workflows/{name}` | DELETE | 删除 Workflow 定义 |
+| `/comparisons` | GET / POST | 对比批次（列表 / 创建） |
+| `/comparisons/stats` | GET | 跨批次 Agent 胜负统计 |
+| `/comparisons/stats/by-model` | GET | 按模型分组的胜负统计 |
+| `/conversations` | GET / POST | Chat 会话（列表 / 创建 / 重命名 / 删除） |
+| `/conversations/{id}/messages` | POST | 追加会话消息 |
+| `/skills` / `/{name}/export` | GET / POST | Skill 库 CRUD + SKILL.md 导出 |
+| `/skills/import` | POST | 从 FORGE_SKILLS_DIR 导入 SKILL.md |
+| `/workspace/tree` `/workspace/file` | GET | Workspace 文件树 / 内容 |
+| `/workspace/file` | PUT / DELETE | 写入 / 删除文件 |
+| `/workspace/git/status` `…/commit` | GET / POST | Git 面板后端（status / diff / commit） |
+| `/memory` | GET | Session Memory 摘要 |
+| `/metrics` | GET | 运行指标 |
 
 认证：`FORGE_AUTH_REQUIRED=1` 时除 health/openapi 外均需 `Authorization: Bearer <token>`。

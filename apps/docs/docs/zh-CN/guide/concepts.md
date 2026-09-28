@@ -23,6 +23,14 @@ ADui Forge 的领域模型围绕"Agent 执行软件工程"组织。
 - 工具执行强制经 Sandbox：Host（仅可信本地模式）或 Docker 容器
   （默认无网络、资源受限、只挂载工作区）。
 
+## Custom Agents、模型与 Skill
+
+- **自定义 Agent**：运行时定义 name / description / systemPrompt / 工具集 / 模型 /
+  循环参数——不改代码；内置 Agent 只读展示。
+- **命名模型**（`FORGE_MODELS`）：多 Provider 可按 Agent 选择；默认模型来自 `FORGE_MODEL_*`。
+- **Skill**：高于 Tool 的可复用能力——Markdown 指令注入 Agent 系统提示词；
+  支持 SKILL.md 目录导入与导出。
+
 ## Workflow
 
 多步骤编排：`agent` / `tool` / `condition` 三类节点顺序执行，
