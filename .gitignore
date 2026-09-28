@@ -40,3 +40,4 @@ doc_build
 .rspress
 apps/api/generated/
 apps/desktop/src-tauri/binaries/
+.ai/
