@@ -4,8 +4,9 @@ import { runProcess, type Sandbox, type SandboxExecOptions, type ExecResult } fr
 /**
  * Windows Job Object 沙箱（ADR-008）：
  * 命令子进程（含其派生的整棵树）放入 Job Object，具备：
- * - KILL_ON_JOB_CLOSE：沙箱销毁/超时/abort 时整树强制终止，不留孤儿；
- * - Job 级内存上限（默认 2 GiB）与进程数上限（默认 512）。
+ * - KILL_ON_JOB_CLOSE：沙箱销毁/超时/abort 时整树强制终止，不留孤儿。
+ * 内存/进程数上限（SetInformationJobObject）经 koffi 3.3.2 恒败
+ * （ERROR_BAD_LENGTH，Query 正常排除句柄问题）——暂缓，见 ADR-008。
  * 不提供文件系统/网络/注册表隔离——那些由三层文件边界 + 审批 + Workspace 根约束。
  *
  * 经 koffi 调用 kernel32（纯 npm 依赖，无 node-gyp）。构造在 koffi 不可用时抛错，
