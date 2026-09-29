@@ -17,7 +17,8 @@ const dockerAvailable = await new Promise<boolean>((resolve) => {
 const TEST_IMAGE = "nginx:1.27.4-alpine";
 
 describe.skipIf(!dockerAvailable)("DockerSandbox", () => {
-  it("runs a one-off container with the workspace mounted", async () => {
+  // CI 上首次拉取镜像较慢：所有用例放宽到 120s（与网络封锁用例一致）
+  it("runs a one-off container with the workspace mounted", { timeout: 120_000 }, async () => {
     const workspaceRoot = mkdtempSync(join(tmpdir(), "forge-docker-"));
     const sandbox = new DockerSandbox({ workspaceRoot, image: TEST_IMAGE });
 
@@ -30,23 +31,27 @@ describe.skipIf(!dockerAvailable)("DockerSandbox", () => {
     expect(result.stdout).toContain("container-ok");
   });
 
-  it("maps the workspace into /workspace and runs from the mapped cwd", async () => {
-    const workspaceRoot = mkdtempSync(join(tmpdir(), "forge-docker-"));
-    const sub = join(workspaceRoot, "sub");
-    const { mkdirSync, writeFileSync } = await import("node:fs");
-    mkdirSync(sub);
-    writeFileSync(join(sub, "marker.txt"), "mount-ok");
-    const sandbox = new DockerSandbox({ workspaceRoot, image: TEST_IMAGE });
+  it(
+    "maps the workspace into /workspace and runs from the mapped cwd",
+    { timeout: 120_000 },
+    async () => {
+      const workspaceRoot = mkdtempSync(join(tmpdir(), "forge-docker-"));
+      const sub = join(workspaceRoot, "sub");
+      const { mkdirSync, writeFileSync } = await import("node:fs");
+      mkdirSync(sub);
+      writeFileSync(join(sub, "marker.txt"), "mount-ok");
+      const sandbox = new DockerSandbox({ workspaceRoot, image: TEST_IMAGE });
 
-    const result = await sandbox.execShell("cat /workspace/sub/marker.txt && pwd", {
-      cwd: sub,
-      timeoutMs: 60_000,
-    });
+      const result = await sandbox.execShell("cat /workspace/sub/marker.txt && pwd", {
+        cwd: sub,
+        timeoutMs: 60_000,
+      });
 
-    expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain("mount-ok");
-    expect(result.stdout).toContain("/workspace/sub");
-  });
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toContain("mount-ok");
+      expect(result.stdout).toContain("/workspace/sub");
+    },
+  );
 
   it("blocks network by default", { timeout: 120_000 }, async () => {
     const workspaceRoot = mkdtempSync(join(tmpdir(), "forge-docker-"));
