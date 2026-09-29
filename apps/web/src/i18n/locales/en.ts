@@ -361,6 +361,7 @@ export const en: ZhCNTranslation = {
     starting: "Starting…",
     emptyTitle: "Configure the form above to start a comparison.",
     emptyHint: "Each agent runs the same task independently; results stream side by side.",
+    export: "Export report (CSV+MD)",
   },
   tools: {
     title: "Tools",

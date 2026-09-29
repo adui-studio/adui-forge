@@ -5,6 +5,7 @@ import { InMemoryRunStore } from "../src/runs/in-memory-run.store";
 import { RunService } from "../src/runs/run.service";
 import { ComparisonService } from "../src/compare/comparison.service";
 import { InMemoryComparisonStore } from "../src/compare/comparison.store";
+import { comparisonToCsv, comparisonToMarkdown } from "../src/compare/comparison.export";
 
 const buildService = () => {
   const registry = new AgentRegistry();
@@ -152,5 +153,39 @@ describe("ComparisonService statsByModel", () => {
     const stats = await service.statsByModel();
     // 空批次时为空数组；结构校验
     expect(Array.isArray(stats)).toBe(true);
+  });
+});
+
+describe("对比报告导出", () => {
+  it("CSV 转义逗号/引号/换行；Markdown 含结果表与输出段", async () => {
+    const record = { id: "cmp_1", task: "t", items: [], createdAt: "2026-09-14T00:00:00Z" };
+    const results = [
+      {
+        agentName: "agent,a",
+        runId: "run_1",
+        status: "completed",
+        text: 'line1\nline2 with "quotes"',
+        tools: [],
+        durationMs: 1500,
+      },
+      {
+        agentName: "agent-b",
+        runId: "run_2",
+        status: "failed",
+        text: "",
+        tools: [],
+        error: "boom",
+        durationMs: null,
+      },
+    ];
+    const csv = comparisonToCsv(record, results as never);
+    expect(csv.split("\r\n")[0]).toBe("agentName,runId,status,durationSeconds,error,output");
+    expect(csv).toContain('"agent,a"');
+    expect(csv).toContain('"line1\nline2 with ""quotes"""');
+
+    const md = comparisonToMarkdown(record, results as never);
+    expect(md).toContain("# Agent Comparison: t");
+    expect(md).toContain("| agent-b | failed | — | boom |");
+    expect(md).toContain("```text");
   });
 });

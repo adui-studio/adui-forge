@@ -349,6 +349,7 @@ export const zhCN = {
     starting: "启动中…",
     emptyTitle: "配置上方表单后开始对比。",
     emptyHint: "每个 Agent 独立执行同一任务，结果并排实时展示。",
+    export: "导出报告 (CSV+MD)",
   },
   tools: {
     title: "工具",

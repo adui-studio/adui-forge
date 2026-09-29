@@ -7,6 +7,7 @@ import { Button, Card, Empty, Input, Popconfirm, Select, Space, Spin, Tag, Toolt
 import {
   createComparison,
   deleteComparison,
+  exportComparison,
   createRun,
   fetchAgents,
   fetchComparison,
@@ -188,16 +189,40 @@ export function ComparePage() {
             onChange={(value) => void loadHistory(value)}
           />
           {selectedHistoryId !== null && (
-            <Popconfirm
-              title={t("compare.deleteTitle")}
-              okText={t("common.delete")}
-              cancelText={t("common.cancel")}
-              onConfirm={() => removeComparison.mutate()}
-            >
-              <Button danger size="small">
-                {t("common.delete")}
+            <>
+              <Button
+                size="small"
+                onClick={() => {
+                  const download = (format: "csv" | "md"): void => {
+                    void exportComparison(selectedHistoryId, format).then((result) => {
+                      const blob = new Blob([result.content], {
+                        type: format === "csv" ? "text/csv" : "text/markdown",
+                      });
+                      const url = URL.createObjectURL(blob);
+                      const anchor = document.createElement("a");
+                      anchor.href = url;
+                      anchor.download = result.filename;
+                      anchor.click();
+                      URL.revokeObjectURL(url);
+                    });
+                  };
+                  download("csv");
+                  download("md");
+                }}
+              >
+                {t("compare.export")}
               </Button>
-            </Popconfirm>
+              <Popconfirm
+                title={t("compare.deleteTitle")}
+                okText={t("common.delete")}
+                cancelText={t("common.cancel")}
+                onConfirm={() => removeComparison.mutate()}
+              >
+                <Button danger size="small">
+                  {t("common.delete")}
+                </Button>
+              </Popconfirm>
+            </>
           )}
         </div>
       )}

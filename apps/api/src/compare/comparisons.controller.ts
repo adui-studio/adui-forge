@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Inject, Param, Post } from "@nestjs/comm
 import { z } from "zod";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { ComparisonService } from "./comparison.service";
+import { comparisonToCsv, comparisonToMarkdown } from "./comparison.export";
 
 export const createComparisonSchema = z.object({
   task: z.string().min(1).max(10_000),
@@ -46,6 +47,22 @@ export class ComparisonsController {
   @Get(":id")
   get(@Param("id") id: string) {
     return this.comparisons.get(id);
+  }
+
+  @Get(":id/export/:format")
+  async export(
+    @Param("id") id: string,
+    @Param("format") format: string,
+  ): Promise<{ filename: string; content: string }> {
+    const { record, results } = await this.comparisons.get(id);
+    if (format !== "csv" && format !== "md") {
+      return { filename: "report.txt", content: "unsupported format\n" };
+    }
+    return {
+      filename: `comparison-${id}.${format}`,
+      content:
+        format === "csv" ? comparisonToCsv(record, results) : comparisonToMarkdown(record, results),
+    };
   }
 
   @Delete(":id")

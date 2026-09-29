@@ -363,6 +363,14 @@ export const createComparison = (input: {
     body: JSON.stringify(input),
   });
 
+export const exportComparison = (
+  id: string,
+  format: "csv" | "md",
+): Promise<{ filename: string; content: string }> =>
+  request<{ filename: string; content: string }>(
+    `/api/v1/comparisons/${encodeURIComponent(id)}/export/${format}`,
+  );
+
 export const deleteComparison = (id: string): Promise<{ ok: boolean }> =>
   request<{ ok: boolean }>(`/api/v1/comparisons/${encodeURIComponent(id)}`, {
     method: "DELETE",

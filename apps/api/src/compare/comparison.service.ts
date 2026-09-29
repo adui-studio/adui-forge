@@ -9,6 +9,8 @@ import {
   type ComparisonStore,
 } from "./comparison.store";
 
+export type { ComparisonRecord } from "./comparison.store";
+
 /** 对比列的派生结果：全部来自 Run 记录，不复制数据。 */
 export interface ComparisonItemResult extends ComparisonItem {
   status: string;
