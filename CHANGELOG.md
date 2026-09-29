@@ -1,6 +1,6 @@
 # Changelog
 
-> 版本与里程碑提交对齐：v0.2.0 → 063fb01，v0.3.0 → 6ec475b，v0.4.0 → 43b5043，v0.5.0 → efc6faf，v0.6.0 → c1937dc，v0.6.1 → ddd285b，v0.7.0 → e633c58，v0.7.2 → be0bc39，v0.8.0 → 3170c17，v0.9.0 → 33fa989，v0.9.1 → 80bc5fa，v0.9.2 → 里程碑提交（见下）。
+> 版本与里程碑提交对齐：v0.2.0 → 063fb01，v0.3.0 → 6ec475b，v0.4.0 → 43b5043，v0.5.0 → efc6faf，v0.6.0 → c1937dc，v0.6.1 → ddd285b，v0.7.0 → e633c58，v0.7.2 → be0bc39，v0.8.0 → 3170c17，v0.9.0 → 33fa989，v0.9.1 → 80bc5fa，v0.9.2 → efa66fe，v1.0.0 → 里程碑提交（见下）。
 
 ## 0.9.1 — 2026-09-14
 
@@ -12,6 +12,24 @@
   并警告；POSIX 沿用进程组语义
 - 诚实边界：Job Object 提供进程树生命周期与限制，不做文件系统/网络隔离——那些由
   三层文件边界 + 审批 + Workspace 根约束
+
+---
+
+## 1.0.0 — 2026-09-14
+
+### 首个正式版
+
+v0.6.0 以来九个版本迭代收束：Workspace IDE（文件/Git/终端/Agent 三栏）、
+Local Runner 本地闭环（Bun sidecar 分发、Trusted Local Mode、审批闭环、
+Job Object 沙箱）、Skill 系统（SDK/注入/SKILL.md 双向）、Model Registry、
+Workflow 条件分支图、会话持久化、对比分析（跨批次统计 + 报告导出）、
+任务台账、i18n 双语（Web 与文档站）。CI / Release 持续全绿。
+
+### 新增
+
+- **对比报告导出**：`GET /comparisons/{id}/export/{csv|md}`——CSV 遵循
+  RFC 4180（逗号/引号/换行转义），Markdown 含结果表与逐 Agent 输出；
+  对比页选中历史批次后一键下载双格式
 
 ---
 
