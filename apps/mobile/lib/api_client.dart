@@ -184,6 +184,22 @@ class ForgeApiClient {
     return RunRecord.fromJson(response.data!);
   }
 
+  /// 对比批次摘要列表（含 task / agentName 列表）。
+  Future<List<Map<String, dynamic>>> listComparisons() async {
+    final response = await _dio.get<List<dynamic>>('/comparisons',
+        options: await _auth());
+    return response.data!
+        .map((item) => item as Map<String, dynamic>)
+        .toList();
+  }
+
+  /// 对比批次详情（含从 Run 派生的结果）。
+  Future<Map<String, dynamic>> fetchComparison(String id) async {
+    final response = await _dio.get<Map<String, dynamic>>('/comparisons/',
+        options: await _auth());
+    return response.data!;
+  }
+
   Future<List<PendingApproval>> listPendingApprovals() async {
     final response = await _dio.get<List<dynamic>>('/approvals/pending',
         options: await _auth());

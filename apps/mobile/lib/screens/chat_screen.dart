@@ -195,6 +195,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             onPressed: _busy ? null : _showHistorySheet,
           ),
           IconButton(
+            tooltip: '对比查看',
+            icon: const Icon(Icons.compare_arrows),
+            onPressed: () => context.push('/compare'),
+          ),
+          IconButton(
             tooltip: 'Runs',
             icon: const Icon(Icons.list_alt),
             onPressed: () => context.push('/runs'),

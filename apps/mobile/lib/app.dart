@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'screens/approvals_screen.dart';
 import 'screens/chat_screen.dart';
+import 'screens/compare_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/run_detail_screen.dart';
 import 'screens/runs_screen.dart';
@@ -15,6 +16,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/chat',
         builder: (context, state) => const ChatScreen(),
+      ),
+      GoRoute(
+        path: '/compare',
+        builder: (context, state) => const CompareScreen(),
       ),
       GoRoute(
         path: '/runs',
