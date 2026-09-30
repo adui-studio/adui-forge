@@ -15,6 +15,7 @@ modify, test, fix and deliver; high-risk operations wait for human approval.
 - [Architecture](/guide/architecture.html)
 - [API Reference](/guide/api-reference.html)
 - [Configuration](/guide/configuration.html)
+- [Skills](/guide/skills.html)
 - [Security Model](/guide/security.html)
 - [Deployment](/guide/deployment.html)
 - [Desktop & Mobile](/guide/desktop-mobile.html)

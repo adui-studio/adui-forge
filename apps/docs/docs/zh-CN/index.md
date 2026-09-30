@@ -22,6 +22,7 @@ title: ADui Forge
 - [架构总览](/zh-CN/guide/architecture.html)
 - [API 参考](/zh-CN/guide/api-reference.html)
 - [配置参考](/zh-CN/guide/configuration.html)
+- [Skills](/zh-CN/guide/skills.html)
 - [安全模型](/zh-CN/guide/security.html)
 - [部署](/zh-CN/guide/deployment.html)
 - [Desktop 与 Mobile](/zh-CN/guide/desktop-mobile.html)
