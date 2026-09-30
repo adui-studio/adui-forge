@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers.dart';
@@ -47,6 +48,8 @@ class _CompareScreenState extends ConsumerState<CompareScreen> {
         builder: (_) => _ComparisonDetailScreen(
           task: (record['task'] as String?) ?? '',
           results: results,
+          onExport: (format) =>
+              ref.read(apiClientProvider).exportComparison(id, format),
         ),
       ),
     );
@@ -109,15 +112,47 @@ class _CompareScreenState extends ConsumerState<CompareScreen> {
 }
 
 class _ComparisonDetailScreen extends StatelessWidget {
-  const _ComparisonDetailScreen({required this.task, required this.results});
+  const _ComparisonDetailScreen({
+    required this.task,
+    required this.results,
+    required this.onExport,
+  });
 
   final String task;
   final List<Map<String, dynamic>> results;
 
+  /// 导出回调：传入格式（csv / md），返回报告文本（由父级请求 API 并复制到剪贴板）。
+  final Future<String> Function(String format) onExport;
+
+  Future<void> _export(BuildContext context, String format) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final content = await onExport(format);
+    await Clipboard.setData(ClipboardData(text: content));
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+            '${format == 'csv' ? 'CSV' : 'Markdown'} 报告已复制到剪贴板'),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('对比详情')),
+      appBar: AppBar(
+        title: const Text('对比详情'),
+        actions: [
+          PopupMenuButton<String>(
+            tooltip: '导出报告',
+            icon: const Icon(Icons.ios_share),
+            onSelected: (format) => _export(context, format),
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'csv', child: Text('CSV 报告')),
+              PopupMenuItem(value: 'md', child: Text('Markdown 报告')),
+            ],
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

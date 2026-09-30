@@ -162,6 +162,15 @@ class ForgeApiClient {
     return ConversationRecord.fromJson(response.data!);
   }
 
+  /// 对比报告导出（CSV / Markdown 文本）。
+  Future<String> exportComparison(String id, String format) async {
+    final response = await _dio.get<String>(
+      '/comparisons//export/',
+      options: await _auth(),
+    );
+    return response.data ?? '';
+  }
+
   Future<void> deleteConversation(String id) async {
     await _dio.delete('/conversations/', options: await _auth());
   }
