@@ -52,12 +52,22 @@ jobs:
       - name: 打包 Desktop 安装程序
         run: pnpm --filter @adui-forge/desktop bundle
 
+      # 统一命名：adui-forge-<version>-windows-x64-setup.exe / adui-forge-<version>-windows-x64.msi
+      - name: 重命名产物
+        shell: pwsh
+        run: |
+          $version = (Get-Content apps/desktop/src-tauri/tauri.conf.json | ConvertFrom-Json).version
+          $nsis = Get-ChildItem apps/desktop/src-tauri/target/release/bundle/nsis/*.exe | Select-Object -First 1
+          $msi = Get-ChildItem apps/desktop/src-tauri/target/release/bundle/msi/*.msi | Select-Object -First 1
+          Rename-Item $nsis.FullName "adui-forge-$version-windows-x64-setup.exe"
+          Rename-Item $msi.FullName "adui-forge-$version-windows-x64.msi"
+
       - name: 上传安装包到 Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           files: |
-            apps/desktop/src-tauri/target/release/bundle/nsis/*.exe
-            apps/desktop/src-tauri/target/release/bundle/msi/*.msi
+            apps/desktop/src-tauri/target/release/bundle/nsis/adui-forge-*-windows-x64-setup.exe
+            apps/desktop/src-tauri/target/release/bundle/msi/adui-forge-*-windows-x64.msi
 
   desktop-mac:
     name: Desktop 安装包（macOS DMG）
@@ -98,11 +108,18 @@ jobs:
       - name: 打包 DMG
         run: pnpm --filter @adui-forge/desktop bundle
 
+      # 统一命名：adui-forge-<version>-macos-arm64.dmg
+      - name: 重命名产物
+        run: |
+          version=$(node -p "require('./apps/desktop/src-tauri/tauri.conf.json').version")
+          mv apps/desktop/src-tauri/target/release/bundle/dmg/*.dmg \
+             "apps/desktop/src-tauri/target/release/bundle/dmg/adui-forge-${version}-macos-arm64.dmg"
+
       - name: 上传 DMG 到 Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           files: |
-            apps/desktop/src-tauri/target/release/bundle/dmg/*.dmg
+            apps/desktop/src-tauri/target/release/bundle/dmg/adui-forge-*-macos-arm64.dmg
 
   desktop-linux:
     name: Desktop 包（Linux AppImage/deb）
@@ -148,12 +165,21 @@ jobs:
       - name: 打包 AppImage / deb
         run: pnpm --filter @adui-forge/desktop bundle
 
+      # 统一命名：adui-forge-<version>-linux-x64.AppImage / adui-forge-<version>-linux-x64.deb
+      - name: 重命名产物
+        run: |
+          version=$(node -p "require('./apps/desktop/src-tauri/tauri.conf.json').version")
+          mv apps/desktop/src-tauri/target/release/bundle/appimage/*.AppImage \
+             "apps/desktop/src-tauri/target/release/bundle/appimage/adui-forge-${version}-linux-x64.AppImage"
+          mv apps/desktop/src-tauri/target/release/bundle/deb/*.deb \
+             "apps/desktop/src-tauri/target/release/bundle/deb/adui-forge-${version}-linux-x64.deb"
+
       - name: 上传到 Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           files: |
-            apps/desktop/src-tauri/target/release/bundle/appimage/*.AppImage
-            apps/desktop/src-tauri/target/release/bundle/deb/*.deb
+            apps/desktop/src-tauri/target/release/bundle/appimage/adui-forge-*-linux-x64.AppImage
+            apps/desktop/src-tauri/target/release/bundle/deb/adui-forge-*-linux-x64.deb
 
   mobile:
     name: Mobile APK（Android）
@@ -197,9 +223,9 @@ jobs:
         run: |
           VERSION=$(grep '^version:' apps/mobile/pubspec.yaml | cut -d' ' -f2 | cut -d'+' -f1)
           mv apps/mobile/build/app/outputs/flutter-apk/app-release.apk \
-             "apps/mobile/build/app/outputs/flutter-apk/adui-forge-${VERSION}.apk"
+             "apps/mobile/build/app/outputs/flutter-apk/adui-forge-${VERSION}-android.apk"
 
       - name: 上传 APK 到 Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
-          files: apps/mobile/build/app/outputs/flutter-apk/adui-forge-*.apk
+          files: apps/mobile/build/app/outputs/flutter-apk/adui-forge-*-android.apk
