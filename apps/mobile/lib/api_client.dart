@@ -172,6 +172,18 @@ class ForgeApiClient {
         data: message.toJson(), options: await _auth());
   }
 
+  Future<RunRecord> cancelRun(String id) async {
+    final response = await _dio.post<Map<String, dynamic>>('/runs//cancel',
+        options: await _auth());
+    return RunRecord.fromJson(response.data!);
+  }
+
+  Future<RunRecord> retryRun(String id) async {
+    final response = await _dio.post<Map<String, dynamic>>('/runs//retry',
+        options: await _auth());
+    return RunRecord.fromJson(response.data!);
+  }
+
   Future<List<PendingApproval>> listPendingApprovals() async {
     final response = await _dio.get<List<dynamic>>('/approvals/pending',
         options: await _auth());
