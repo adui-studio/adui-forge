@@ -1,19 +1,30 @@
 # Changelog
 
-> 版本与里程碑提交对齐：v0.2.0 → 063fb01，v0.3.0 → 6ec475b，v0.4.0 → 43b5043，v0.5.0 → efc6faf，v0.6.0 → c1937dc，v0.6.1 → ddd285b，v0.7.0 → e633c58，v0.7.2 → be0bc39，v0.8.0 → 3170c17，v0.9.0 → 33fa989，v0.9.1 → 80bc5fa，v0.9.2 → efa66fe，v1.0.0 → 里程碑提交（见下）。
+> 版本与里程碑提交对齐：v0.2.0 → 063fb01，v0.3.0 → 6ec475b，v0.4.0 → 43b5043，v0.5.0 → efc6faf，v0.6.0 → c1937dc，v0.6.1 → ddd285b，v0.7.0 → e633c58，v0.7.2 → be0bc39，v0.8.0 → 3170c17，v0.9.0 → 33fa989，v0.9.1 → 80bc5fa，v0.9.2 → efa66fe，v1.0.0 → 8a8ef62，v1.1.0 → 里程碑提交（见下）。
 
-## 0.9.1 — 2026-09-14
+## 1.1.0 — 2026-09-14
 
-### 本地沙箱（ADR-008，docs/decisions）
+### 平台与生态
 
-- **JobObjectSandbox（Windows）**：Trusted Local Mode 下 Shell/Git 执行经 Windows
-  Job Object——整树终止（超时/abort/会话结束不留孤儿）、koffi FFI（纯 npm 依赖）
-- Runner 沙箱选择：Windows + 信任模式自动选用，koffi 加载失败显式降级 HostSandbox
-  并警告；POSIX 沿用进程组语义
-- 诚实边界：Job Object 提供进程树生命周期与限制，不做文件系统/网络隔离——那些由
-  三层文件边界 + 审批 + Workspace 根约束
+- **macOS Intel (x64) DMG**：Release matrix 扩展为 arm64 + x64 双包，
+  Local Runner sidecar 随平台构建（统一命名 adui-forge-<version>-macos-x64.dmg）
+- **Skill 市场占位**：Skills 页与文档站说明市场路线（导入导出已就绪）
+- **文档站新增 Skills 指南**（zh-CN / en 双语，含生命周期与目录约定）
 
----
+### 移动端
+
+- **Run 详情屏增强**：模型输出展示、非终态自动轮询、取消 / 重试
+- **对比查看 + 报告导出**：批次列表 / 详情 / CSV 与 Markdown 复制到剪贴板
+- **会话删除**：历史会话二次确认删除
+
+## 1.0.2 — 2026-09-14
+
+### 产物命名规范化
+
+- 全平台安装包统一命名 `adui-forge-<version>-<platform>.<ext>`：
+  windows-x64-setup.exe / windows-x64.msi / macos-arm64.dmg /
+  linux-x64.AppImage / linux-x64.deb / android.apk
+- 各平台 Release job 增加重命名步骤（版本号单一来源为 tauri.conf.json / pubspec.yaml）
 
 ## 1.0.0 — 2026-09-14
 
@@ -44,6 +55,19 @@ Workflow 条件分支图、会话持久化、对比分析（跨批次统计 + �
 - 诚实边界：内存/进程数上限经 koffi 3.3.2 存在兼容缺陷（恒 ERROR_BAD_LENGTH），
   暂缓启用（Query 同句柄正常，确认非句柄问题）；待 koffi 修复后补齐
 - POSIX 沿用进程组树杀语义
+
+---
+
+## 0.9.1 — 2026-09-14
+
+### 本地沙箱（ADR-008，docs/decisions）
+
+- **JobObjectSandbox（Windows）**：Trusted Local Mode 下 Shell/Git 执行经 Windows
+  Job Object——整树终止（超时/abort/会话结束不留孤儿）、koffi FFI（纯 npm 依赖）
+- Runner 沙箱选择：Windows + 信任模式自动选用，koffi 加载失败显式降级 HostSandbox
+  并警告；POSIX 沿用进程组语义
+- 诚实边界：Job Object 提供进程树生命周期与限制，不做文件系统/网络隔离——那些由
+  三层文件边界 + 审批 + Workspace 根约束
 
 ---
 
