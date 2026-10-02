@@ -1,6 +1,18 @@
 # Changelog
 
-> 版本与里程碑提交对齐：v0.2.0 → 063fb01，v0.3.0 → 6ec475b，v0.4.0 → 43b5043，v0.5.0 → efc6faf，v0.6.0 → c1937dc，v0.6.1 → ddd285b，v0.7.0 → e633c58，v0.7.2 → be0bc39，v0.8.0 → 3170c17，v0.9.0 → 33fa989，v0.9.1 → 80bc5fa，v0.9.2 → efa66fe，v1.0.0 → 8a8ef62，v1.1.0 → 里程碑提交（见下）。
+> 版本与里程碑提交对齐：v0.2.0 → 063fb01，v0.3.0 → 6ec475b，v0.4.0 → 43b5043，v0.5.0 → efc6faf，v0.6.0 → c1937dc，v0.6.1 → ddd285b，v0.7.0 → e633c58，v0.7.2 → be0bc39，v0.8.0 → 3170c17，v0.9.0 → 33fa989，v0.9.1 → 80bc5fa，v0.9.2 → efa66fe，v1.0.0 → 8a8ef62，v1.1.0 → a9155e8，v1.1.1 → 里程碑提交（见下）。
+
+## 1.1.1 — 2026-10-01
+
+### Skill 市场 MVP
+
+- **内置技能目录**：随应用分发 5 个精选技能（bug-fixing / code-review /
+  test-writing / minimal-diff / api-design），零网络依赖、零 SSRF 面
+- **一键导入**：`GET /skills/bundled` + `POST /skills/import-bundled`（幂等
+  upsert 并触发 Agent 重建）；Skills 页安装卡（i18n 双语）
+- 导入的技能与目录导入 / SKILL.md 导出三层来源互通
+
+---
 
 ## 1.1.0 — 2026-09-14
 
