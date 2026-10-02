@@ -378,6 +378,7 @@ export const en: ZhCNTranslation = {
     subtitle:
       "A skill is a reusable agent capability above tools: its instructions are injected into the system prompt of agents that select it.",
     import: "Import from SKILL.md",
+    marketUpdateAvailable: "Update available",
     marketInstall: "Install",
     marketUpdate: "Update",
     marketInstalled: "Installed",

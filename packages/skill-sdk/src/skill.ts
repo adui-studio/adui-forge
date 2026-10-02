@@ -14,6 +14,8 @@ export const skillSchema = z.object({
   /** Markdown 指令文本，运行时注入 Agent 系统提示词。 */
   instructions: z.string().min(1).max(50_000),
   enabled: z.boolean().default(true),
+  /** 内置目录版本号：随市场分发的技能带版本，用户自建为 undefined。 */
+  version: z.number().int().positive().optional(),
 });
 
 export type Skill = z.infer<typeof skillSchema>;

@@ -8,6 +8,8 @@ export interface SkillRecord {
   description: string;
   instructions: string;
   enabled: boolean;
+  /** 内置技能安装时的目录版本；用户自建为 undefined。 */
+  bundledVersion?: number;
   createdAt: string;
   updatedAt?: string;
 }
@@ -60,11 +62,13 @@ export class PrismaSkillStore implements SkillStore {
         description: record.description,
         instructions: record.instructions,
         enabled: record.enabled,
+        bundledVersion: record.bundledVersion,
       },
       update: {
         description: record.description,
         instructions: record.instructions,
         enabled: record.enabled,
+        bundledVersion: record.bundledVersion,
       },
     });
   }
@@ -89,6 +93,7 @@ export class PrismaSkillStore implements SkillStore {
     description: string;
     instructions: string;
     enabled: boolean;
+    bundledVersion?: number | null;
     createdAt: Date;
     updatedAt: Date;
   }): SkillRecord {
@@ -97,6 +102,7 @@ export class PrismaSkillStore implements SkillStore {
       description: row.description,
       instructions: row.instructions,
       enabled: row.enabled,
+      bundledVersion: row.bundledVersion ?? undefined,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
     };
@@ -108,4 +114,5 @@ export const toSkill = (record: SkillRecord): Skill => ({
   description: record.description,
   instructions: record.instructions,
   enabled: record.enabled,
+  version: record.bundledVersion,
 });

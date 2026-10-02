@@ -85,11 +85,12 @@ model Comparison {
 
 /// 可复用 Agent 能力（REQUIREMENTS §35：Instructions 优先，后续扩展 Tools/Knowledge）
 model Skill {
-  name         String   @id
-  description  String   @default("")
-  instructions String
-  enabled      Boolean  @default(true)
-  createdAt    DateTime @default(now())
+  name           String   @id
+  description    String   @default("")
+  instructions   String
+  enabled        Boolean  @default(true)
+  bundledVersion Int?     @map("bundled_version")
+  createdAt      DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   @@map("skills")

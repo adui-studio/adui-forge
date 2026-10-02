@@ -292,6 +292,8 @@ export interface SkillRecord {
   description: string;
   instructions: string;
   enabled: boolean;
+  /** 内置技能安装时的目录版本；用户自建为 undefined。 */
+  bundledVersion?: number;
   createdAt: string;
   updatedAt?: string;
 }
@@ -337,6 +339,7 @@ export interface BundledSkillRecord {
   description: string;
   instructions: string;
   enabled: boolean;
+  version: number;
 }
 
 export const fetchBundledSkills = (): Promise<BundledSkillRecord[]> =>

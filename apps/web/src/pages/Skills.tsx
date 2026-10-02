@@ -135,20 +135,32 @@ export function SkillsPage() {
         <div className="flex flex-col gap-2">
           {(bundled ?? []).map((skill) => {
             const existing = skills?.find((item) => item.name === skill.name);
-            const modified = existing !== undefined && existing.instructions !== skill.instructions;
+            // 已安装且版本更高 → 官方更新可用；同版本内容不同 → 本地已修改
+            const hasUpdate =
+              existing !== undefined && (existing.bundledVersion ?? 0) < (skill.version ?? 1);
+            const modified =
+              existing !== undefined && !hasUpdate && existing.instructions !== skill.instructions;
             return (
               <div key={skill.name} className="flex items-center gap-3">
                 <span className="forge-code text-sm text-slate-200">{skill.name}</span>
                 <span className="flex-1 truncate text-xs text-slate-500">{skill.description}</span>
-                {modified && <Tag color="gold">{t("skills.marketModified")}</Tag>}
+                {hasUpdate ? (
+                  <Tag color="gold">{t("skills.marketUpdateAvailable")}</Tag>
+                ) : modified ? (
+                  <Tag color="gold">{t("skills.marketModified")}</Tag>
+                ) : null}
                 <Button
                   size="small"
-                  variant={existing === undefined ? "outlined" : "solid"}
-                  color={existing === undefined ? "primary" : "default"}
+                  variant={existing === undefined || hasUpdate ? "solid" : "outlined"}
+                  color={existing === undefined || hasUpdate ? "primary" : "default"}
                   loading={installOne.isPending && installOne.variables === skill.name}
                   onClick={() => installOne.mutate(skill.name)}
                 >
-                  {existing === undefined ? t("skills.marketInstall") : t("skills.marketUpdate")}
+                  {existing === undefined
+                    ? t("skills.marketInstall")
+                    : hasUpdate
+                      ? t("skills.marketUpdateAvailable")
+                      : t("skills.marketUpdate")}
                 </Button>
               </div>
             );

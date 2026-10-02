@@ -63,8 +63,14 @@ export class SkillsController {
       return null;
     }
     const existing = await this.store.get(name);
-    // 不覆盖用户已自定义的同名 Skill（内容不同且未显式 force）
-    if (existing !== null && existing.instructions !== bundled.instructions && !body.force) {
+    // 防覆盖：同版本但内容不同 = 用户已本地修改，未显式 force 时拒绝；
+    // bundled version 更新 = 官方更新，直接安装
+    if (
+      existing !== null &&
+      existing.instructions !== bundled.instructions &&
+      (existing.bundledVersion ?? 0) >= (bundled.version ?? 1) &&
+      !body.force
+    ) {
       return { ok: false, reason: "modified" as const, name };
     }
     await this.store.upsert({
@@ -72,6 +78,7 @@ export class SkillsController {
       description: bundled.description,
       instructions: bundled.instructions,
       enabled: bundled.enabled,
+      bundledVersion: bundled.version,
       createdAt: existing?.createdAt ?? new Date().toISOString(),
     });
     await this.agents.rebuildAll();
@@ -88,6 +95,7 @@ export class SkillsController {
         description: skill.description,
         instructions: skill.instructions,
         enabled: skill.enabled,
+        bundledVersion: skill.version,
         createdAt: existing?.createdAt ?? new Date().toISOString(),
       });
       imported += 1;
