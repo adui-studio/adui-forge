@@ -161,7 +161,7 @@ function StatusFooter() {
             ? "nav.apiOffline"
             : "nav.apiChecking",
       )}
-      <span className="ml-auto font-mono text-[10px] text-slate-600">v1.1.2</span>
+      <span className="ml-auto font-mono text-[10px] text-slate-600">v1.1.3</span>
     </div>
   );
 }
