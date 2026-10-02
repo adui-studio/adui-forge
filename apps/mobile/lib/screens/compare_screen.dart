@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers.dart';
+import 'compare_stats_screen.dart';
 
 /// 对比查看屏（只读）：列出对比批次 → 查看某批次各 Agent 的
 /// 状态 / 耗时 / 输出。数据来自 /comparisons（结果由 Run 实时派生）。
@@ -58,7 +59,19 @@ class _CompareScreenState extends ConsumerState<CompareScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('对比查看')),
+      appBar: AppBar(
+        title: const Text('对比查看'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.leaderboard),
+            tooltip: '对比统计',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                  builder: (_) => const CompareStatsScreen()),
+            ),
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: _reload,
         child: FutureBuilder<List<Map<String, dynamic>>>(

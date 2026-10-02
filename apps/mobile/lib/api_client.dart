@@ -165,14 +165,14 @@ class ForgeApiClient {
   /// 对比报告导出（CSV / Markdown 文本）。
   Future<String> exportComparison(String id, String format) async {
     final response = await _dio.get<String>(
-      '/comparisons//export/',
+      '/comparisons/$id/export/$format',
       options: await _auth(),
     );
     return response.data ?? '';
   }
 
   Future<void> deleteConversation(String id) async {
-    await _dio.delete('/conversations/', options: await _auth());
+    await _dio.delete('/conversations/$id', options: await _auth());
   }
 
   Future<void> appendConversationMessage(
@@ -182,13 +182,13 @@ class ForgeApiClient {
   }
 
   Future<RunRecord> cancelRun(String id) async {
-    final response = await _dio.post<Map<String, dynamic>>('/runs//cancel',
+    final response = await _dio.post<Map<String, dynamic>>('/runs/$id/cancel',
         options: await _auth());
     return RunRecord.fromJson(response.data!);
   }
 
   Future<RunRecord> retryRun(String id) async {
-    final response = await _dio.post<Map<String, dynamic>>('/runs//retry',
+    final response = await _dio.post<Map<String, dynamic>>('/runs/$id/retry',
         options: await _auth());
     return RunRecord.fromJson(response.data!);
   }
@@ -204,9 +204,27 @@ class ForgeApiClient {
 
   /// 对比批次详情（含从 Run 派生的结果）。
   Future<Map<String, dynamic>> fetchComparison(String id) async {
-    final response = await _dio.get<Map<String, dynamic>>('/comparisons/',
+    final response = await _dio.get<Map<String, dynamic>>('/comparisons/$id',
         options: await _auth());
     return response.data!;
+  }
+
+  /// 跨批次统计：按 Agent 聚合（参与数/完成/失败/平均耗时/最快胜出）。
+  Future<List<Map<String, dynamic>>> fetchComparisonStats() async {
+    final response = await _dio.get<List<dynamic>>('/comparisons/stats',
+        options: await _auth());
+    return response.data!
+        .map((item) => item as Map<String, dynamic>)
+        .toList();
+  }
+
+  /// 跨批次统计：按模型聚合（同一结构，key 为模型名）。
+  Future<List<Map<String, dynamic>>> fetchComparisonStatsByModel() async {
+    final response = await _dio.get<List<dynamic>>('/comparisons/stats/by-model',
+        options: await _auth());
+    return response.data!
+        .map((item) => item as Map<String, dynamic>)
+        .toList();
   }
 
   Future<List<PendingApproval>> listPendingApprovals() async {
