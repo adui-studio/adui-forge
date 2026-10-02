@@ -4,6 +4,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
 import { InMemorySkillStore } from "../src/skills/skill.store";
 import { importSkillsFromDir } from "../src/skills/skill.import";
+import { BUNDLED_SKILLS } from "../src/skills/bundled-skills";
+import { skillSchema } from "@adui-forge/skill-sdk";
 
 const tempDirs: string[] = [];
 
@@ -83,5 +85,14 @@ describe("skill 导出", () => {
     const parsed = parseSkillMarkdown(markdown);
     expect(parsed.name).toBe("plan");
     expect(parsed.instructions).toBe("先理解需求再实现。");
+  });
+});
+
+describe("内置技能目录（市场 MVP）", () => {
+  it("BUNDLED_SKILLS 均通过 skillSchema 且 name 唯一", () => {
+    expect(BUNDLED_SKILLS.length).toBeGreaterThanOrEqual(4);
+    const names = BUNDLED_SKILLS.map((skill) => skill.name);
+    expect(new Set(names).size).toBe(names.length);
+    for (const skill of BUNDLED_SKILLS) expect(() => skillSchema.parse(skill)).not.toThrow();
   });
 });

@@ -365,6 +365,8 @@ export const zhCN = {
     title: "Skills",
     subtitle: "Skill 是高于 Tool 的可复用 Agent 能力：指令文本会注入选中它的 Agent 系统提示词。",
     import: "从 SKILL.md 导入",
+    bundledDone: "已安装 {{count}} 个内置 Skill",
+    installBundled: "安装内置技能 ({{count}})",
     importDone: "导入完成：{{count}} 个 Skill",
     importFail: "导入失败",
     marketTitle: "Skill 市场",

@@ -6,7 +6,9 @@ import { App as AntApp, Button, Card, Empty, Form, Input, Space, Spin, Switch, T
 import {
   deleteSkill,
   exportSkill,
+  fetchBundledSkills,
   fetchSkills,
+  importBundledSkills,
   importSkills,
   setSkillEnabled,
   upsertSkill,
@@ -35,6 +37,19 @@ export function SkillsPage() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["skills"] });
       void message.success(t("common.saved"));
+    },
+  });
+
+  const { data: bundled } = useQuery({
+    queryKey: ["skills-bundled"],
+    queryFn: fetchBundledSkills,
+  });
+
+  const installBundled = useMutation({
+    mutationFn: () => importBundledSkills(),
+    onSuccess: (result) => {
+      void queryClient.invalidateQueries({ queryKey: ["skills"] });
+      void message.success(t("skills.bundledDone", { count: result.imported }));
     },
   });
 
@@ -84,13 +99,22 @@ export function SkillsPage() {
       </div>
       <p className="mb-4 text-sm text-slate-400">{t("skills.subtitle")}</p>
       <Card className="mb-4" size="small">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Store className="h-4 w-4 text-slate-500" aria-hidden />
           <div className="flex-1">
             <p className="text-sm text-slate-300">{t("skills.marketTitle")}</p>
             <p className="mt-0.5 text-xs text-slate-500">{t("skills.marketDesc")}</p>
           </div>
-          <Tag color="default">{t("skills.marketSoon")}</Tag>
+          {bundled !== undefined && bundled.length > 0 && (
+            <Button
+              size="small"
+              icon={<Download className="h-3.5 w-3.5" />}
+              loading={installBundled.isPending}
+              onClick={() => installBundled.mutate()}
+            >
+              {t("skills.installBundled", { count: bundled.length })}
+            </Button>
+          )}
         </div>
       </Card>
 

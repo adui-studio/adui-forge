@@ -332,6 +332,21 @@ export const exportSkill = (
     `/api/v1/skills/${encodeURIComponent(name)}/export`,
   );
 
+export interface BundledSkillRecord {
+  name: string;
+  description: string;
+  instructions: string;
+  enabled: boolean;
+}
+
+export const fetchBundledSkills = (): Promise<BundledSkillRecord[]> =>
+  request<BundledSkillRecord[]>("/api/v1/skills/bundled");
+
+export const importBundledSkills = (): Promise<{ ok: boolean; imported: number }> =>
+  request<{ ok: boolean; imported: number }>("/api/v1/skills/import-bundled", {
+    method: "POST",
+  });
+
 export const deleteSkill = (name: string): Promise<{ ok: boolean }> =>
   request<{ ok: boolean }>(`/api/v1/skills/${encodeURIComponent(name)}`, {
     method: "DELETE",

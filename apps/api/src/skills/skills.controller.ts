@@ -4,6 +4,7 @@ import { renderSkillMarkdown, skillSchema } from "@adui-forge/skill-sdk";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { AgentConfigService } from "../agents/agent-config.service";
 import { SKILL_STORE, type SkillRecord, type SkillStore } from "./skill.store";
+import { BUNDLED_SKILLS } from "./bundled-skills";
 import { importSkillsFromDir } from "./skill.import";
 
 export const upsertSkillSchema = skillSchema;
@@ -43,6 +44,29 @@ export class SkillsController {
     // 指令变更立即生效：重建引用它的自定义 Agent
     await this.agents.rebuildAll();
     return { ok: true, name: record.name };
+  }
+
+  @Get("bundled")
+  bundled() {
+    return BUNDLED_SKILLS;
+  }
+
+  @Post("import-bundled")
+  async importBundled() {
+    let imported = 0;
+    for (const skill of BUNDLED_SKILLS) {
+      const existing = await this.store.get(skill.name);
+      await this.store.upsert({
+        name: skill.name,
+        description: skill.description,
+        instructions: skill.instructions,
+        enabled: skill.enabled,
+        createdAt: existing?.createdAt ?? new Date().toISOString(),
+      });
+      imported += 1;
+    }
+    await this.agents.rebuildAll();
+    return { ok: true, imported };
   }
 
   @Post("import")
