@@ -5,7 +5,14 @@ import type { Skill } from "@adui-forge/skill-sdk";
  * 零网络依赖、无 SSRF 面，安装 = upsert 到 Skill 库。
  * 与 .agents/skills（仓库级开发流程）独立；内容面向平台 Agent 运行时。
  */
-export const BUNDLED_SKILLS: ReadonlyArray<Skill> = [
+/** 内置技能的目录版本：内容变更时递增，供导入端判断覆盖策略。 */
+export const BUNDLED_SKILLS_VERSION = 1;
+
+export interface BundledSkill extends Skill {
+  version: number;
+}
+
+export const BUNDLED_SKILLS: ReadonlyArray<BundledSkill> = [
   {
     name: "bug-fixing",
     description: "系统化修 Bug：先复现、找根因、补回归测试，再修复",
@@ -19,6 +26,7 @@ export const BUNDLED_SKILLS: ReadonlyArray<Skill> = [
       "5. **Verify**：跑全量相关测试，确认新测试通过且无回归。",
     ].join("\n"),
     enabled: true,
+    version: 1,
   },
   {
     name: "code-review",
@@ -36,6 +44,7 @@ export const BUNDLED_SKILLS: ReadonlyArray<Skill> = [
       "输出格式：每条发现给出 `file:line`、问题、建议修复。禁止空泛评价。",
     ].join("\n"),
     enabled: true,
+    version: 1,
   },
   {
     name: "test-writing",
@@ -50,6 +59,7 @@ export const BUNDLED_SKILLS: ReadonlyArray<Skill> = [
       "5. 修改 Bug 必须伴随回归测试（见 bug-fixing skill）。",
     ].join("\n"),
     enabled: true,
+    version: 1,
   },
   {
     name: "minimal-diff",
@@ -64,6 +74,7 @@ export const BUNDLED_SKILLS: ReadonlyArray<Skill> = [
       "5. 完成后检查 diff：无调试代码、无 Secret、无意外删除。",
     ].join("\n"),
     enabled: true,
+    version: 1,
   },
   {
     name: "api-design",
@@ -80,5 +91,6 @@ export const BUNDLED_SKILLS: ReadonlyArray<Skill> = [
       "- **Naming**：事件 domain.action、URL kebab-case、与现有端点风格一致。",
     ].join("\n"),
     enabled: true,
+    version: 1,
   },
-] as const;
+] as const satisfies readonly BundledSkill[];

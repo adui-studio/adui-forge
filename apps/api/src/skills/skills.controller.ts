@@ -51,6 +51,33 @@ export class SkillsController {
     return BUNDLED_SKILLS;
   }
 
+  @Post("import-bundled/:name")
+  async importBundledOne(
+    @Param("name") name: string,
+    @Body(new ZodValidationPipe(z.object({ force: z.boolean().default(false) }))) body: {
+      force: boolean;
+    },
+  ) {
+    const bundled = BUNDLED_SKILLS.find((skill) => skill.name === name);
+    if (bundled === undefined) {
+      return null;
+    }
+    const existing = await this.store.get(name);
+    // 不覆盖用户已自定义的同名 Skill（内容不同且未显式 force）
+    if (existing !== null && existing.instructions !== bundled.instructions && !body.force) {
+      return { ok: false, reason: "modified" as const, name };
+    }
+    await this.store.upsert({
+      name: bundled.name,
+      description: bundled.description,
+      instructions: bundled.instructions,
+      enabled: bundled.enabled,
+      createdAt: existing?.createdAt ?? new Date().toISOString(),
+    });
+    await this.agents.rebuildAll();
+    return { ok: true, name };
+  }
+
   @Post("import-bundled")
   async importBundled() {
     let imported = 0;

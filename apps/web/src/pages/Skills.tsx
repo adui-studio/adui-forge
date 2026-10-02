@@ -8,6 +8,7 @@ import {
   exportSkill,
   fetchBundledSkills,
   fetchSkills,
+  importBundledSkill,
   importBundledSkills,
   importSkills,
   setSkillEnabled,
@@ -50,6 +51,18 @@ export function SkillsPage() {
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ["skills"] });
       void message.success(t("skills.bundledDone", { count: result.imported }));
+    },
+  });
+
+  const installOne = useMutation({
+    mutationFn: (name: string) => importBundledSkill(name, false),
+    onSuccess: (result) => {
+      void queryClient.invalidateQueries({ queryKey: ["skills"] });
+      if (result.ok) {
+        void message.success(t("skills.marketInstalled"));
+      } else {
+        void message.warning(t("skills.marketModifiedWarning"));
+      }
     },
   });
 
@@ -98,23 +111,48 @@ export function SkillsPage() {
         </Space>
       </div>
       <p className="mb-4 text-sm text-slate-400">{t("skills.subtitle")}</p>
-      <Card className="mb-4" size="small">
-        <div className="flex flex-wrap items-center gap-3">
-          <Store className="h-4 w-4 text-slate-500" aria-hidden />
-          <div className="flex-1">
-            <p className="text-sm text-slate-300">{t("skills.marketTitle")}</p>
-            <p className="mt-0.5 text-xs text-slate-500">{t("skills.marketDesc")}</p>
-          </div>
-          {bundled !== undefined && bundled.length > 0 && (
-            <Button
-              size="small"
-              icon={<Download className="h-3.5 w-3.5" />}
-              loading={installBundled.isPending}
-              onClick={() => installBundled.mutate()}
-            >
-              {t("skills.installBundled", { count: bundled.length })}
-            </Button>
-          )}
+      <Card
+        className="mb-4"
+        size="small"
+        title={
+          <span className="flex items-center gap-2 text-sm">
+            <Store className="h-4 w-4 text-slate-500" aria-hidden />
+            {t("skills.marketTitle")}
+          </span>
+        }
+        extra={
+          <Button
+            size="small"
+            icon={<Download className="h-3.5 w-3.5" />}
+            loading={installBundled.isPending}
+            onClick={() => installBundled.mutate()}
+          >
+            {t("skills.installBundled", { count: bundled?.length ?? 0 })}
+          </Button>
+        }
+      >
+        <p className="mb-3 text-xs text-slate-500">{t("skills.marketDesc")}</p>
+        <div className="flex flex-col gap-2">
+          {(bundled ?? []).map((skill) => {
+            const existing = skills?.find((item) => item.name === skill.name);
+            const modified = existing !== undefined && existing.instructions !== skill.instructions;
+            return (
+              <div key={skill.name} className="flex items-center gap-3">
+                <span className="forge-code text-sm text-slate-200">{skill.name}</span>
+                <span className="flex-1 truncate text-xs text-slate-500">{skill.description}</span>
+                {modified && <Tag color="gold">{t("skills.marketModified")}</Tag>}
+                <Button
+                  size="small"
+                  variant={existing === undefined ? "outlined" : "solid"}
+                  color={existing === undefined ? "primary" : "default"}
+                  loading={installOne.isPending && installOne.variables === skill.name}
+                  onClick={() => installOne.mutate(skill.name)}
+                >
+                  {existing === undefined ? t("skills.marketInstall") : t("skills.marketUpdate")}
+                </Button>
+              </div>
+            );
+          })}
         </div>
       </Card>
 

@@ -342,6 +342,15 @@ export interface BundledSkillRecord {
 export const fetchBundledSkills = (): Promise<BundledSkillRecord[]> =>
   request<BundledSkillRecord[]>("/api/v1/skills/bundled");
 
+export const importBundledSkill = (
+  name: string,
+  force = false,
+): Promise<{ ok: boolean; reason?: string }> =>
+  request<{ ok: boolean; reason?: string }>(
+    `/api/v1/skills/import-bundled/${encodeURIComponent(name)}`,
+    { method: "POST", body: JSON.stringify({ force }) },
+  );
+
 export const importBundledSkills = (): Promise<{ ok: boolean; imported: number }> =>
   request<{ ok: boolean; imported: number }>("/api/v1/skills/import-bundled", {
     method: "POST",

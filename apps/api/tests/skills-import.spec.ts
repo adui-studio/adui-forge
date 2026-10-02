@@ -96,3 +96,9 @@ describe("内置技能目录（市场 MVP）", () => {
     for (const skill of BUNDLED_SKILLS) expect(() => skillSchema.parse(skill)).not.toThrow();
   });
 });
+
+describe("内置技能单技能安装", () => {
+  it("BUNDLED_SKILLS 含 version 字段（市场第二步：覆盖判断依据）", () => {
+    expect(BUNDLED_SKILLS.every((skill) => skill.version === 1)).toBe(true);
+  });
+});

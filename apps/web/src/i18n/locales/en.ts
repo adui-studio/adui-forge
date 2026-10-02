@@ -378,6 +378,12 @@ export const en: ZhCNTranslation = {
     subtitle:
       "A skill is a reusable agent capability above tools: its instructions are injected into the system prompt of agents that select it.",
     import: "Import from SKILL.md",
+    marketInstall: "Install",
+    marketUpdate: "Update",
+    marketInstalled: "Installed",
+    marketModifiedWarning:
+      "This skill was locally modified and was not overwritten (force update to override)",
+    marketModified: "Modified",
     bundledDone: "Installed {{count}} bundled skills",
     installBundled: "Install bundled skills ({{count}})",
     importDone: "Imported {{count}} skill(s)",
