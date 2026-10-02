@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
 import { InMemorySkillStore } from "../src/skills/skill.store";
-import { importSkillsFromDir } from "../src/skills/skill.import";
+import { importSkillsFromDir, importSkillFromMarkdown } from "../src/skills/skill.import";
 import { BUNDLED_SKILLS } from "../src/skills/bundled-skills";
 import { skillSchema } from "@adui-forge/skill-sdk";
 
@@ -100,5 +100,71 @@ describe("内置技能目录（市场 MVP）", () => {
 describe("内置技能单技能安装", () => {
   it("BUNDLED_SKILLS 含 version 字段（市场第二步：覆盖判断依据）", () => {
     expect(BUNDLED_SKILLS.every((skill) => skill.version === 1)).toBe(true);
+  });
+});
+
+describe("粘贴 Markdown 导入（市场第四步）", () => {
+  const importSkill = async (
+    markdown: string,
+    store: InMemorySkillStore,
+    force = false,
+  ): Promise<Awaited<ReturnType<typeof importSkillFromMarkdown>>> => {
+    let rebuildCount = 0;
+    const result = await importSkillFromMarkdown(markdown, {
+      store,
+      force,
+      rebuild: async () => {
+        rebuildCount += 1;
+      },
+    });
+    return result;
+  };
+
+  it("带 frontmatter 的 SKILL.md 正常导入并触发重建", async () => {
+    const store = new InMemorySkillStore();
+    const result = await importSkill(
+      "---\nname: my-skill\ndescription: 自定义技能\n---\n\n指令正文。",
+      store,
+    );
+    expect(result).toEqual({ ok: true, name: "my-skill" });
+    const record = await store.get("my-skill");
+    expect(record?.description).toBe("自定义技能");
+    expect(record?.instructions).toBe("指令正文。");
+    expect(record?.enabled).toBe(true);
+  });
+
+  it("缺少 frontmatter name 时拒绝并说明原因", async () => {
+    const result = await importSkill("只有正文，没有 frontmatter", new InMemorySkillStore());
+    expect(result).toEqual({
+      ok: false,
+      reason: "invalid",
+      message: expect.stringContaining("name"),
+    });
+  });
+
+  it("name 不合规时拒绝（走 skillSchema 校验）", async () => {
+    const result = await importSkill("---\nname: Bad Name\n---\n\n正文", new InMemorySkillStore());
+    expect(result.ok).toBe(false);
+    if (!result.ok && result.reason === "invalid") {
+      expect(result.message).toContain("name");
+    }
+  });
+
+  it("同名但内容不同时拒绝覆盖，force 可越", async () => {
+    const store = new InMemorySkillStore();
+    await store.upsert({
+      name: "plan",
+      description: "",
+      instructions: "旧版本指令",
+      enabled: true,
+      createdAt: new Date().toISOString(),
+    });
+    const conflict = await importSkill("---\nname: plan\n---\n\n新版本指令", store);
+    expect(conflict).toEqual({ ok: false, reason: "exists", name: "plan" });
+    expect((await store.get("plan"))?.instructions).toBe("旧版本指令");
+
+    const forced = await importSkill("---\nname: plan\n---\n\n新版本指令", store, true);
+    expect(forced).toEqual({ ok: true, name: "plan" });
+    expect((await store.get("plan"))?.instructions).toBe("新版本指令");
   });
 });

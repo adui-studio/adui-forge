@@ -389,6 +389,16 @@ export const en: ZhCNTranslation = {
     installBundled: "Install bundled skills ({{count}})",
     importDone: "Imported {{count}} skill(s)",
     importFail: "Import failed",
+    importMarkdown: "Paste import",
+    importMarkdownTitle: "Import skill from Markdown",
+    importMarkdownPlaceholder:
+      "Paste SKILL.md content, e.g.:\n\n---\nname: my-skill\ndescription: One-line description\n---\n\nInstruction body (Markdown)",
+    importMarkdownConfirm: "Import",
+    importMarkdownInvalid: "Invalid skill content",
+    importMarkdownExists:
+      'Skill "{{name}}" already exists with different content. Check overwrite and retry.',
+    importMarkdownForce: "Overwrite existing skill (local modifications will be lost)",
+    importMarkdownDone: 'Imported skill "{{name}}"',
     marketTitle: "Skill Marketplace",
     marketDesc: "Share skill packs with ratings and distribution — import/export already shipped.",
     marketSoon: "Coming soon",

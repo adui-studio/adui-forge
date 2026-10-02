@@ -5,7 +5,7 @@ import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { AgentConfigService } from "../agents/agent-config.service";
 import { SKILL_STORE, type SkillRecord, type SkillStore } from "./skill.store";
 import { BUNDLED_SKILLS } from "./bundled-skills";
-import { importSkillsFromDir } from "./skill.import";
+import { importSkillsFromDir, importSkillFromMarkdown } from "./skill.import";
 
 export const upsertSkillSchema = skillSchema;
 export type UpsertSkillInput = z.infer<typeof upsertSkillSchema>;
@@ -118,6 +118,26 @@ export class SkillsController {
       rebuild: () => this.agents.rebuildAll(),
     });
     return { ok: true as const, ...result };
+  }
+
+  /** 粘贴 SKILL.md 导入（市场第四步）：服务端 parse + 校验 + 防覆盖。 */
+  @Post("import-markdown")
+  async importMarkdown(
+    @Body(
+      new ZodValidationPipe(
+        z.object({
+          markdown: z.string().min(1).max(100_000),
+          force: z.boolean().default(false),
+        }),
+      ),
+    )
+    body: { markdown: string; force: boolean },
+  ) {
+    return importSkillFromMarkdown(body.markdown, {
+      store: this.store,
+      rebuild: () => this.agents.rebuildAll(),
+      force: body.force,
+    });
   }
 
   @Get(":name/export")

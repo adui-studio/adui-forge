@@ -359,6 +359,20 @@ export const importBundledSkills = (): Promise<{ ok: boolean; imported: number }
     method: "POST",
   });
 
+export type MarkdownImportResult =
+  | { ok: true; name: string }
+  | { ok: false; reason: "invalid"; message: string }
+  | { ok: false; reason: "exists"; name: string };
+
+export const importSkillMarkdown = (
+  markdown: string,
+  force = false,
+): Promise<MarkdownImportResult> =>
+  request<MarkdownImportResult>("/api/v1/skills/import-markdown", {
+    method: "POST",
+    body: JSON.stringify({ markdown, force }),
+  });
+
 export const deleteSkill = (name: string): Promise<{ ok: boolean }> =>
   request<{ ok: boolean }>(`/api/v1/skills/${encodeURIComponent(name)}`, {
     method: "DELETE",

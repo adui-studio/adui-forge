@@ -1,8 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Download, FolderInput, Plus, Save, Store } from "lucide-react";
-import { useState } from "react";
+import { BookOpen, ClipboardPaste, Download, FolderInput, Plus, Save, Store } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { App as AntApp, Button, Card, Empty, Form, Input, Space, Spin, Switch, Tag } from "antd";
+import {
+  App as AntApp,
+  Button,
+  Card,
+  Checkbox,
+  Empty,
+  Form,
+  Input,
+  Modal,
+  Space,
+  Spin,
+  Switch,
+  Tag,
+} from "antd";
 import {
   deleteSkill,
   exportSkill,
@@ -10,6 +23,7 @@ import {
   fetchSkills,
   importBundledSkill,
   importBundledSkills,
+  importSkillMarkdown,
   importSkills,
   setSkillEnabled,
   upsertSkill,
@@ -21,6 +35,7 @@ export function SkillsPage() {
   const queryClient = useQueryClient();
   const { message } = AntApp.useApp();
   const [editing, setEditing] = useState<string | null | undefined>(undefined);
+  const [pasteOpen, setPasteOpen] = useState(false);
 
   const {
     data: skills,
@@ -94,6 +109,12 @@ export function SkillsPage() {
           <h1 className="text-xl font-semibold text-slate-100">{t("skills.title")}</h1>
         </div>
         <Space>
+          <Button
+            icon={<ClipboardPaste className="h-3.5 w-3.5" />}
+            onClick={() => setPasteOpen(true)}
+          >
+            {t("skills.importMarkdown")}
+          </Button>
           <Button
             icon={<FolderInput className="h-3.5 w-3.5" />}
             loading={importFromDir.isPending}
@@ -241,6 +262,8 @@ export function SkillsPage() {
         <SkillEditor editingName={editing} onClose={() => setEditing(undefined)} />
       )}
 
+      <PasteImportModal open={pasteOpen} onClose={() => setPasteOpen(false)} />
+
       {toggle.isError && (
         <p role="alert" className="mt-3 text-sm text-red-600">
           {String(toggle.error)}
@@ -369,5 +392,87 @@ function SkillEditor({
         </div>
       </Form>
     </Card>
+  );
+}
+
+/** 粘贴 SKILL.md 导入对话框（市场第四步）：解析/校验/防覆盖均在服务端完成。 */
+function PasteImportModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const { message } = AntApp.useApp();
+  const [markdown, setMarkdown] = useState("");
+  const [force, setForce] = useState(false);
+  const [failure, setFailure] = useState<
+    { reason: "invalid"; message: string } | { reason: "exists"; name: string } | null
+  >(null);
+
+  /* 每次打开清空上次的输入与错误状态 */
+  useEffect(() => {
+    if (open) {
+      setMarkdown("");
+      setForce(false);
+      setFailure(null);
+    }
+  }, [open]);
+
+  const run = useMutation({
+    mutationFn: (input: { markdown: string; force: boolean }) =>
+      importSkillMarkdown(input.markdown, input.force),
+    onSuccess: (result) => {
+      if (result.ok) {
+        void queryClient.invalidateQueries({ queryKey: ["skills"] });
+        void message.success(t("skills.importMarkdownDone", { name: result.name }));
+        onClose();
+        return;
+      }
+      setFailure(result);
+    },
+  });
+
+  return (
+    <Modal
+      title={t("skills.importMarkdownTitle")}
+      open={open}
+      onCancel={onClose}
+      footer={null}
+      width={640}
+    >
+      <Input.TextArea
+        rows={12}
+        value={markdown}
+        onChange={(event) => {
+          setMarkdown(event.target.value);
+          setFailure(null);
+        }}
+        placeholder={t("skills.importMarkdownPlaceholder")}
+        style={{ fontFamily: "monospace" }}
+      />
+      {failure?.reason === "invalid" && (
+        <p role="alert" className="mt-3 text-sm text-red-600">
+          {t("skills.importMarkdownInvalid")}：{failure.message}
+        </p>
+      )}
+      {failure?.reason === "exists" && (
+        <>
+          <p role="alert" className="mt-3 text-sm text-amber-500">
+            {t("skills.importMarkdownExists", { name: failure.name })}
+          </p>
+          <Checkbox className="mt-2" checked={force} onChange={(e) => setForce(e.target.checked)}>
+            {t("skills.importMarkdownForce")}
+          </Checkbox>
+        </>
+      )}
+      <div className="mt-4 flex justify-end gap-2">
+        <Button onClick={onClose}>{t("common.cancel")}</Button>
+        <Button
+          type="primary"
+          loading={run.isPending}
+          disabled={markdown.trim() === ""}
+          onClick={() => run.mutate({ markdown, force })}
+        >
+          {t("skills.importMarkdownConfirm")}
+        </Button>
+      </div>
+    </Modal>
   );
 }

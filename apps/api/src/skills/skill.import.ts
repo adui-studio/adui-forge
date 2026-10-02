@@ -1,6 +1,12 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { skillSchema, parseSkillMarkdown, SKILL_FILE_NAME } from "@adui-forge/skill-sdk";
+import { z } from "zod";
+import {
+  skillSchema,
+  parseSkillMarkdown,
+  SKILL_FILE_NAME,
+  type Skill,
+} from "@adui-forge/skill-sdk";
 import type { SkillStore } from "./skill.store";
 
 export interface SkillImportResult {
@@ -13,6 +19,56 @@ export interface SkillImportDeps {
   /** 变更后重建引用 Skill 的自定义 Agent。 */
   rebuild: () => Promise<void>;
 }
+
+/** 粘贴 Markdown 导入的 discriminated union：成功 / 内容非法 / 与已有技能冲突。 */
+export type MarkdownImportResult =
+  | { ok: true; name: string }
+  | { ok: false; reason: "invalid"; message: string }
+  | { ok: false; reason: "exists"; name: string };
+
+/**
+ * 粘贴 SKILL.md 导入（Skill 市场第四步：外部技能进入平台的手动通道）。
+ * 服务端完成 parse + schema 校验（前端校验不作为依据）；已有同名技能且内容不同时
+ * 拒绝覆盖，需显式 force（与内置技能导入同一防覆盖语义）。
+ */
+export const importSkillFromMarkdown = async (
+  raw: string,
+  deps: SkillImportDeps & { force: boolean },
+): Promise<MarkdownImportResult> => {
+  const parsed = parseSkillMarkdown(raw);
+  if (parsed.name === undefined || parsed.name.trim() === "") {
+    return {
+      ok: false,
+      reason: "invalid",
+      message: "缺少 frontmatter name（需以 --- name: xxx --- 开头）",
+    };
+  }
+  let skill: Skill;
+  try {
+    skill = skillSchema.parse({
+      name: parsed.name.trim(),
+      description: parsed.description ?? "",
+      instructions: parsed.instructions,
+      enabled: true,
+    });
+  } catch (error) {
+    const message =
+      error instanceof z.ZodError
+        ? error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ")
+        : String(error);
+    return { ok: false, reason: "invalid", message };
+  }
+  const existing = await deps.store.get(skill.name);
+  if (existing !== null && existing.instructions !== skill.instructions && !deps.force) {
+    return { ok: false, reason: "exists", name: skill.name };
+  }
+  await deps.store.upsert({
+    ...skill,
+    createdAt: existing?.createdAt ?? new Date().toISOString(),
+  });
+  await deps.rebuild();
+  return { ok: true, name: skill.name };
+};
 
 /**
  * 从目录扫描 <name>/SKILL.md 并导入注册表（REQUIREMENTS §36：兼容 .skill/SKILL.md 约定）。
