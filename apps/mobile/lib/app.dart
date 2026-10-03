@@ -8,6 +8,7 @@ import 'screens/login_screen.dart';
 import 'screens/run_detail_screen.dart';
 import 'screens/runs_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/skills_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -29,6 +30,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/runs/:id',
         builder: (context, state) =>
             RunDetailScreen(runId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/skills',
+        builder: (context, state) => const SkillsScreen(),
       ),
       GoRoute(
         path: '/approvals',

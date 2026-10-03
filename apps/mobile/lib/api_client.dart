@@ -227,6 +227,15 @@ class ForgeApiClient {
         .toList();
   }
 
+  /// Skill 库只读列表（name/description/instructions/enabled）。
+  Future<List<Map<String, dynamic>>> fetchSkills() async {
+    final response = await _dio.get<List<dynamic>>('/skills',
+        options: await _auth());
+    return response.data!
+        .map((item) => item as Map<String, dynamic>)
+        .toList();
+  }
+
   Future<List<PendingApproval>> listPendingApprovals() async {
     final response = await _dio.get<List<dynamic>>('/approvals/pending',
         options: await _auth());

@@ -210,6 +210,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             onPressed: () => context.push('/approvals'),
           ),
           IconButton(
+            tooltip: '技能库',
+            icon: const Icon(Icons.menu_book_outlined),
+            onPressed: () => context.push('/skills'),
+          ),
+          IconButton(
             tooltip: '设置',
             icon: const Icon(Icons.settings_outlined),
             onPressed: () => context.push('/settings'),

@@ -56,6 +56,22 @@ class FakeApiClient extends ForgeApiClient {
       rejectCalls += 1;
     }
   }
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchSkills() async => [
+        {
+          'name': 'bug-fixing',
+          'description': '先复现再修',
+          'instructions': '复现 → 定位根因 → 回归测试 → 修复。',
+          'enabled': true,
+        },
+        {
+          'name': 'code-review',
+          'description': '',
+          'instructions': '检查边界与错误处理。',
+          'enabled': false,
+        },
+      ];
 }
 
 Future<void> pumpApp(WidgetTester tester) async {
@@ -100,5 +116,19 @@ void main() {
     await tester.tap(find.byTooltip('设置'));
     await tester.pumpAndSettle();
     expect(find.text('API 地址'), findsOneWidget);
+  });
+
+  testWidgets('技能库屏展示 Skill 列表并可查看指令全文', (tester) async {
+    await pumpApp(tester);
+    await tester.tap(find.byTooltip('技能库'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('bug-fixing'), findsOneWidget);
+    expect(find.text('启用'), findsOneWidget);
+    expect(find.text('停用'), findsOneWidget);
+
+    await tester.tap(find.text('bug-fixing'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('复现 → 定位根因'), findsOneWidget);
   });
 }
