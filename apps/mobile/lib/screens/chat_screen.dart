@@ -39,6 +39,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _input = TextEditingController();
   final ScrollController _scroll = ScrollController();
   String? _conversationId;
+
+  /// 当前会话标题（加载历史/重命名后更新）；新会话为空，AppBar 回退 'Chat'。
+  String _conversationTitle = '';
   bool _busy = false;
 
   /// 当前选中的执行 Agent；null = 默认（forge-dev）。切换只影响后续 Run。
@@ -254,6 +257,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             conversation.id,
                             newTitle,
                           );
+                          // 改名的若是当前会话，同步 AppBar 标题
+                          if (conversation.id == _conversationId && mounted) {
+                            setState(() => _conversationTitle = newTitle);
+                          }
                           setSheetState(() {
                             list = [
                               for (final item in list)
@@ -294,6 +301,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (!mounted) return;
     setState(() {
       _conversationId = detail.id;
+      _conversationTitle = detail.title;
       _busy = false;
       _messages
         ..clear()
@@ -330,7 +338,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chat'),
+        title: Text(
+          _conversationTitle.isEmpty ? 'Chat' : _conversationTitle,
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
           IconButton(
             tooltip: '历史会话',
