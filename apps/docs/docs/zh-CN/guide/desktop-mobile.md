@@ -23,8 +23,13 @@ title: Desktop 与 Mobile
 
 - 技术栈：Riverpod（状态）/ go_router（路由）/ Dio（HTTP）/
   flutter_secure_storage（令牌与 API 地址）
-- 屏：Runs 列表、Run 详情（下拉刷新）、审批（批准 / 拒绝）、
-  设置（API 地址）、登录 / 注册
+- 屏：Chat（历史会话 / 执行 Agent 选择）、Runs 列表、Run 详情
+  （下拉刷新 / 取消 / 重试 / Token 用量）、审批（批准 / 拒绝）、
+  对比查看（批次 → 详情，CSV / MD 导出经剪贴板）、对比统计
+  （按 Agent / 按模型，含平均 Tokens）、技能库（只读）、
+  任务台账（只读，跳转派生 Run）、设置（API 地址）、登录 / 注册
+- 增删改类操作（Skill 管理、任务创建、Workflow 编排）在 Web 端完成；
+  移动端聚焦查看与控制
 - Android 模拟器访问宿主机 API 使用 `http://10.0.2.2:3000`
 
 ```bash

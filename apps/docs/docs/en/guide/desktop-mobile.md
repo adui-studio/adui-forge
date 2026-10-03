@@ -29,9 +29,14 @@ provides the native bridge and the Local Runner process lifecycle.
 
 - Stack: Riverpod (state) / go_router (routing) / Dio (HTTP) /
   flutter_secure_storage (token & API address)
-- Screens: Runs list, Run detail (pull-to-refresh), Approvals (approve /
-  reject), Chat (with conversation persistence shared with the Web), Settings
-  (API address), Login / Register
+- Screens: Chat (history / executing-agent picker), Runs list, Run detail
+  (pull-to-refresh / cancel / retry / token usage), Approvals (approve /
+  reject), Comparison view (batches → detail, CSV / MD export via clipboard),
+  comparison stats (by agent / by model, incl. avg tokens), Skills (read-only),
+  Tasks (read-only, jumps to the derived run), Settings (API address),
+  Login / Register
+- Mutating operations (skill management, task creation, workflow authoring)
+  live on the Web; mobile focuses on viewing and control
 - The Android emulator reaches the host API at `http://10.0.2.2:3000`
 
 ```bash
