@@ -29,9 +29,7 @@ class _SkillsScreenState extends ConsumerState<SkillsScreen> {
 
   void _openDetail(Map<String, dynamic> skill) {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => _SkillDetailScreen(skill: skill),
-      ),
+      MaterialPageRoute<void>(builder: (_) => _SkillDetailScreen(skill: skill)),
     );
   }
 
@@ -56,8 +54,7 @@ class _SkillsScreenState extends ConsumerState<SkillsScreen> {
                 child: Text(
                   '还没有 Skill。\n在 Web 端「Skills」页创建或从市场安装。',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.45)),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.45)),
                 ),
               );
             }
@@ -76,7 +73,9 @@ class _SkillsScreenState extends ConsumerState<SkillsScreen> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                  fontWeight: FontWeight.w600, fontSize: 14),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -84,14 +83,17 @@ class _SkillsScreenState extends ConsumerState<SkillsScreen> {
                             const Text(
                               '启用',
                               style: TextStyle(
-                                  fontSize: 12, color: Color(0xFF6CFF00)),
+                                fontSize: 12,
+                                color: Color(0xFF6CFF00),
+                              ),
                             )
                           else
                             Text(
                               '停用',
                               style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white.withValues(alpha: 0.4)),
+                                fontSize: 12,
+                                color: Colors.white.withValues(alpha: 0.4),
+                              ),
                             ),
                         ],
                       ),
@@ -133,8 +135,9 @@ class _SkillDetailScreen extends StatelessWidget {
               Text(
                 description,
                 style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white.withValues(alpha: 0.55)),
+                  fontSize: 13,
+                  color: Colors.white.withValues(alpha: 0.55),
+                ),
               ),
             if (description.isNotEmpty) const SizedBox(height: 12),
             SelectableText(

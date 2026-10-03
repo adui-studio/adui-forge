@@ -20,7 +20,9 @@ class _CapturingAdapter implements HttpClientAdapter {
     return ResponseBody.fromString(
       '{}',
       200,
-      headers: {Headers.contentTypeHeader: [Headers.jsonContentType]},
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
     );
   }
 
@@ -34,8 +36,9 @@ void main() {
   setUp(() {
     // flutter_secure_storage 的平台通道在测试环境不存在，mock 为空实现
     // （read 返回 null 即无 token，不影响 URL 断言）。
-    const channel =
-        MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+    const channel = MethodChannel(
+      'plugins.it_nomads.com/flutter_secure_storage',
+    );
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (call) async => null);
   });
@@ -58,8 +61,12 @@ void main() {
     await attempt(client.retryRun('r1'));
     await attempt(client.fetchConversation('c1'));
     await attempt(client.deleteConversation('c1'));
-    await attempt(client.appendConversationMessage(
-        'c1', ChatMessageRecord(role: 'user', text: 'hi')));
+    await attempt(
+      client.appendConversationMessage(
+        'c1',
+        ChatMessageRecord(role: 'user', text: 'hi'),
+      ),
+    );
     await attempt(client.exportComparison('cmp1', 'csv'));
     await attempt(client.fetchComparison('cmp1'));
     await attempt(client.decideApproval('a1', true));

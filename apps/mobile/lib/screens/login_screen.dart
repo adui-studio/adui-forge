@@ -64,14 +64,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           const SizedBox(height: 12),
           FilledButton(
             onPressed: _valid
-                ? () => _submit(() => client.login(_username.text, _password.text))
+                ? () => _submit(
+                    () => client.login(_username.text, _password.text),
+                  )
                 : null,
             child: const Text('登录'),
           ),
           const SizedBox(height: 8),
           FilledButton.tonal(
             onPressed: _valid
-                ? () => _submit(() => client.register(_username.text, _password.text))
+                ? () => _submit(
+                    () => client.register(_username.text, _password.text),
+                  )
                 : null,
             child: const Text('注册并登录'),
           ),

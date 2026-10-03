@@ -298,6 +298,15 @@ class ForgeApiClient {
     return response.data!.map((item) => item as Map<String, dynamic>).toList();
   }
 
+  /// 任务台账只读列表（title/runId/status/createdAt）。
+  Future<List<Map<String, dynamic>>> fetchTasks() async {
+    final response = await _dio.get<List<dynamic>>(
+      '/tasks',
+      options: await _auth(),
+    );
+    return response.data!.map((item) => item as Map<String, dynamic>).toList();
+  }
+
   Future<List<PendingApproval>> listPendingApprovals() async {
     final response = await _dio.get<List<dynamic>>(
       '/approvals/pending',

@@ -16,37 +16,37 @@ class FakeApiClient extends ForgeApiClient {
 
   @override
   Future<List<RunRecord>> listRuns() async => [
-        RunRecord.fromJson({
-          'id': 'run_1',
-          'task': '实现搜索功能',
-          'status': 'running',
-          'createdAt': '2026-08-30T00:00:00.000Z',
-        }),
-        RunRecord.fromJson({
-          'id': 'run_2',
-          'task': '修复构建',
-          'status': 'completed',
-          'createdAt': '2026-08-30T00:00:00.000Z',
-        }),
-      ];
+    RunRecord.fromJson({
+      'id': 'run_1',
+      'task': '实现搜索功能',
+      'status': 'running',
+      'createdAt': '2026-08-30T00:00:00.000Z',
+    }),
+    RunRecord.fromJson({
+      'id': 'run_2',
+      'task': '修复构建',
+      'status': 'completed',
+      'createdAt': '2026-08-30T00:00:00.000Z',
+    }),
+  ];
 
   @override
   Future<RunRecord> getRun(String id) async => RunRecord.fromJson({
-        'id': id,
-        'task': '实现搜索功能',
-        'status': 'completed',
-        'createdAt': '2026-08-30T00:00:00.000Z',
-      });
+    'id': id,
+    'task': '实现搜索功能',
+    'status': 'completed',
+    'createdAt': '2026-08-30T00:00:00.000Z',
+  });
 
   @override
   Future<List<PendingApproval>> listPendingApprovals() async => [
-        PendingApproval.fromJson({
-          'id': 'appr_1',
-          'runId': 'run_1',
-          'toolName': 'shell_exec',
-          'reason': 'requires approval',
-        }),
-      ];
+    PendingApproval.fromJson({
+      'id': 'appr_1',
+      'runId': 'run_1',
+      'toolName': 'shell_exec',
+      'reason': 'requires approval',
+    }),
+  ];
 
   @override
   Future<void> decideApproval(String id, bool approved) async {
@@ -59,24 +59,35 @@ class FakeApiClient extends ForgeApiClient {
 
   @override
   Future<List<Map<String, dynamic>>> fetchAgents() async => [
-        {'name': 'scout', 'description': '探索者', 'model': 'gpt-x'},
-      ];
+    {'name': 'scout', 'description': '探索者', 'model': 'gpt-x'},
+  ];
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchTasks() async => [
+    {
+      'id': 'task_1',
+      'title': '实现搜索功能',
+      'runId': 'run_1',
+      'status': 'completed',
+      'createdAt': '2026-09-30T08:30:00.000Z',
+    },
+  ];
 
   @override
   Future<List<Map<String, dynamic>>> fetchSkills() async => [
-        {
-          'name': 'bug-fixing',
-          'description': '先复现再修',
-          'instructions': '复现 → 定位根因 → 回归测试 → 修复。',
-          'enabled': true,
-        },
-        {
-          'name': 'code-review',
-          'description': '',
-          'instructions': '检查边界与错误处理。',
-          'enabled': false,
-        },
-      ];
+    {
+      'name': 'bug-fixing',
+      'description': '先复现再修',
+      'instructions': '复现 → 定位根因 → 回归测试 → 修复。',
+      'enabled': true,
+    },
+    {
+      'name': 'code-review',
+      'description': '',
+      'instructions': '检查边界与错误处理。',
+      'enabled': false,
+    },
+  ];
 }
 
 Future<void> pumpApp(WidgetTester tester) async {
@@ -150,5 +161,21 @@ void main() {
     await tester.pumpAndSettle();
     // 弹层关闭后选择器标签更新为所选 Agent
     expect(find.text('scout'), findsOneWidget);
+  });
+
+  testWidgets('任务台账屏展示任务并可跳转派生 Run 详情', (tester) async {
+    await pumpApp(tester);
+    // 经 Runs 屏 AppBar 的任务入口进入
+    await tester.tap(find.byTooltip('Runs'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('任务'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('实现搜索功能'), findsOneWidget);
+    expect(find.text('completed'), findsOneWidget);
+
+    await tester.tap(find.text('实现搜索功能'));
+    await tester.pumpAndSettle();
+    expect(find.text('Run 详情'), findsOneWidget);
   });
 }

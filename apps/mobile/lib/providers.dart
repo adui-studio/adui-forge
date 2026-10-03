@@ -4,8 +4,9 @@ import 'api_client.dart';
 
 /// baseUrl 运行时可变（设置项）；默认指向本机开发 API。
 /// Android 模拟器访问宿主机用 10.0.2.2。
-final baseUrlProvider =
-    NotifierProvider<BaseUrlNotifier, String>(BaseUrlNotifier.new);
+final baseUrlProvider = NotifierProvider<BaseUrlNotifier, String>(
+  BaseUrlNotifier.new,
+);
 
 class BaseUrlNotifier extends Notifier<String> {
   @override
@@ -24,10 +25,12 @@ final runsProvider = FutureProvider.autoDispose<List<RunRecord>>((ref) async {
 
 final pendingApprovalsProvider =
     FutureProvider.autoDispose<List<PendingApproval>>((ref) async {
-  return ref.watch(apiClientProvider).listPendingApprovals();
-});
+      return ref.watch(apiClientProvider).listPendingApprovals();
+    });
 
-final runDetailProvider =
-    FutureProvider.autoDispose.family<RunRecord, String>((ref, id) async {
+final runDetailProvider = FutureProvider.autoDispose.family<RunRecord, String>((
+  ref,
+  id,
+) async {
   return ref.watch(apiClientProvider).getRun(id);
 });

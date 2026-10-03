@@ -21,19 +21,26 @@ class ApprovalsScreen extends ConsumerWidget {
                 itemBuilder: (context, index) {
                   final item = list[index];
                   return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(item.toolName,
-                              style: Theme.of(context).textTheme.titleMedium),
+                          Text(
+                            item.toolName,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
                           const SizedBox(height: 4),
                           Text(item.reason),
                           const SizedBox(height: 4),
-                          Text('Run: ${item.runId}',
-                              style: Theme.of(context).textTheme.bodySmall),
+                          Text(
+                            'Run: ${item.runId}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
                           const SizedBox(height: 12),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,

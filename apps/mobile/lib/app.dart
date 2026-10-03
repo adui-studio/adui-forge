@@ -9,23 +9,18 @@ import 'screens/run_detail_screen.dart';
 import 'screens/runs_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/skills_screen.dart';
+import 'screens/tasks_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/chat',
     routes: [
-      GoRoute(
-        path: '/chat',
-        builder: (context, state) => const ChatScreen(),
-      ),
+      GoRoute(path: '/chat', builder: (context, state) => const ChatScreen()),
       GoRoute(
         path: '/compare',
         builder: (context, state) => const CompareScreen(),
       ),
-      GoRoute(
-        path: '/runs',
-        builder: (context, state) => const RunsScreen(),
-      ),
+      GoRoute(path: '/runs', builder: (context, state) => const RunsScreen()),
       GoRoute(
         path: '/runs/:id',
         builder: (context, state) =>
@@ -35,14 +30,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/skills',
         builder: (context, state) => const SkillsScreen(),
       ),
+      GoRoute(path: '/tasks', builder: (context, state) => const TasksScreen()),
       GoRoute(
         path: '/approvals',
         builder: (context, state) => const ApprovalsScreen(),
       ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
@@ -64,7 +57,6 @@ class ForgeApp extends ConsumerWidget {
     );
   }
 }
-
 
 /// 沉浸式品牌主题：深空底 + logo 电光绿/深紫双色系（与 Web 端一致）。
 ThemeData _forgeTheme() {

@@ -14,6 +14,11 @@ class RunsScreen extends ConsumerWidget {
         title: const Text('ADui Forge'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.checklist),
+            tooltip: '任务',
+            onPressed: () => context.push('/tasks'),
+          ),
+          IconButton(
             icon: const Icon(Icons.verified_user_outlined),
             tooltip: '审批',
             onPressed: () => context.push('/approvals'),
@@ -50,8 +55,16 @@ class RunsScreen extends ConsumerWidget {
                     final run = list[index];
                     return ListTile(
                       leading: _StatusChip(status: run.status),
-                      title: Text(run.task, maxLines: 1, overflow: TextOverflow.ellipsis),
-                      subtitle: Text(run.id, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      title: Text(
+                        run.task,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        run.id,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       onTap: () => context.push('/runs/${run.id}'),
                     );
                   },
@@ -77,7 +90,10 @@ class _StatusChip extends StatelessWidget {
       _ => Colors.grey,
     };
     return Chip(
-      label: Text(status, style: const TextStyle(fontSize: 11, color: Colors.white)),
+      label: Text(
+        status,
+        style: const TextStyle(fontSize: 11, color: Colors.white),
+      ),
       backgroundColor: color,
       visualDensity: VisualDensity.compact,
     );

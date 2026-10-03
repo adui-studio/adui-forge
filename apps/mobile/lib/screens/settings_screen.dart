@@ -42,8 +42,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     ref.invalidate(runsProvider);
     ref.invalidate(pendingApprovalsProvider);
     if (mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('已保存：$value')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('已保存：$value')));
     }
   }
 
