@@ -39,6 +39,22 @@ class RunRecord {
       )
       .join();
 
+  /// model.completed 事件上报的 token 用量合计；无用量上报时为 null。
+  int? get totalTokens {
+    int? total;
+    for (final event in events.whereType<Map<String, dynamic>>()) {
+      if (event['name'] != 'model.completed') continue;
+      final payload = event['payload'] as Map<String, dynamic>?;
+      final input = payload?['inputTokens'];
+      final output = payload?['outputTokens'];
+      total =
+          (total ?? 0) +
+          (input is num ? input.toInt() : 0) +
+          (output is num ? output.toInt() : 0);
+    }
+    return total;
+  }
+
   bool get isTerminal =>
       const {'completed', 'failed', 'cancelled', 'timeout'}.contains(status);
 }

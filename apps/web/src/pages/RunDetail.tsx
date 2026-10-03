@@ -203,6 +203,16 @@ export function RunDetailPage() {
     .map((event) => (event.payload as { text?: string } | undefined)?.text ?? "")
     .join("");
 
+  // model.completed 上报的 token 用量合计；无事件时为 null，显示时仅取正值
+  let totalTokens: number | null = null;
+  for (const event of events) {
+    if (event.name !== "model.completed") continue;
+    const payload = event.payload as { inputTokens?: unknown; outputTokens?: unknown } | undefined;
+    const input = typeof payload?.inputTokens === "number" ? payload.inputTokens : 0;
+    const output = typeof payload?.outputTokens === "number" ? payload.outputTokens : 0;
+    totalTokens = (totalTokens ?? 0) + input + output;
+  }
+
   const filteredEvents = events.filter(
     (event) => eventFilter === "all" || event.name.startsWith(eventFilter),
   );
@@ -233,6 +243,7 @@ export function RunDetailPage() {
       </div>
       <p className="forge-code mt-1 text-slate-500">
         {run.id} · {run.agentName} · {new Date(run.createdAt).toLocaleString()}
+        {totalTokens !== null && totalTokens > 0 && ` · ${totalTokens.toLocaleString()} tok`}
       </p>
 
       {/* §94 错误 UX：发生了什么 + 可执行动作 */}

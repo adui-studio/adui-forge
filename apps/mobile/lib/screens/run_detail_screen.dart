@@ -80,8 +80,10 @@ class _RunDetailScreenState extends ConsumerState<RunDetailScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: Text(record.status,
-                        style: Theme.of(context).textTheme.headlineSmall),
+                    child: Text(
+                      record.status,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
                   ),
                   if (!record.isTerminal)
                     TextButton(
@@ -98,8 +100,17 @@ class _RunDetailScreenState extends ConsumerState<RunDetailScreen> {
               const SizedBox(height: 8),
               Text(record.task),
               const SizedBox(height: 8),
-              Text('创建于 ${record.createdAt}',
-                  style: Theme.of(context).textTheme.bodySmall),
+              Text(
+                '创建于 ${record.createdAt}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              if (record.totalTokens != null && record.totalTokens! > 0) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Token 用量 ${record.totalTokens}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
               const SizedBox(height: 16),
               if (record.isTerminal) ...[
                 // 模型输出（model.delta 拼接）与错误
@@ -113,14 +124,18 @@ class _RunDetailScreenState extends ConsumerState<RunDetailScreen> {
                       color: Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: SelectableText(record.output,
-                        style: const TextStyle(height: 1.4)),
+                    child: SelectableText(
+                      record.output,
+                      style: const TextStyle(height: 1.4),
+                    ),
                   ),
                   const SizedBox(height: 12),
                 ],
                 if (record.error != null)
-                  Text('错误：${record.error}',
-                      style: const TextStyle(color: Color(0xFFF87171))),
+                  Text(
+                    '错误：${record.error}',
+                    style: const TextStyle(color: Color(0xFFF87171)),
+                  ),
                 if (record.error == null && record.output.isEmpty)
                   const Text('已结束（无文本输出）'),
               ] else ...[
