@@ -61,6 +61,7 @@ void main() {
     await attempt(client.retryRun('r1'));
     await attempt(client.fetchConversation('c1'));
     await attempt(client.deleteConversation('c1'));
+    await attempt(client.renameConversation('c1', '新标题'));
     await attempt(
       client.appendConversationMessage(
         'c1',
@@ -77,6 +78,7 @@ void main() {
       'POST /runs/r1/retry',
       'GET /conversations/c1',
       'DELETE /conversations/c1',
+      'PATCH /conversations/c1/title',
       'POST /conversations/c1/messages',
       'GET /comparisons/cmp1/export/csv',
       'GET /comparisons/cmp1',

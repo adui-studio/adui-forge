@@ -212,17 +212,76 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
                   subtitle: Text('${conversation.messageCount} 条消息'),
                   onTap: () => Navigator.of(sheetContext).pop(conversation.id),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete_outline),
-                    tooltip: '删除',
-                    onPressed: () async {
-                      await client.deleteConversation(conversation.id);
-                      setSheetState(() {
-                        list = list
-                            .where((item) => item.id != conversation.id)
-                            .toList();
-                      });
-                    },
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined, size: 20),
+                        tooltip: '重命名',
+                        onPressed: () async {
+                          final controller = TextEditingController(
+                            text: conversation.title,
+                          );
+                          final newTitle = await showDialog<String>(
+                            // 用屏级 context：对话框盖在弹层之上，列表保持打开
+                            context: context,
+                            builder: (dialogContext) => AlertDialog(
+                              title: const Text('重命名会话'),
+                              content: TextField(
+                                controller: controller,
+                                autofocus: true,
+                                onSubmitted: (value) => Navigator.of(
+                                  dialogContext,
+                                ).pop(value.trim()),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.of(dialogContext).pop(),
+                                  child: const Text('取消'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.of(
+                                    dialogContext,
+                                  ).pop(controller.text.trim()),
+                                  child: const Text('保存'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (newTitle == null || newTitle.isEmpty) return;
+                          await client.renameConversation(
+                            conversation.id,
+                            newTitle,
+                          );
+                          setSheetState(() {
+                            list = [
+                              for (final item in list)
+                                if (item.id == conversation.id)
+                                  ConversationSummary(
+                                    id: item.id,
+                                    title: newTitle,
+                                    messageCount: item.messageCount,
+                                  )
+                                else
+                                  item,
+                            ];
+                          });
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline, size: 20),
+                        tooltip: '删除',
+                        onPressed: () async {
+                          await client.deleteConversation(conversation.id);
+                          setSheetState(() {
+                            list = list
+                                .where((item) => item.id != conversation.id)
+                                .toList();
+                          });
+                        },
+                      ),
+                    ],
                   ),
                 ),
             ],

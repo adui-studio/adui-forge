@@ -217,6 +217,15 @@ class ForgeApiClient {
     await _dio.delete('/conversations/$id', options: await _auth());
   }
 
+  /// 会话重命名（与 Web 端同语义）。
+  Future<void> renameConversation(String id, String title) async {
+    await _dio.patch(
+      '/conversations/$id/title',
+      data: {'title': title},
+      options: await _auth(),
+    );
+  }
+
   Future<void> appendConversationMessage(
     String id,
     ChatMessageRecord message,
