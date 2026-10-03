@@ -62,9 +62,14 @@ jobs:
           Rename-Item $nsis.FullName "adui-forge-$version-windows-x64-setup.exe"
           Rename-Item $msi.FullName "adui-forge-$version-windows-x64.msi"
 
+      - name: 生成发布说明
+        run: node scripts/release-notes.mjs > release-notes.md
+
       - name: 上传安装包到 Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
+          body_path: release-notes.md
+          generate_release_notes: true
           files: |
             apps/desktop/src-tauri/target/release/bundle/nsis/adui-forge-*-windows-x64-setup.exe
             apps/desktop/src-tauri/target/release/bundle/msi/adui-forge-*-windows-x64.msi
@@ -127,9 +132,14 @@ jobs:
           mv apps/desktop/src-tauri/target/release/bundle/dmg/*.dmg \
              "apps/desktop/src-tauri/target/release/bundle/dmg/adui-forge-${version}-${{ matrix.dmg_suffix }}.dmg"
 
+      - name: 生成发布说明
+        run: node scripts/release-notes.mjs > release-notes.md
+
       - name: 上传 DMG 到 Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
+          body_path: release-notes.md
+          generate_release_notes: true
           files: |
             apps/desktop/src-tauri/target/release/bundle/dmg/adui-forge-*-macos-*.dmg
 
@@ -186,9 +196,14 @@ jobs:
           mv apps/desktop/src-tauri/target/release/bundle/deb/*.deb \
              "apps/desktop/src-tauri/target/release/bundle/deb/adui-forge-${version}-linux-x64.deb"
 
+      - name: 生成发布说明
+        run: node scripts/release-notes.mjs > release-notes.md
+
       - name: 上传到 Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
+          body_path: release-notes.md
+          generate_release_notes: true
           files: |
             apps/desktop/src-tauri/target/release/bundle/appimage/adui-forge-*-linux-x64.AppImage
             apps/desktop/src-tauri/target/release/bundle/deb/adui-forge-*-linux-x64.deb
@@ -237,7 +252,12 @@ jobs:
           mv apps/mobile/build/app/outputs/flutter-apk/app-release.apk \
              "apps/mobile/build/app/outputs/flutter-apk/adui-forge-${VERSION}-android.apk"
 
+      - name: 生成发布说明
+        run: node scripts/release-notes.mjs > release-notes.md
+
       - name: 上传 APK 到 Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
+          body_path: release-notes.md
+          generate_release_notes: true
           files: apps/mobile/build/app/outputs/flutter-apk/adui-forge-*-android.apk
