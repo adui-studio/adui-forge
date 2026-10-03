@@ -1,12 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Play, Plus, Workflow as WorkflowIcon } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Button, Card, Empty, Form, Input, Popconfirm, Spin, Steps } from "antd";
+import { Button, Card, Empty, Form, Input, Listy, Popconfirm, Space, Spin, Steps } from "antd";
 import { deleteWorkflow, fetchWorkflows, runWorkflow } from "@/lib/workflows.ts";
 import type { WorkflowDefinitionRecord } from "@/lib/workflows.ts";
-import { registerWorkflow } from "@/lib/api.ts";
+import { fetchRuns, registerWorkflow } from "@/lib/api.ts";
+import { StatusTag } from "@/components/status-tag.tsx";
 
 export function WorkflowsPage() {
   const { t } = useTranslation();
@@ -21,6 +22,18 @@ export function WorkflowsPage() {
     queryKey: ["workflows"],
     queryFn: fetchWorkflows,
   });
+
+  // 运行历史：Workflow 执行即 Run（agentName 为 workflow(N steps/nodes)），
+  // 与 Runs 页共用 queryKey 缓存互通
+  const { data: runs } = useQuery({
+    queryKey: ["runs"],
+    queryFn: fetchRuns,
+    refetchInterval: 5_000,
+  });
+  const workflowRuns = (runs ?? [])
+    .filter((run) => run.agentName.startsWith("workflow("))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 8);
 
   const remove = useMutation({
     mutationFn: (name: string) => deleteWorkflow(name),
@@ -114,6 +127,32 @@ export function WorkflowsPage() {
         <p role="alert" className="mt-3 text-sm text-red-600">
           {String(run.error)}
         </p>
+      )}
+
+      <div className="mb-3 mt-8">
+        <h2 className="text-sm font-medium text-slate-400">{t("workflows.runHistory")}</h2>
+      </div>
+      {workflowRuns.length === 0 ? (
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("workflows.emptyRuns")} />
+      ) : (
+        <Listy
+          items={workflowRuns}
+          rowKey={(run) => run.id}
+          itemRender={(run) => (
+            <Link
+              to={`/runs/${run.id}`}
+              className="block rounded-md border border-[#20242C] bg-[#111318] px-4 py-3 transition-colors hover:border-brand-400/40"
+            >
+              <Space>
+                <StatusTag status={run.status} />
+                <span className="max-w-md truncate text-sm text-slate-300">{run.task}</span>
+                <span className="forge-code text-xs text-slate-500">
+                  {new Date(run.createdAt).toLocaleString()}
+                </span>
+              </Space>
+            </Link>
+          )}
+        />
       )}
     </>
   );

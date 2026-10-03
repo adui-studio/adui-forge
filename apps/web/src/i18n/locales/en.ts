@@ -222,6 +222,8 @@ export const en: ZhCNTranslation = {
     register: "Register workflow",
     newVisual: "Visual editor",
     empty: "No workflows registered yet — create the first one with the form above",
+    runHistory: "Run history",
+    emptyRuns: "No workflow runs yet — run a workflow and recent executions appear here",
     run: "Run",
     starting: "Starting…",
     formTitle: "Register workflow",

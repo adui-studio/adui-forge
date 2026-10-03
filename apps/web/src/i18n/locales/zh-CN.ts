@@ -212,6 +212,8 @@ export const zhCN = {
     register: "注册 Workflow",
     newVisual: "可视化新建",
     empty: "还没有注册的 Workflow，用上方表单注册第一个",
+    runHistory: "运行历史",
+    emptyRuns: "还没有 Workflow 运行——点击运行后这里显示最近执行",
     run: "运行",
     starting: "启动中…",
     formTitle: "注册 Workflow",
