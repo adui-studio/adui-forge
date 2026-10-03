@@ -11,22 +11,22 @@ Agent 负责理解、规划、检索、修改、测试、修复与交付，高�
 
 ## 功能总览
 
-| 域                | 能力                                                                                 |
-| ----------------- | ------------------------------------------------------------------------------------ |
-| **Agent 运行**    | 流式 Run（SSE）、事件时间线、取消 / 重试、Token 限额、approval 审批闭环              |
-| **Agent 管理**    | 自定义 Agent（systemPrompt / 工具 / 模型 / 循环参数），内置 Agent 只读展示           |
-| **模型目录**      | `FORGE_MODELS` 命名模型（OpenAI Compatible 多 Provider），Agent 级模型选择           |
-| **Skill 系统**    | 指令库 CRUD、启停、注入 Agent 系统提示词、SKILL.md 导入 / 导出双向闭环               |
-| **Workflow**      | 可序列化条件分支图（agent / condition 节点）、可视化编辑器（自由连线）、图校验与执行 |
-| **Workspace IDE** | 文件树 + Monaco 多 Tab 编辑 + Git 面板（status / diff / commit）+ Agent 面板 + 终端  |
-| **Local Runner**  | 桌面本地闭环：同形 REST（workspace / runs / 审批 / 终端），Bun sidecar 随安装包分发  |
-| **Chat / 会话**   | 流式对话、会话持久化、历史切换 / 重命名 / 删除、失败重试、编辑文件上下文注入         |
-| **任务台账**      | Tasks：新建即派生 Run，实时状态回填                                                  |
-| **对比分析**      | 多 Agent 并排流式对比 + 批次持久化 + 跨批次胜负统计                                  |
-| **MCP**           | `FORGE_MCP_SERVERS` 服务连接状态观测与按需重连测试                                   |
-| **审批**          | 高风险操作（Shell / Git 写入）人工批准 / 拒绝，云端与本地语义一致                    |
-| **多端**          | Web（浏览器）、Desktop（Tauri，本地 Runner）、Mobile（Flutter：Runs / 审批 / Chat）  |
-| **i18n**          | 简体中文 / English 全界面切换（含 antd locale），偏好持久化                          |
+| 域                | 能力                                                                                                                                |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Agent 运行**    | 流式 Run（SSE）、事件时间线、取消 / 重试、Token 限额、approval 审批闭环                                                             |
+| **Agent 管理**    | 自定义 Agent（systemPrompt / 工具 / 模型 / 循环参数），内置 Agent 只读展示                                                          |
+| **模型目录**      | `FORGE_MODELS` 命名模型（OpenAI Compatible 多 Provider），Agent 级模型选择                                                          |
+| **Skill 系统**    | 指令库 CRUD、启停、注入 Agent 系统提示词、SKILL.md / 粘贴 / 目录 / 技能包四路导入，内置技能市场（防覆盖 + 版本更新提示 + 使用统计） |
+| **Workflow**      | 可序列化条件分支图（agent / condition 节点）、可视化编辑器（自由连线）、图校验与执行                                                |
+| **Workspace IDE** | 文件树 + Monaco 多 Tab 编辑 + Git 面板（status / diff / commit）+ Agent 面板 + 终端                                                 |
+| **Local Runner**  | 桌面本地闭环：同形 REST（workspace / runs / 审批 / 终端），Bun sidecar 随安装包分发                                                 |
+| **Chat / 会话**   | 流式对话、会话持久化、历史切换 / 重命名 / 删除、失败重试、编辑文件上下文注入                                                        |
+| **任务台账**      | Tasks：新建即派生 Run，实时状态回填                                                                                                 |
+| **对比分析**      | 多 Agent 并排流式对比 + 批次持久化 + 跨批次胜负统计                                                                                 |
+| **MCP**           | `FORGE_MCP_SERVERS` 服务连接状态观测与按需重连测试                                                                                  |
+| **审批**          | 高风险操作（Shell / Git 写入）人工批准 / 拒绝，云端与本地语义一致                                                                   |
+| **多端**          | Web（浏览器）、Desktop（Tauri，本地 Runner）、Mobile（Flutter：Runs / 审批 / Chat）                                                 |
+| **i18n**          | 简体中文 / English 全界面切换（含 antd locale），偏好持久化                                                                         |
 
 ---
 
