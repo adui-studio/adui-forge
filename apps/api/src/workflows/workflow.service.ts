@@ -62,6 +62,14 @@ export class WorkflowService {
     if (agent === undefined) {
       throw new NotFoundException(`unknown agent: "${DEFAULT_AGENT_NAME}"`);
     }
+    // 逐节点解析 Agent：任何未知名在创建 Run 之前显式失败（不留孤儿运行）
+    const resolveAgent = (agentName: string | undefined): typeof agent => {
+      const resolved = this.agents.get(agentName ?? DEFAULT_AGENT_NAME);
+      if (resolved === undefined) {
+        throw new NotFoundException(`unknown agent: "${agentName ?? DEFAULT_AGENT_NAME}"`);
+      }
+      return resolved;
+    };
 
     const agentTasks = graph.nodes.filter((node) => node.type === "agent").map((node) => node.task);
     const record = await this.store.create({
@@ -70,7 +78,7 @@ export class WorkflowService {
       task: agentTasks.join(" → "),
     });
 
-    void this.#execute(record.id, graphToSteps(graph, agent)).catch(() => {});
+    void this.#execute(record.id, graphToSteps(graph, resolveAgent)).catch(() => {});
 
     return record;
   }

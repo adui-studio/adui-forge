@@ -96,7 +96,12 @@ export const graphToFlow = (graph: WorkflowGraph): { nodes: Node[]; edges: Edge[
   const nodes: Node[] = graph.nodes.map((node) => {
     const position = node.position ?? fallback.get(node.id) ?? { x: 80, y: 40 };
     if (node.type === "agent") {
-      return { id: node.id, type: "task", position, data: { label: node.task, task: node.task } };
+      return {
+        id: node.id,
+        type: "task",
+        position,
+        data: { label: node.task, task: node.task, agentName: node.agentName },
+      };
     }
     return {
       id: node.id,
@@ -142,6 +147,10 @@ export const flowToGraph = (nodes: Node[], edges: Edge[]): WorkflowGraph | null 
             id: node.id,
             type: "agent" as const,
             task: nodeText(node.data),
+            // 多 Agent 编排：节点可选执行 Agent；空串归一为缺省
+            ...(typeof node.data.agentName === "string" && node.data.agentName !== ""
+              ? { agentName: node.data.agentName }
+              : {}),
             // 画布坐标随定义持久化（编辑器视图提示，运行时忽略）
             position: { x: node.position.x, y: node.position.y },
           }

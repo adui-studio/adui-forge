@@ -10,6 +10,9 @@ import {
 import type { WorkflowGraph } from "../src/graph.ts";
 import type { WorkflowContext } from "../src/types.ts";
 
+/** graphToSteps 第二参现在是解析器；fake Agent 取其返回类型。 */
+type FakeAgent = ReturnType<Parameters<typeof graphToSteps>[1]>;
+
 const linearGraph: WorkflowGraph = {
   nodes: [
     { id: "n1", type: "agent", task: "first" },
@@ -116,9 +119,9 @@ describe("graphToSteps + WorkflowRunner", () => {
         turn += 1;
         return { status: "completed", messages: [{ content: `out ${turn}` }] };
       },
-    } as unknown as Parameters<typeof graphToSteps>[1];
+    } as unknown as FakeAgent;
     const runner = new WorkflowRunner();
-    const result = await runner.run({ name: "g", steps: graphToSteps(linearGraph, agent) });
+    const result = await runner.run({ name: "g", steps: graphToSteps(linearGraph, () => agent) });
     expect(result.status).toBe("completed");
     expect(result.outputs["n1"]).toBe("out 1");
     expect(result.outputs["n2"]).toBe("out 2");
@@ -134,9 +137,9 @@ describe("graphToSteps + WorkflowRunner", () => {
           messages: [{ content: task.includes("tests") ? "tests FAIL" : "ok" }],
         };
       },
-    } as unknown as Parameters<typeof graphToSteps>[1];
+    } as unknown as FakeAgent;
     const runner = new WorkflowRunner();
-    const result = await runner.run({ name: "g", steps: graphToSteps(branchGraph, agent) });
+    const result = await runner.run({ name: "g", steps: graphToSteps(branchGraph, () => agent) });
     expect(result.status).toBe("completed");
     expect(calls).toEqual(["run tests", "fix issues"]);
     expect(result.outputs["fix"]).toBe("ok");
@@ -150,13 +153,44 @@ describe("graphToSteps + WorkflowRunner", () => {
         calls.push(task);
         return { status: "completed", messages: [{ content: "all good" }] };
       },
-    } as unknown as Parameters<typeof graphToSteps>[1];
+    } as unknown as FakeAgent;
     const runner = new WorkflowRunner();
-    const result = await runner.run({ name: "g", steps: graphToSteps(branchGraph, agent) });
+    const result = await runner.run({ name: "g", steps: graphToSteps(branchGraph, () => agent) });
     expect(result.status).toBe("completed");
     expect(calls).toEqual(["run tests", "write report"]);
     expect(result.outputs["report"]).toBe("all good");
     expect(result.outputs["fix"]).toBeUndefined();
+  });
+
+  it("按节点 agentName 解析对应 Agent（多 Agent 编排）", async () => {
+    const graph: WorkflowGraph = {
+      nodes: [
+        { id: "n1", type: "agent", task: "plan", agentName: "planner" },
+        { id: "n2", type: "agent", task: "review", agentName: "reviewer" },
+      ],
+      edges: [{ source: "n1", target: "n2" }],
+    };
+    const calls: string[] = [];
+    const makeAgent = (name: string) => ({
+      async run(_task: string) {
+        calls.push(name);
+        return { status: "completed", messages: [{ content: name }] };
+      },
+    });
+    const agents: Record<string, unknown> = {
+      planner: makeAgent("planner"),
+      reviewer: makeAgent("reviewer"),
+    };
+    const result = await new WorkflowRunner().run({
+      name: "g",
+      steps: graphToSteps(graph, (name) => {
+        const resolved = agents[name ?? ""];
+        if (resolved === undefined) throw new Error(`unknown agent: ${name ?? ""}`);
+        return resolved as never;
+      }),
+    });
+    expect(calls).toEqual(["planner", "reviewer"]);
+    expect(result.outputs["n2"]).toBe("reviewer");
   });
 });
 
@@ -183,9 +217,9 @@ describe("evaluateCondition", () => {
       async run() {
         return { status: "completed", messages: [{ content: "x" }] };
       },
-    } as unknown as Parameters<typeof graphToSteps>[1];
+    } as unknown as FakeAgent;
     await new WorkflowRunner().run(
-      { name: "g", steps: graphToSteps(linearGraph, agent) },
+      { name: "g", steps: graphToSteps(linearGraph, () => agent) },
       { onEvent: (event) => events.push(event) },
     );
     expect(
@@ -204,11 +238,15 @@ describe("节点坐标持久化", () => {
       edges: [{ source: "n1", target: "n2" }],
     };
     expect(() => validateWorkflowGraph(graph)).not.toThrow();
-    const steps = graphToSteps(graph, {
-      async run() {
-        return { status: "completed", messages: [{ content: "x" }] };
-      },
-    } as never);
+    const steps = graphToSteps(
+      graph,
+      () =>
+        ({
+          async run() {
+            return { status: "completed", messages: [{ content: "x" }] };
+          },
+        }) as never,
+    );
     expect(steps).toHaveLength(2);
     // 坐标不进入运行时步骤
     expect(JSON.stringify(steps)).not.toContain("position");

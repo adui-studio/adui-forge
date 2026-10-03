@@ -22,7 +22,7 @@ import { useTranslation } from "react-i18next";
 import { App as AntApp, Button, Card, Empty, Input, Select, Spin } from "antd";
 import { validateWorkflowGraph } from "@adui-forge/workflow";
 import { fetchWorkflows } from "@/lib/workflows.ts";
-import { registerWorkflow } from "@/lib/api.ts";
+import { registerWorkflow, fetchAgents } from "@/lib/api.ts";
 import { flowToGraph, graphToFlow, nodeText, tasksToGraph } from "@/lib/workflow-editor.ts";
 
 function StartNode() {
@@ -56,7 +56,11 @@ function TaskNode({ data, selected }: NodeProps) {
       }
     >
       <Handle type="target" position={Position.Top} />
-      <p className="mb-1 font-mono text-[10px] text-slate-500">AGENT</p>
+      <p className="mb-1 font-mono text-[10px] text-slate-500">
+        {typeof data.agentName === "string" && data.agentName !== ""
+          ? `AGENT · ${data.agentName}`
+          : "AGENT"}
+      </p>
       <p className="text-sm text-slate-200">{String(data.label)}</p>
       <Handle type="source" position={Position.Bottom} />
     </div>
@@ -385,6 +389,16 @@ function TaskInspector({
   setSelectedId: (id: string | null) => void;
 }) {
   const { t } = useTranslation();
+  // 多 Agent 编排：为本节点选择执行 Agent（缺省 = 默认 Agent）
+  const { data: agents } = useQuery({
+    queryKey: ["agents"],
+    queryFn: fetchAgents,
+    staleTime: 60_000,
+  });
+  const selectedAgent =
+    typeof selected.data.agentName === "string" && selected.data.agentName !== ""
+      ? selected.data.agentName
+      : "";
   return (
     <div className="flex flex-col gap-3">
       <label htmlFor="task-text" className="text-sm font-medium text-slate-300">
@@ -400,6 +414,26 @@ function TaskInspector({
             current.map((node) =>
               node.id === selected.id
                 ? { ...node, data: { ...node.data, label: value, task: value } }
+                : node,
+            ),
+          );
+        }}
+      />
+      <label htmlFor="task-agent" className="text-sm font-medium text-slate-300">
+        {t("workflowEditor.agentLabel")}
+      </label>
+      <Select
+        id="task-agent"
+        aria-label={t("workflowEditor.agentLabel")}
+        allowClear
+        placeholder={t("workflowEditor.agentDefault")}
+        value={selectedAgent === "" ? null : selectedAgent}
+        options={(agents ?? []).map((agent) => ({ value: agent.name, label: agent.name }))}
+        onChange={(value) => {
+          setNodes((current) =>
+            current.map((node) =>
+              node.id === selected.id
+                ? { ...node, data: { ...node.data, agentName: value ?? "" } }
                 : node,
             ),
           );

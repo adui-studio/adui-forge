@@ -254,6 +254,8 @@ export const en: ZhCNTranslation = {
     inspectorEmptyHint2:
       "Tasks run along the connections; condition nodes branch on the previous node's output.",
     taskLabel: "Task description",
+    agentLabel: "Executing agent",
+    agentDefault: "Default agent",
     deleteNode: "Delete node",
     newTask: "New task",
     taskNodeCount: "{{count}} task nodes",

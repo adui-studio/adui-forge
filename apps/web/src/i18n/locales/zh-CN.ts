@@ -243,6 +243,8 @@ export const zhCN = {
     inspectorEmptyHint1: "点击画布中的节点进行编辑。",
     inspectorEmptyHint2: "任务按连线顺序执行；条件节点按上一节点输出决定走向。",
     taskLabel: "任务描述",
+    agentLabel: "执行 Agent",
+    agentDefault: "默认 Agent",
     deleteNode: "删除节点",
     newTask: "新任务",
     taskNodeCount: "共 {{count}} 个任务节点",

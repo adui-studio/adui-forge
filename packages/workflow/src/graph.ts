@@ -36,6 +36,13 @@ export const workflowGraphNodeSchema = z.discriminatedUnion("type", [
       .regex(/^[a-zA-Z0-9_-]+$/),
     type: z.literal("agent"),
     task: z.string().min(1).max(10_000),
+    /** 执行该节点的 Agent 名；缺省用默认 Agent（多 Agent 编排入口）。 */
+    agentName: z
+      .string()
+      .min(1)
+      .max(64)
+      .regex(/^[a-z0-9-]+$/)
+      .optional(),
     position: nodePositionSchema.optional(),
   }),
   z.object({
@@ -174,14 +181,18 @@ export const validateWorkflowGraph = (graph: WorkflowGraph): void => {
 
 /**
  * 图定义 → 运行时 `WorkflowStep[]`。调用前必须先通过 `validateWorkflowGraph`。
- * 所有 agent 节点共用传入的 agent 实例（与线性 tasks 语义一致）。
+ * 每个 agent 节点经 resolveAgent 按 agentName 解析实例（缺省名由调用方回退
+ * 默认 Agent），实现多 Agent 编排。
  *
  * 运行时的 condition 是"为真执行、为假跳过、随后继续"，不表达互斥分支；
  * 因此编译 if/else 时生成一对取反断言：
  *   [cond] { then 链 } → [!cond] { else 链 }
  * 条件节点是链的终点——两分支内部各自延伸（分支不可汇合，见 validateWorkflowGraph）。
  */
-export const graphToSteps = (graph: WorkflowGraph, agent: Agent): WorkflowStep[] => {
+export const graphToSteps = (
+  graph: WorkflowGraph,
+  resolveAgent: (agentName: string | undefined) => Agent,
+): WorkflowStep[] => {
   validateWorkflowGraph(graph);
   const byId = new Map(graph.nodes.map((node) => [node.id, node]));
   const outEdges = new Map<string, WorkflowGraphEdge[]>();
@@ -196,7 +207,12 @@ export const graphToSteps = (graph: WorkflowGraph, agent: Agent): WorkflowStep[]
     let current = byId.get(nodeId);
     while (current !== undefined) {
       if (current.type === "agent") {
-        steps.push({ id: current.id, type: "agent", agent, task: current.task });
+        steps.push({
+          id: current.id,
+          type: "agent",
+          agent: resolveAgent(current.agentName),
+          task: current.task,
+        });
         current = byId.get(outEdges.get(current.id)?.[0]?.target ?? "");
         continue;
       }
