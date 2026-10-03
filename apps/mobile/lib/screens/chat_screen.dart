@@ -10,12 +10,12 @@ import '../providers.dart';
 /// 消息气泡的极简模型。
 class _ChatMessage {
   _ChatMessage.user(this.text)
-      : role = 'user',
-        state = _MessageState.done,
-        error = null;
+    : role = 'user',
+      state = _MessageState.done,
+      error = null;
 
   _ChatMessage.assistant(this.text, this.state, {this.error})
-      : role = 'assistant';
+    : role = 'assistant';
 
   final String role;
   String text;
@@ -41,6 +41,71 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   String? _conversationId;
   bool _busy = false;
 
+  /// 当前选中的执行 Agent；null = 默认（forge-dev）。切换只影响后续 Run。
+  String? _selectedAgent;
+  List<Map<String, dynamic>> _agents = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAgents();
+  }
+
+  /// Agent 列表加载失败不阻塞 Chat：保持默认 Agent 可用。
+  Future<void> _loadAgents() async {
+    try {
+      final agents = await ref.read(apiClientProvider).fetchAgents();
+      if (mounted) setState(() => _agents = agents);
+    } catch (_) {}
+  }
+
+  /// 底部弹层选择执行 Agent（与 Web 端选择器同语义：null = 默认）。
+  Future<void> _pickAgent() async {
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Text(
+                '选择执行 Agent',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            ListTile(
+              leading: Icon(
+                _selectedAgent == null ? Icons.check : Icons.smart_toy_outlined,
+              ),
+              title: const Text('默认 Agent'),
+              onTap: () => Navigator.of(sheetContext).pop(null),
+            ),
+            for (final agent in _agents)
+              ListTile(
+                leading: Icon(
+                  _selectedAgent == agent['name']
+                      ? Icons.check
+                      : Icons.smart_toy_outlined,
+                ),
+                title: Text((agent['name'] as String?) ?? ''),
+                subtitle: Text(
+                  ((agent['description'] as String?) ?? '').isNotEmpty
+                      ? (agent['description'] as String?)!
+                      : ((agent['model'] as String?) ?? ''),
+                ),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(agent['name'] as String?),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (picked != _selectedAgent && mounted) {
+      setState(() => _selectedAgent = picked);
+    }
+  }
+
   @override
   void dispose() {
     _input.dispose();
@@ -62,10 +127,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     try {
       final client = ref.read(apiClientProvider);
       // 会话持久化：首条消息时创建会话（标题由后端取前 30 字）
-      _conversationId ??= (await client.createConversation('forge-dev')).id;
+      _conversationId ??= (await client.createConversation(
+        _selectedAgent ?? 'forge-dev',
+      )).id;
       await client.appendConversationMessage(
-          _conversationId!, ChatMessageRecord(role: 'user', text: text));
-      final run = await client.createRun(text);
+        _conversationId!,
+        ChatMessageRecord(role: 'user', text: text),
+      );
+      final run = await client.createRun(text, agentName: _selectedAgent);
       // 轮询至终态（2s 间隔，最多 5 分钟）
       RunRecord current = run;
       for (var attempt = 0; attempt < 150; attempt++) {
@@ -79,25 +148,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           : '';
       // 回复落库（runId 关联派生 Run）
       await client.appendConversationMessage(
-          _conversationId!,
-          ChatMessageRecord(
-            role: 'assistant',
-            text: assistantText,
-            runId: run.id,
-            status: current.status,
-            error: current.error,
-          ));
+        _conversationId!,
+        ChatMessageRecord(
+          role: 'assistant',
+          text: assistantText,
+          runId: run.id,
+          status: current.status,
+          error: current.error,
+        ),
+      );
       if (!mounted) return;
       setState(() {
         _messages.removeLast();
         if (current.status == 'completed') {
-          _messages.add(_ChatMessage.assistant(assistantText, _MessageState.done));
+          _messages.add(
+            _ChatMessage.assistant(assistantText, _MessageState.done),
+          );
         } else {
-          _messages.add(_ChatMessage.assistant(
-            current.status == 'cancelled' ? '已取消。' : '',
-            _MessageState.failed,
-            error: current.error ?? 'Run ${current.status}',
-          ));
+          _messages.add(
+            _ChatMessage.assistant(
+              current.status == 'cancelled' ? '已取消。' : '',
+              _MessageState.failed,
+              error: current.error ?? 'Run ${current.status}',
+            ),
+          );
         }
         _busy = false;
       });
@@ -106,8 +180,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       if (!mounted) return;
       setState(() {
         _messages.removeLast();
-        _messages.add(_ChatMessage.assistant('', _MessageState.failed,
-            error: error.toString()));
+        _messages.add(
+          _ChatMessage.assistant(
+            '',
+            _MessageState.failed,
+            error: error.toString(),
+          ),
+        );
         _busy = false;
       });
       _scrollToBottom();
@@ -128,9 +207,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               for (final conversation in list.take(30))
                 ListTile(
                   leading: const Icon(Icons.forum_outlined),
-                  title: Text(conversation.title.isEmpty
-                      ? '（未命名会话）'
-                      : conversation.title),
+                  title: Text(
+                    conversation.title.isEmpty ? '（未命名会话）' : conversation.title,
+                  ),
                   subtitle: Text('${conversation.messageCount} 条消息'),
                   onTap: () => Navigator.of(sheetContext).pop(conversation.id),
                   trailing: IconButton(
@@ -159,18 +238,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       _busy = false;
       _messages
         ..clear()
-        ..addAll(detail.messages.map((message) => message.role == 'user'
-            ? _ChatMessage.user(message.text)
-            : _ChatMessage.assistant(
-                message.text,
-                message.status == 'failed'
-                    ? _MessageState.failed
-                    : _MessageState.done,
-                error: message.error,
-              )));
+        ..addAll(
+          detail.messages.map(
+            (message) => message.role == 'user'
+                ? _ChatMessage.user(message.text)
+                : _ChatMessage.assistant(
+                    message.text,
+                    message.status == 'failed'
+                        ? _MessageState.failed
+                        : _MessageState.done,
+                    error: message.error,
+                  ),
+          ),
+        );
     });
     _scrollToBottom();
   }
+
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) {
@@ -230,7 +314,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       '向 Agent 提问或下达指令。\n每条消息作为一个独立 Run 执行，会话自动保存。',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.45)),
+                        color: Colors.white.withValues(alpha: 0.45),
+                      ),
                     ),
                   )
                 : ListView.builder(
@@ -241,41 +326,85 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
           ),
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _input,
-                      enabled: !_busy,
-                      maxLines: null,
-                      minLines: 1,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _send(),
-                      decoration: InputDecoration(
-                        hintText: '输入消息…',
-                        filled: true,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: _busy ? null : _pickAgent,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.smart_toy_outlined,
+                            size: 14,
+                            color: Colors.white54,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _selectedAgent ?? '默认 Agent',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.white54,
+                            ),
+                          ),
+                          const Icon(
+                            Icons.keyboard_arrow_down,
+                            size: 16,
+                            color: Colors.white54,
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  IconButton.filled(
-                    onPressed: _busy ? null : _send,
-                    icon: _busy
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.send),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _input,
+                          enabled: !_busy,
+                          maxLines: null,
+                          minLines: 1,
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) => _send(),
+                          decoration: InputDecoration(
+                            hintText: '输入消息…',
+                            filled: true,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton.filled(
+                        onPressed: _busy ? null : _send,
+                        icon: _busy
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.send),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
@@ -323,7 +452,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       child: Text(
                         '执行失败：${message.error}',
                         style: const TextStyle(
-                            color: Color(0xFFF87171), fontSize: 12),
+                          color: Color(0xFFF87171),
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                 ],

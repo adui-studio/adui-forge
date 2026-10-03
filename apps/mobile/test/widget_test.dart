@@ -58,6 +58,11 @@ class FakeApiClient extends ForgeApiClient {
   }
 
   @override
+  Future<List<Map<String, dynamic>>> fetchAgents() async => [
+        {'name': 'scout', 'description': '探索者', 'model': 'gpt-x'},
+      ];
+
+  @override
   Future<List<Map<String, dynamic>>> fetchSkills() async => [
         {
           'name': 'bug-fixing',
@@ -130,5 +135,20 @@ void main() {
     await tester.tap(find.text('bug-fixing'));
     await tester.pumpAndSettle();
     expect(find.textContaining('复现 → 定位根因'), findsOneWidget);
+  });
+
+  testWidgets('Chat 可切换执行 Agent（底部弹层选择）', (tester) async {
+    await pumpApp(tester);
+    // 初始为默认 Agent
+    expect(find.text('默认 Agent'), findsOneWidget);
+
+    await tester.tap(find.text('默认 Agent'));
+    await tester.pumpAndSettle();
+    expect(find.text('选择执行 Agent'), findsOneWidget);
+
+    await tester.tap(find.text('scout'));
+    await tester.pumpAndSettle();
+    // 弹层关闭后选择器标签更新为所选 Agent
+    expect(find.text('scout'), findsOneWidget);
   });
 }
