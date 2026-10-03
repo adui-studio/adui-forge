@@ -400,6 +400,15 @@ export const importSkillBundle = (bundle: unknown): Promise<SkillBundleImportRes
     body: JSON.stringify(bundle),
   });
 
+export interface SkillUsageEntry {
+  name: string;
+  agents: number;
+  agentNames: string[];
+}
+
+export const fetchSkillUsage = (): Promise<SkillUsageEntry[]> =>
+  request<SkillUsageEntry[]>("/api/v1/skills/usage");
+
 export const deleteSkill = (name: string): Promise<{ ok: boolean }> =>
   request<{ ok: boolean }>(`/api/v1/skills/${encodeURIComponent(name)}`, {
     method: "DELETE",

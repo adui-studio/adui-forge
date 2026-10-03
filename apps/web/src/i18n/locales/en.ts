@@ -405,6 +405,7 @@ export const en: ZhCNTranslation = {
     bundleExportDone: "Exported {{count}} skill(s)",
     bundleImportDone: "Bundle imported: {{imported}} imported, {{skipped}} skipped",
     bundleImportInvalid: "Invalid skill bundle file",
+    usageCount: "Used by {{count}} agent(s)",
     marketTitle: "Skill Marketplace",
     marketDesc: "Share skill packs with ratings and distribution — import/export already shipped.",
     marketSoon: "Coming soon",

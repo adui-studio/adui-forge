@@ -390,6 +390,7 @@ export const zhCN = {
     bundleExportDone: "已导出 {{count}} 个 Skill",
     bundleImportDone: "技能包导入完成：{{imported}} 个，跳过 {{skipped}} 个",
     bundleImportInvalid: "技能包文件不合法",
+    usageCount: "{{count}} 个 Agent 引用",
     marketTitle: "Skill 市场",
     marketDesc: "按需共享 Skill 包、评分与分发——底层导入导出已就绪。",
     marketSoon: "即将推出",

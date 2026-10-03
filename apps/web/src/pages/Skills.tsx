@@ -24,6 +24,7 @@ import {
   Spin,
   Switch,
   Tag,
+  Tooltip,
 } from "antd";
 import {
   deleteSkill,
@@ -31,6 +32,7 @@ import {
   exportSkillBundle,
   fetchBundledSkills,
   fetchSkills,
+  fetchSkillUsage,
   importBundledSkill,
   importBundledSkills,
   importSkillBundle,
@@ -113,6 +115,14 @@ export function SkillsPage() {
     queryKey: ["skills-bundled"],
     queryFn: fetchBundledSkills,
   });
+
+  // 使用统计：name → {agents, agentNames}（无引用的 Skill 不在结果里）。
+  // key 挂在 ["skills"] 前缀下，页内 skills 变更后的失效会连带刷新它。
+  const { data: usage } = useQuery({
+    queryKey: ["skills", "usage"],
+    queryFn: fetchSkillUsage,
+  });
+  const usageMap = new Map((usage ?? []).map((entry) => [entry.name, entry]));
 
   const installBundled = useMutation({
     mutationFn: () => importBundledSkills(),
@@ -301,6 +311,14 @@ export function SkillsPage() {
                 ) : (
                   <Tag>{t("skills.disabled")}</Tag>
                 )}
+                {(() => {
+                  const usage = usageMap.get(skill.name);
+                  return usage !== undefined && usage.agents > 0 ? (
+                    <Tooltip title={usage.agentNames.join(", ")}>
+                      <Tag color="blue">{t("skills.usageCount", { count: usage.agents })}</Tag>
+                    </Tooltip>
+                  ) : null;
+                })()}
                 <span className="text-sm text-slate-400">{skill.description}</span>
                 <div className="ml-auto flex items-center gap-2">
                   {/* 启停开关：切换立即重建引用它的 Agent */}

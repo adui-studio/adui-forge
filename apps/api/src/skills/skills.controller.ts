@@ -10,6 +10,7 @@ import {
   importSkillFromMarkdown,
   importSkillsFromBundle,
 } from "./skill.import";
+import { computeSkillUsage } from "./skill.usage";
 
 export const upsertSkillSchema = skillSchema;
 export type UpsertSkillInput = z.infer<typeof upsertSkillSchema>;
@@ -142,6 +143,12 @@ export class SkillsController {
       rebuild: () => this.agents.rebuildAll(),
       force: body.force,
     });
+  }
+
+  /** 使用统计（市场第六步）：每个 Skill 被多少个自定义 Agent 选中。 */
+  @Get("usage")
+  async usage() {
+    return computeSkillUsage(await this.agents.list());
   }
 
   /** 技能包导出（市场第五步）：全量 Skill 序列化为可分享 JSON。 */
