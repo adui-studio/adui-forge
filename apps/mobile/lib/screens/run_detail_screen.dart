@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../api_client.dart';
 import '../providers.dart';
 
@@ -100,6 +101,32 @@ class _RunDetailScreenState extends ConsumerState<RunDetailScreen> {
               const SizedBox(height: 8),
               Text(record.task),
               const SizedBox(height: 8),
+              // 等待审批时给出快捷入口，避免用户自己找审批屏
+              if (record.status == 'waiting_approval') ...[
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '该 Run 正在等待人工审批，批准后将继续执行。',
+                          style: TextStyle(
+                            color: Color(0xFFFFC66D),
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        FilledButton(
+                          onPressed: () => context.push('/approvals'),
+                          child: const Text('前往审批'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
               Text(
                 '创建于 ${record.createdAt}',
                 style: Theme.of(context).textTheme.bodySmall,
