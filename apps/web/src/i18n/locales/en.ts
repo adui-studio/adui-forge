@@ -77,6 +77,11 @@ export const en: ZhCNTranslation = {
     emptyActiveHint: "Start a task above, or browse past runs.",
     recentRuns: "Recent runs",
     emptyRecent: "No records yet",
+    statsAgents: "Agents",
+    statsSkills: "Skills",
+    statsWorkflows: "Workflows",
+    statsMcp: "MCP connected",
+    statsPending: "Pending approvals",
   },
   runs: {
     title: "Runs",

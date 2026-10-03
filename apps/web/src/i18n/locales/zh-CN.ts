@@ -75,6 +75,11 @@ export const zhCN = {
     emptyActiveHint: "在上方发起任务，或到 Runs 页查看历史。",
     recentRuns: "最近 Runs",
     emptyRecent: "暂无记录",
+    statsAgents: "Agents",
+    statsSkills: "Skills",
+    statsWorkflows: "Workflows",
+    statsMcp: "MCP 已连接",
+    statsPending: "待审批",
   },
   runs: {
     title: "Runs",

@@ -1,12 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Loader2, Send } from "lucide-react";
+import {
+  BookOpen,
+  Bot,
+  Loader2,
+  Plug,
+  Send,
+  ShieldAlert,
+  Workflow,
+  type LucideIcon,
+} from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { StatusTag } from "@/components/status-tag.tsx";
 import { Button, Card, Empty, Listy, Select, Space } from "antd";
-import { createRun, fetchAgents, fetchRuns } from "@/lib/api.ts";
+import { createRun, fetchAgents, fetchMcpServers, fetchRuns, fetchSkills } from "@/lib/api.ts";
 import { fetchPendingApprovals } from "@/lib/approvals.ts";
+import { fetchWorkflows } from "@/lib/workflows.ts";
 import { useRunNotifications } from "@/hooks/use-run-notifications.ts";
 
 export function HomePage() {
@@ -29,6 +39,22 @@ export function HomePage() {
     queryKey: ["approvals"],
     queryFn: fetchPendingApprovals,
     refetchInterval: 5_000,
+  });
+  // 概览统计：与其余页面共用 queryKey，缓存互通
+  const { data: skills } = useQuery({
+    queryKey: ["skills"],
+    queryFn: fetchSkills,
+    staleTime: 60_000,
+  });
+  const { data: workflows } = useQuery({
+    queryKey: ["workflows"],
+    queryFn: fetchWorkflows,
+    staleTime: 60_000,
+  });
+  const { data: mcpServers } = useQuery({
+    queryKey: ["mcp-servers"],
+    queryFn: fetchMcpServers,
+    staleTime: 60_000,
   });
 
   const mutation = useMutation({
@@ -68,6 +94,40 @@ export function HomePage() {
       <div className="mb-8">
         <h1 className="text-xl font-semibold text-slate-100">{t("home.title")}</h1>
         <p className="mt-1 text-sm text-slate-400">{t("home.subtitle")}</p>
+      </div>
+
+      {/* 概览统计：五域入口，待审批有值时高亮 */}
+      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-5">
+        <StatCard to="/agents" label={t("home.statsAgents")} value={agents?.length} icon={Bot} />
+        <StatCard
+          to="/skills"
+          label={t("home.statsSkills")}
+          value={skills?.length}
+          icon={BookOpen}
+        />
+        <StatCard
+          to="/workflows"
+          label={t("home.statsWorkflows")}
+          value={workflows?.length}
+          icon={Workflow}
+        />
+        <StatCard
+          to="/mcp"
+          label={t("home.statsMcp")}
+          value={
+            mcpServers === undefined
+              ? undefined
+              : `${mcpServers.filter((server) => server.status === "connected").length}/${mcpServers.length}`
+          }
+          icon={Plug}
+        />
+        <StatCard
+          to="/approvals"
+          label={t("home.statsPending")}
+          value={pending?.length}
+          icon={ShieldAlert}
+          alert={(pending?.length ?? 0) > 0}
+        />
       </div>
 
       <Card className="mb-6" title={t("home.newTask")}>
@@ -192,5 +252,39 @@ export function HomePage() {
         />
       )}
     </>
+  );
+}
+
+/** 概览统计卡：图标 + 数值 + 标签，整卡可点跳转对应域页面。 */
+function StatCard({
+  to,
+  label,
+  value,
+  icon: Icon,
+  alert = false,
+}: {
+  to: string;
+  label: string;
+  value: number | string | undefined;
+  icon: LucideIcon;
+  alert?: boolean;
+}) {
+  return (
+    <Link
+      to={to}
+      className={
+        "flex items-center gap-3 rounded-lg border bg-[#111318] px-4 py-3 transition-colors hover:border-brand-400/40 " +
+        (alert ? "border-[#B79AEC]/60" : "border-[#20242C]")
+      }
+    >
+      <Icon
+        className={"h-4 w-4 shrink-0 " + (alert ? "text-[#B79AEC]" : "text-slate-500")}
+        aria-hidden
+      />
+      <div className="min-w-0">
+        <p className="text-lg font-semibold leading-tight text-slate-100">{value ?? "—"}</p>
+        <p className="truncate text-xs text-slate-500">{label}</p>
+      </div>
+    </Link>
   );
 }
