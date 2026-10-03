@@ -355,6 +355,7 @@ export const en: ZhCNTranslation = {
     statsCompleted: "Completed",
     statsFailed: "Failed",
     statsAvg: "Avg duration",
+    statsTokens: "Avg tokens",
     statsWins: "Fastest wins",
     startHint: "Pick at least 2 agents and fill in the task",
     start: "Start comparison",

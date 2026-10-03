@@ -18,6 +18,8 @@ export interface ComparisonItemResult extends ComparisonItem {
   tools: string[];
   error?: string;
   durationMs: number | null;
+  /** model.completed 事件上报的 input+output token 合计；无用量上报时为 null。 */
+  totalTokens: number | null;
 }
 
 const runOutputText = (run: RunRecord): string =>
@@ -28,6 +30,23 @@ const runOutputText = (run: RunRecord): string =>
       return typeof value === "string" ? value : "";
     })
     .join("");
+
+/** 汇总 model.completed 的 input/output token；Provider 未上报用量时为 null。 */
+const runTotalTokens = (run: RunRecord): number | null => {
+  let total = 0;
+  let reported = false;
+  for (const event of run.events) {
+    if (event.name !== "model.completed") continue;
+    const payload = event.payload as { inputTokens?: unknown; outputTokens?: unknown } | undefined;
+    const input = typeof payload?.inputTokens === "number" ? payload.inputTokens : 0;
+    const output = typeof payload?.outputTokens === "number" ? payload.outputTokens : 0;
+    if (payload?.inputTokens !== undefined || payload?.outputTokens !== undefined) {
+      reported = true;
+    }
+    total += input + output;
+  }
+  return reported ? total : null;
+};
 
 const runTools = (run: RunRecord): string[] => {
   const tools: string[] = [];
@@ -49,6 +68,7 @@ const deriveItem = (item: ComparisonItem, run: RunRecord | undefined): Compariso
     run?.startedAt !== undefined && run?.finishedAt !== undefined
       ? new Date(run.finishedAt).getTime() - new Date(run.startedAt).getTime()
       : null,
+  totalTokens: run === undefined ? null : runTotalTokens(run),
 });
 
 /** 对比批次服务：批次生命周期 + 从 RunStore 派生结果详情。 */
@@ -94,7 +114,7 @@ export class ComparisonService {
     }
   }
 
-  /** 跨批次统计：每个 Agent 的参与数、完成/失败、平均耗时与最快胜出次数。 */
+  /** 跨批次统计：每个 Agent 的参与数、完成/失败、平均耗时/Token 与最快胜出次数。 */
   async stats(): Promise<
     Array<{
       agentName: string;
@@ -102,13 +122,21 @@ export class ComparisonService {
       completed: number;
       failed: number;
       avgDurationMs: number | null;
+      avgTokens: number | null;
       fastestWins: number;
     }>
   > {
     const batches = await this.store.list();
     const acc = new Map<
       string,
-      { batches: number; completed: number; failed: number; durations: number[]; wins: number }
+      {
+        batches: number;
+        completed: number;
+        failed: number;
+        durations: number[];
+        tokens: number[];
+        wins: number;
+      }
     >();
     for (const batch of batches) {
       const { results } = await this.get(batch.id);
@@ -126,12 +154,14 @@ export class ComparisonService {
           completed: 0,
           failed: 0,
           durations: [],
+          tokens: [],
           wins: 0,
         };
         entry.batches += 1;
         if (result.status === "completed") {
           entry.completed += 1;
           if (result.durationMs !== null) entry.durations.push(result.durationMs);
+          if (result.totalTokens !== null) entry.tokens.push(result.totalTokens);
           if (fastest !== null && result.durationMs === fastest) entry.wins += 1;
         } else if (result.status === "failed") {
           entry.failed += 1;
@@ -151,6 +181,10 @@ export class ComparisonService {
                 entry.durations.reduce((sum, value) => sum + value, 0) / entry.durations.length,
               )
             : null,
+        avgTokens:
+          entry.tokens.length > 0
+            ? Math.round(entry.tokens.reduce((sum, value) => sum + value, 0) / entry.tokens.length)
+            : null,
         fastestWins: entry.wins,
       }))
       .sort((a, b) => b.fastestWins - a.fastestWins || a.agentName.localeCompare(b.agentName));
@@ -164,6 +198,7 @@ export class ComparisonService {
       completed: number;
       failed: number;
       avgDurationMs: number | null;
+      avgTokens: number | null;
       fastestWins: number;
     }>
   > {
@@ -176,7 +211,14 @@ export class ComparisonService {
     const batches = await this.store.list();
     const acc = new Map<
       string,
-      { batches: number; completed: number; failed: number; durations: number[]; wins: number }
+      {
+        batches: number;
+        completed: number;
+        failed: number;
+        durations: number[];
+        tokens: number[];
+        wins: number;
+      }
     >();
     for (const batch of batches) {
       const { results } = await this.get(batch.id);
@@ -194,12 +236,14 @@ export class ComparisonService {
           completed: 0,
           failed: 0,
           durations: [],
+          tokens: [],
           wins: 0,
         };
         entry.batches += 1;
         if (result.status === "completed") {
           entry.completed += 1;
           if (result.durationMs !== null) entry.durations.push(result.durationMs);
+          if (result.totalTokens !== null) entry.tokens.push(result.totalTokens);
           if (fastest !== null && result.durationMs === fastest) entry.wins += 1;
         } else if (result.status === "failed") {
           entry.failed += 1;
@@ -218,6 +262,10 @@ export class ComparisonService {
             ? Math.round(
                 entry.durations.reduce((sum, value) => sum + value, 0) / entry.durations.length,
               )
+            : null,
+        avgTokens:
+          entry.tokens.length > 0
+            ? Math.round(entry.tokens.reduce((sum, value) => sum + value, 0) / entry.tokens.length)
             : null,
         fastestWins: entry.wins,
       }))

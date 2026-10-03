@@ -237,6 +237,7 @@ export function ComparePage() {
                 <th className="pb-2 pr-4 font-medium">{t("compare.statsCompleted")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("compare.statsFailed")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("compare.statsAvg")}</th>
+                <th className="pb-2 pr-4 font-medium">{t("compare.statsTokens")}</th>
                 <th className="pb-2 font-medium">{t("compare.statsWins")}</th>
               </tr>
             </thead>
@@ -251,6 +252,9 @@ export function ComparePage() {
                     {entry.avgDurationMs === null
                       ? "—"
                       : `${(entry.avgDurationMs / 1000).toFixed(1)}s`}
+                  </td>
+                  <td className="py-2 pr-4 forge-code text-slate-300">
+                    {entry.avgTokens === null ? "—" : entry.avgTokens.toLocaleString()}
                   </td>
                   <td className="py-2 forge-code text-[#6CFF00]">{entry.fastestWins}</td>
                 </tr>
@@ -270,6 +274,7 @@ export function ComparePage() {
                 <th className="pb-2 pr-4 font-medium">{t("compare.statsCompleted")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("compare.statsFailed")}</th>
                 <th className="pb-2 pr-4 font-medium">{t("compare.statsAvg")}</th>
+                <th className="pb-2 pr-4 font-medium">{t("compare.statsTokens")}</th>
                 <th className="pb-2 font-medium">{t("compare.statsWins")}</th>
               </tr>
             </thead>
@@ -284,6 +289,9 @@ export function ComparePage() {
                     {entry.avgDurationMs === null
                       ? "—"
                       : `${(entry.avgDurationMs / 1000).toFixed(1)}s`}
+                  </td>
+                  <td className="py-2 pr-4 forge-code text-slate-300">
+                    {entry.avgTokens === null ? "—" : entry.avgTokens.toLocaleString()}
                   </td>
                   <td className="py-2 forge-code text-[#6CFF00]">{entry.fastestWins}</td>
                 </tr>

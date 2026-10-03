@@ -459,6 +459,7 @@ export interface ComparisonStatsRecord {
   completed: number;
   failed: number;
   avgDurationMs: number | null;
+  avgTokens: number | null;
   fastestWins: number;
 }
 
@@ -471,6 +472,7 @@ export interface ComparisonModelStatsRecord {
   completed: number;
   failed: number;
   avgDurationMs: number | null;
+  avgTokens: number | null;
   fastestWins: number;
 }
 

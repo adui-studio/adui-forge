@@ -39,6 +39,11 @@ class _CompareStatsScreenState extends ConsumerState<CompareStatsScreen> {
     return avg == null ? '—' : '${(avg / 1000).toStringAsFixed(1)}s';
   }
 
+  String _tokensOf(Map<String, dynamic> row) {
+    final avg = row['avgTokens'] as num?;
+    return avg == null ? '—' : avg.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,7 +85,8 @@ class _CompareStatsScreenState extends ConsumerState<CompareStatsScreen> {
                         '暂无统计数据。\n在「对比」页发起几次对比后可见。',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.45)),
+                          color: Colors.white.withValues(alpha: 0.45),
+                        ),
                       ),
                     );
                   }
@@ -103,15 +109,17 @@ class _CompareStatsScreenState extends ConsumerState<CompareStatsScreen> {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14),
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                        ),
                                       ),
                                     ),
                                     Text(
                                       '最快 x${row['fastestWins'] ?? 0}',
                                       style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Color(0xFF6CFF00)),
+                                        fontSize: 12,
+                                        color: Color(0xFF6CFF00),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -120,9 +128,12 @@ class _CompareStatsScreenState extends ConsumerState<CompareStatsScreen> {
                                   '批次 ${row['batches'] ?? 0}'
                                   ' · 完成 ${row['completed'] ?? 0}'
                                   ' · 失败 ${row['failed'] ?? 0}'
-                                  ' · 平均 ${_durationOf(row)}',
+                                  ' · 平均 ${_durationOf(row)}'
+                                  ' · 平均 ${_tokensOf(row)} tok',
                                   style: const TextStyle(
-                                      fontSize: 12, color: Colors.white54),
+                                    fontSize: 12,
+                                    color: Colors.white54,
+                                  ),
                                 ),
                               ],
                             ),

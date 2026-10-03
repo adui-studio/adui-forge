@@ -7,12 +7,15 @@ const csvCell = (value: string): string =>
 const durationText = (result: ComparisonItemResult): string =>
   result.durationMs === null ? "" : (result.durationMs / 1000).toFixed(1);
 
+const tokensText = (result: ComparisonItemResult): string =>
+  result.totalTokens === null ? "" : String(result.totalTokens);
+
 /** 对比批次 → CSV（RFC 4180；表头 + 每列一个 Agent）。 */
 export const comparisonToCsv = (
   record: ComparisonRecord,
   results: ComparisonItemResult[],
 ): string => {
-  const header = ["agentName", "runId", "status", "durationSeconds", "error", "output"]
+  const header = ["agentName", "runId", "status", "durationSeconds", "tokens", "error", "output"]
     .map(csvCell)
     .join(",");
   const rows = results.map((result) =>
@@ -21,6 +24,7 @@ export const comparisonToCsv = (
       result.runId,
       result.status,
       durationText(result),
+      tokensText(result),
       result.error ?? "",
       result.text,
     ]
@@ -43,14 +47,14 @@ export const comparisonToMarkdown = (
     "",
     "## Results",
     "",
-    "| Agent | Status | Duration | Error |",
-    "| ----- | ------ | -------- | ----- |",
+    "| Agent | Status | Duration | Tokens | Error |",
+    "| ----- | ------ | -------- | ------ | ----- |",
   ];
   for (const result of results) {
     lines.push(
       `| ${result.agentName} | ${result.status} | ${
         result.durationMs === null ? "—" : `${(result.durationMs / 1000).toFixed(1)}s`
-      } | ${result.error ?? "—"} |`,
+      } | ${result.totalTokens === null ? "—" : result.totalTokens} | ${result.error ?? "—"} |`,
     );
   }
   lines.push("", "## Outputs", "");

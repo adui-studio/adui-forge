@@ -67,7 +67,8 @@ class _CompareScreenState extends ConsumerState<CompareScreen> {
             tooltip: '对比统计',
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
-                  builder: (_) => const CompareStatsScreen()),
+                builder: (_) => const CompareStatsScreen(),
+              ),
             ),
           ),
         ],
@@ -89,8 +90,7 @@ class _CompareScreenState extends ConsumerState<CompareScreen> {
                 child: Text(
                   '还没有对比批次。\n在 Web 端「对比」页发起后可在此查看。',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.45)),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.45)),
                 ),
               );
             }
@@ -143,8 +143,7 @@ class _ComparisonDetailScreen extends StatelessWidget {
     await Clipboard.setData(ClipboardData(text: content));
     messenger.showSnackBar(
       SnackBar(
-        content: Text(
-            '${format == 'csv' ? 'CSV' : 'Markdown'} 报告已复制到剪贴板'),
+        content: Text('${format == 'csv' ? 'CSV' : 'Markdown'} 报告已复制到剪贴板'),
       ),
     );
   }
@@ -184,7 +183,9 @@ class _ComparisonDetailScreen extends StatelessWidget {
                         Text(
                           (result['agentName'] as String?) ?? '',
                           style: const TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 14),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -194,8 +195,8 @@ class _ComparisonDetailScreen extends StatelessWidget {
                             color: result['status'] == 'completed'
                                 ? const Color(0xFF6CFF00)
                                 : result['status'] == 'failed'
-                                    ? const Color(0xFFF87171)
-                                    : Colors.white54,
+                                ? const Color(0xFFF87171)
+                                : Colors.white54,
                           ),
                         ),
                         const Spacer(),
@@ -204,7 +205,18 @@ class _ComparisonDetailScreen extends StatelessWidget {
                               ? '—'
                               : '${((result['durationMs'] as num) / 1000).toStringAsFixed(1)}s',
                           style: const TextStyle(
-                              fontSize: 12, color: Colors.white54),
+                            fontSize: 12,
+                            color: Colors.white54,
+                          ),
+                        ),
+                        Text(
+                          result['totalTokens'] == null
+                              ? ''
+                              : ' · ${(result['totalTokens'] as num)} tok',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.white54,
+                          ),
                         ),
                       ],
                     ),
@@ -214,7 +226,9 @@ class _ComparisonDetailScreen extends StatelessWidget {
                         child: Text(
                           '错误：${result['error']}',
                           style: const TextStyle(
-                              color: Color(0xFFF87171), fontSize: 12),
+                            color: Color(0xFFF87171),
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     if (((result['text'] as String?) ?? '').isNotEmpty) ...[

@@ -343,6 +343,7 @@ export const zhCN = {
     statsCompleted: "完成",
     statsFailed: "失败",
     statsAvg: "平均耗时",
+    statsTokens: "平均 Tokens",
     statsWins: "最快胜出",
     startHint: "至少选择 2 个 Agent 并填写任务",
     start: "开始对比",

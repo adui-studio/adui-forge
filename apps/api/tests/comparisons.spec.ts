@@ -87,6 +87,38 @@ describe("ComparisonService", () => {
     expect(results[0]?.status).toBe("unknown");
     expect(results[0]?.text).toBe("");
   });
+
+  it("totalTokens 从 model.completed 事件汇总；无用量上报时为 null", async () => {
+    const { runStore, service } = buildService();
+    const withUsage = await service["runs"].createRun({ agentName: "forge-dev", task: "t" });
+    const withoutUsage = await service["runs"].createRun({ agentName: "forge-dev", task: "t" });
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    const event = (runId: string, payload: Record<string, unknown>) => ({
+      name: "model.completed" as const,
+      runId,
+      timestamp: new Date().toISOString(),
+      payload,
+    });
+    await runStore.update(withUsage.id, {
+      status: "completed",
+      // 两步 model.completed：tokens 累加（100+50 与 200+70）
+      events: [
+        event(withUsage.id, { inputTokens: 100, outputTokens: 50 }),
+        event(withUsage.id, { inputTokens: 200, outputTokens: 70 }),
+      ],
+    });
+    await runStore.update(withoutUsage.id, { status: "completed" });
+    await service.create({
+      task: "t",
+      items: [
+        { agentName: "agent-a", runId: withUsage.id },
+        { agentName: "agent-b", runId: withoutUsage.id },
+      ],
+    });
+    const { results } = await service.get((await service.list())[0]?.id ?? "");
+    expect(results[0]?.totalTokens).toBe(420);
+    expect(results[1]?.totalTokens).toBeNull();
+  });
 });
 
 describe("ComparisonService 跨批次统计", () => {
@@ -167,6 +199,7 @@ describe("对比报告导出", () => {
         text: 'line1\nline2 with "quotes"',
         tools: [],
         durationMs: 1500,
+        totalTokens: 1234,
       },
       {
         agentName: "agent-b",
@@ -176,16 +209,18 @@ describe("对比报告导出", () => {
         tools: [],
         error: "boom",
         durationMs: null,
+        totalTokens: null,
       },
     ];
     const csv = comparisonToCsv(record, results as never);
-    expect(csv.split("\r\n")[0]).toBe("agentName,runId,status,durationSeconds,error,output");
+    expect(csv.split("\r\n")[0]).toBe("agentName,runId,status,durationSeconds,tokens,error,output");
     expect(csv).toContain('"agent,a"');
     expect(csv).toContain('"line1\nline2 with ""quotes"""');
 
     const md = comparisonToMarkdown(record, results as never);
     expect(md).toContain("# Agent Comparison: t");
-    expect(md).toContain("| agent-b | failed | — | boom |");
+    expect(md).toContain("| agent-b | failed | — | — | boom |");
+    expect(md).toContain("| agent,a | completed | 1.5s | 1234 | — |");
     expect(md).toContain("```text");
   });
 });
