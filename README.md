@@ -2,10 +2,15 @@
 
 **ADui Forge — Agent-Driven Development Platform**
 
+[![Release](https://img.shields.io/github/v/release/adui-studio/adui-forge)](https://github.com/adui-studio/adui-forge/releases/latest)
+[![CI](https://github.com/adui-studio/adui-forge/actions/workflows/ci.yml/badge.svg)](https://github.com/adui-studio/adui-forge/actions/workflows/ci.yml)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-8B51A6)](https://adui-studio.github.io/adui-forge/)
+
 一个面向开发者与研发团队的 Agent 驱动软件开发平台：开发者描述意图与边界，
 Agent 负责理解、规划、检索、修改、测试、修复与交付，高风险操作由人工审批。
 
-当前版本 **v0.7.x**（v0.7.0 起 Workspace IDE 与本地 Agent 闭环已随安装包发布）。
+版本轨迹与每个版本的变更见 [CHANGELOG.md](CHANGELOG.md)；安装包经 tag 自动构建，
+覆盖 Windows / macOS (arm64 & x64) / Linux / Android 六产物。
 
 ---
 
@@ -13,19 +18,20 @@ Agent 负责理解、规划、检索、修改、测试、修复与交付，高�
 
 | 域                | 能力                                                                                                                                |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| **Agent 运行**    | 流式 Run（SSE）、事件时间线、取消 / 重试、Token 限额、approval 审批闭环                                                             |
+| **控制台**        | 五域概览统计卡（Agents / Skills / Workflows / MCP / 待审批）+ 快速发起任务 + 活跃与最近 Runs                                        |
+| **Agent 运行**    | 流式 Run（SSE）、事件时间线、取消 / 重试、Token 限额与用量展示、approval 审批闭环                                                   |
 | **Agent 管理**    | 自定义 Agent（systemPrompt / 工具 / 模型 / 循环参数），内置 Agent 只读展示                                                          |
 | **模型目录**      | `FORGE_MODELS` 命名模型（OpenAI Compatible 多 Provider），Agent 级模型选择                                                          |
 | **Skill 系统**    | 指令库 CRUD、启停、注入 Agent 系统提示词、SKILL.md / 粘贴 / 目录 / 技能包四路导入，内置技能市场（防覆盖 + 版本更新提示 + 使用统计） |
-| **Workflow**      | 可序列化条件分支图（agent / condition 节点）、可视化编辑器（自由连线）、图校验与执行                                                |
+| **Workflow**      | 可序列化条件分支图、可视化编辑器（自由连线 + 节点级 Agent 选择的多 Agent 编排）、图校验与执行、运行历史                             |
 | **Workspace IDE** | 文件树 + Monaco 多 Tab 编辑 + Git 面板（status / diff / commit）+ Agent 面板 + 终端                                                 |
 | **Local Runner**  | 桌面本地闭环：同形 REST（workspace / runs / 审批 / 终端），Bun sidecar 随安装包分发                                                 |
 | **Chat / 会话**   | 流式对话、会话持久化、历史切换 / 重命名 / 删除、失败重试、编辑文件上下文注入                                                        |
 | **任务台账**      | Tasks：新建即派生 Run，实时状态回填                                                                                                 |
-| **对比分析**      | 多 Agent 并排流式对比 + 批次持久化 + 跨批次胜负统计                                                                                 |
+| **对比分析**      | 多 Agent 并排流式对比 + 批次持久化 + 跨批次统计（按 Agent / 按模型：平均耗时 / 平均 Tokens / 最快胜出）+ CSV / MD 导出              |
 | **MCP**           | `FORGE_MCP_SERVERS` 服务连接状态观测与按需重连测试                                                                                  |
 | **审批**          | 高风险操作（Shell / Git 写入）人工批准 / 拒绝，云端与本地语义一致                                                                   |
-| **多端**          | Web（浏览器）、Desktop（Tauri，本地 Runner）、Mobile（Flutter：Runs / 审批 / Chat）                                                 |
+| **多端**          | Web（浏览器）、Desktop（Tauri + 本地 Runner）、Mobile（Flutter：Chat / Runs / 审批 / 对比查看与统计 / 技能库 / 任务，只读为主）     |
 | **i18n**          | 简体中文 / English 全界面切换（含 antd locale），偏好持久化                                                                         |
 
 ---
@@ -47,7 +53,24 @@ Agent 负责理解、规划、检索、修改、测试、修复与交付，高�
 
 - 云端 API 与本地 Runner 对前端暴露**同一套 REST 形状**，`PlatformAdapter` 负责分发；
 - Agent Domain（Loop / 工具 / 沙箱边界 / Skill 组装）在 `packages/`，两端共用；
-- 决策记录见 [docs/decisions/](docs/decisions/)（ADR-001 ~ ADR-007）。
+- 决策记录见 [docs/decisions/](docs/decisions/)（ADR-001 ~ ADR-008）。
+
+---
+
+## 安装包下载
+
+**[Releases](https://github.com/adui-studio/adui-forge/releases/latest)** 提供 tag 触发的自动构建产物：
+
+| 平台        | 产物                                           |
+| ----------- | ---------------------------------------------- |
+| Windows x64 | `adui-forge-<版本>-windows-x64-setup.exe/.msi` |
+| macOS Apple | `adui-forge-<版本>-macos-arm64.dmg`            |
+| macOS Intel | `adui-forge-<版本>-macos-x64.dmg`              |
+| Linux x64   | `adui-forge-<版本>-linux-x64.AppImage/.deb`    |
+| Android     | `adui-forge-<版本>-android.apk`                |
+
+安装包内含 Local Runner sidecar（Bun 编译单文件）；Release 正文自动附该版本的
+CHANGELOG 日志与变更列表。
 
 ---
 
@@ -63,7 +86,7 @@ push 到 main 且 `apps/docs/**` 有变更时经 [deploy-docs.yml](.github/workf
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)       | 总体架构                         |
 | [docs/CODEBASE_MAP.md](docs/CODEBASE_MAP.md)       | 代码库地图（现状）               |
 | [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md) | 项目上下文快照                   |
-| [docs/decisions/](docs/decisions/)                 | 架构决策记录（ADR-001 ~ 007）    |
+| [docs/decisions/](docs/decisions/)                 | 架构决策记录（ADR-001 ~ 008）    |
 | [CHANGELOG.md](CHANGELOG.md)                       | 版本里程碑                       |
 | [.agents/skills/](.agents/skills/)                 | 仓库级 Agent Skill               |
 | [evals/](evals/)                                   | Agent 行为评估用例               |
