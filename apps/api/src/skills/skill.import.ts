@@ -70,6 +70,49 @@ export const importSkillFromMarkdown = async (
   return { ok: true, name: skill.name };
 };
 
+export interface SkillBundleResult {
+  imported: string[];
+  skipped: Array<{ name: string; reason: string }>;
+}
+
+/**
+ * 技能包（bundle）导入（Skill 市场第五步：安装间迁移与分享）。
+ * 导入是显式的还原操作，合法条目直接覆盖同名 Skill（与单技能防覆盖语义不同）；
+ * 单条非法只跳过并说明原因，不中断整体；全部成功才触发一次重建。
+ */
+export const importSkillsFromBundle = async (
+  entries: readonly unknown[],
+  deps: SkillImportDeps,
+): Promise<SkillBundleResult> => {
+  const result: SkillBundleResult = { imported: [], skipped: [] };
+  for (const entry of entries) {
+    const name =
+      entry !== null && typeof entry === "object" && "name" in entry
+        ? String((entry as { name: unknown }).name)
+        : "unknown";
+    try {
+      const skill = skillSchema.parse(entry);
+      const { version, ...rest } = skill;
+      const existing = await deps.store.get(skill.name);
+      await deps.store.upsert({
+        ...rest,
+        bundledVersion: version,
+        createdAt: existing?.createdAt ?? new Date().toISOString(),
+      });
+      result.imported.push(skill.name);
+    } catch (error) {
+      result.skipped.push({
+        name,
+        reason: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+  if (result.imported.length > 0) {
+    await deps.rebuild();
+  }
+  return result;
+};
+
 /**
  * 从目录扫描 <name>/SKILL.md 并导入注册表（REQUIREMENTS §36：兼容 .skill/SKILL.md 约定）。
  * 目录由服务端环境变量指定（FORGE_SKILLS_DIR），不接受客户端路径，避免任意文件读取。

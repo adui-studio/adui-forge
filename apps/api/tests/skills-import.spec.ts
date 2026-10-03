@@ -3,7 +3,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
 import { InMemorySkillStore } from "../src/skills/skill.store";
-import { importSkillsFromDir, importSkillFromMarkdown } from "../src/skills/skill.import";
+import {
+  importSkillsFromDir,
+  importSkillFromMarkdown,
+  importSkillsFromBundle,
+} from "../src/skills/skill.import";
 import { BUNDLED_SKILLS } from "../src/skills/bundled-skills";
 import { skillSchema } from "@adui-forge/skill-sdk";
 
@@ -166,5 +170,63 @@ describe("粘贴 Markdown 导入（市场第四步）", () => {
     const forced = await importSkill("---\nname: plan\n---\n\n新版本指令", store, true);
     expect(forced).toEqual({ ok: true, name: "plan" });
     expect((await store.get("plan"))?.instructions).toBe("新版本指令");
+  });
+});
+
+describe("技能包导入（市场第五步）", () => {
+  const importBundle = async (entries: readonly unknown[], store: InMemorySkillStore) => {
+    let rebuildCount = 0;
+    const result = await importSkillsFromBundle(entries, {
+      store,
+      rebuild: async () => {
+        rebuildCount += 1;
+      },
+    });
+    return { result, rebuildCount };
+  };
+
+  it("合法条目导入（version 映射为 bundledVersion），重建一次", async () => {
+    const store = new InMemorySkillStore();
+    const { result, rebuildCount } = await importBundle(
+      [
+        { name: "alpha", description: "甲", instructions: "指令甲", enabled: true },
+        { name: "beta", instructions: "指令乙", version: 3 },
+      ],
+      store,
+    );
+    expect(result.imported).toEqual(["alpha", "beta"]);
+    expect(result.skipped).toEqual([]);
+    expect(rebuildCount).toBe(1);
+    expect((await store.get("alpha"))?.description).toBe("甲");
+    expect((await store.get("beta"))?.bundledVersion).toBe(3);
+  });
+
+  it("非法条目跳过并说明原因，不中断整体；全跳过时不重建", async () => {
+    const store = new InMemorySkillStore();
+    const { result, rebuildCount } = await importBundle(
+      [{ name: "Bad Name", instructions: "非法名称" }, { name: "no-body" }],
+      store,
+    );
+    expect(result.imported).toEqual([]);
+    expect(result.skipped).toHaveLength(2);
+    expect(result.skipped[0]?.name).toBe("Bad Name");
+    expect(rebuildCount).toBe(0);
+  });
+
+  it("同名条目直接覆盖（显式还原语义），createdAt 保留", async () => {
+    const store = new InMemorySkillStore();
+    const created = new Date("2026-01-01T00:00:00Z").toISOString();
+    await store.upsert({
+      name: "plan",
+      description: "",
+      instructions: "旧指令",
+      enabled: true,
+      createdAt: created,
+    });
+    const { result } = await importBundle([{ name: "plan", instructions: "新指令" }], store);
+    expect(result.imported).toEqual(["plan"]);
+    const record = await store.get("plan");
+    expect(record?.instructions).toBe("新指令");
+    expect(record?.createdAt).toBe(created);
   });
 });

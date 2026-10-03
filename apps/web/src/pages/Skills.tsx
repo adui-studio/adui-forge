@@ -1,6 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, ClipboardPaste, Download, FolderInput, Plus, Save, Store } from "lucide-react";
-import { useEffect, useState } from "react";
+import {
+  BookOpen,
+  ClipboardPaste,
+  Download,
+  FolderInput,
+  Plus,
+  Save,
+  Store,
+  Upload,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   App as AntApp,
@@ -19,10 +28,12 @@ import {
 import {
   deleteSkill,
   exportSkill,
+  exportSkillBundle,
   fetchBundledSkills,
   fetchSkills,
   importBundledSkill,
   importBundledSkills,
+  importSkillBundle,
   importSkillMarkdown,
   importSkills,
   setSkillEnabled,
@@ -36,6 +47,48 @@ export function SkillsPage() {
   const { message } = AntApp.useApp();
   const [editing, setEditing] = useState<string | null | undefined>(undefined);
   const [pasteOpen, setPasteOpen] = useState(false);
+  const bundleFileRef = useRef<HTMLInputElement>(null);
+
+  /** 技能包导出：全量 Skill 序列化为 JSON 文件下载（市场第五步）。 */
+  const handleExportBundle = () => {
+    void exportSkillBundle().then((bundle) => {
+      const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `adui-forge-skills-${new Date().toISOString().slice(0, 10)}.json`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      void message.success(t("skills.bundleExportDone", { count: bundle.skills.length }));
+    });
+  };
+
+  /** 技能包导入：读取 JSON 文件交给服务端逐条校验（市场第五步）。 */
+  const handleImportBundleFile = (file: File) => {
+    void file
+      .text()
+      .then((text) => {
+        let bundle: unknown;
+        try {
+          bundle = JSON.parse(text);
+        } catch {
+          void message.error(t("skills.bundleImportInvalid"));
+          return undefined;
+        }
+        return importSkillBundle(bundle).then((result) => {
+          void queryClient.invalidateQueries({ queryKey: ["skills"] });
+          void message.success(
+            t("skills.bundleImportDone", {
+              imported: result.imported.length,
+              skipped: result.skipped.length,
+            }),
+          );
+        });
+      })
+      .catch(() => {
+        void message.error(t("skills.bundleImportInvalid"));
+      });
+  };
 
   const {
     data: skills,
@@ -186,6 +239,36 @@ export function SkillsPage() {
               </div>
             );
           })}
+        </div>
+        <div className="mt-3 flex items-center gap-2 border-t border-slate-800 pt-3">
+          <span className="text-xs text-slate-500">{t("skills.bundleShare")}</span>
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              size="small"
+              icon={<Download className="h-3.5 w-3.5" />}
+              onClick={handleExportBundle}
+            >
+              {t("skills.bundleExport")}
+            </Button>
+            <Button
+              size="small"
+              icon={<Upload className="h-3.5 w-3.5" />}
+              onClick={() => bundleFileRef.current?.click()}
+            >
+              {t("skills.bundleImport")}
+            </Button>
+            <input
+              ref={bundleFileRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file !== undefined) handleImportBundleFile(file);
+                event.target.value = "";
+              }}
+            />
+          </div>
         </div>
       </Card>
 

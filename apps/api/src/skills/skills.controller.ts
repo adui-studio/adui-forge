@@ -5,7 +5,11 @@ import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { AgentConfigService } from "../agents/agent-config.service";
 import { SKILL_STORE, type SkillRecord, type SkillStore } from "./skill.store";
 import { BUNDLED_SKILLS } from "./bundled-skills";
-import { importSkillsFromDir, importSkillFromMarkdown } from "./skill.import";
+import {
+  importSkillsFromDir,
+  importSkillFromMarkdown,
+  importSkillsFromBundle,
+} from "./skill.import";
 
 export const upsertSkillSchema = skillSchema;
 export type UpsertSkillInput = z.infer<typeof upsertSkillSchema>;
@@ -137,6 +141,35 @@ export class SkillsController {
       store: this.store,
       rebuild: () => this.agents.rebuildAll(),
       force: body.force,
+    });
+  }
+
+  /** 技能包导出（市场第五步）：全量 Skill 序列化为可分享 JSON。 */
+  @Get("export-bundle")
+  async exportBundle() {
+    const records = await this.store.list();
+    return {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      skills: records.map((record) => ({
+        name: record.name,
+        description: record.description,
+        instructions: record.instructions,
+        enabled: record.enabled,
+        ...(record.bundledVersion === undefined ? {} : { version: record.bundledVersion }),
+      })),
+    };
+  }
+
+  /** 技能包导入（市场第五步）：逐条校验，非法跳过并说明原因（上限 100 条）。 */
+  @Post("import-bundle")
+  async importBundle(
+    @Body(new ZodValidationPipe(z.object({ skills: z.array(z.unknown()).max(100) })))
+    body: { skills: unknown[] },
+  ) {
+    return importSkillsFromBundle(body.skills, {
+      store: this.store,
+      rebuild: () => this.agents.rebuildAll(),
     });
   }
 

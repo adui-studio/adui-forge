@@ -373,6 +373,33 @@ export const importSkillMarkdown = (
     body: JSON.stringify({ markdown, force }),
   });
 
+export interface SkillBundleExport {
+  version: number;
+  exportedAt: string;
+  skills: Array<{
+    name: string;
+    description: string;
+    instructions: string;
+    enabled: boolean;
+    version?: number;
+  }>;
+}
+
+export interface SkillBundleImportResult {
+  ok: boolean;
+  imported: string[];
+  skipped: Array<{ name: string; reason: string }>;
+}
+
+export const exportSkillBundle = (): Promise<SkillBundleExport> =>
+  request<SkillBundleExport>("/api/v1/skills/export-bundle");
+
+export const importSkillBundle = (bundle: unknown): Promise<SkillBundleImportResult> =>
+  request<SkillBundleImportResult>("/api/v1/skills/import-bundle", {
+    method: "POST",
+    body: JSON.stringify(bundle),
+  });
+
 export const deleteSkill = (name: string): Promise<{ ok: boolean }> =>
   request<{ ok: boolean }>(`/api/v1/skills/${encodeURIComponent(name)}`, {
     method: "DELETE",
