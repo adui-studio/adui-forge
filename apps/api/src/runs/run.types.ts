@@ -13,6 +13,9 @@ export interface RunRecord {
   events: AgentEvent[];
 }
 
+/** 列表视图条目：不含事件流——浏览用途由详情接口（getRun）按需取 events。 */
+export type RunListItem = Omit<RunRecord, "events">;
+
 /** 运行存储接口：让 RunService 与具体存储（内存 / Prisma）解耦。全部异步。 */
 export interface RunStore {
   create(input: Pick<RunRecord, "id" | "agentName" | "task">): Promise<RunRecord>;

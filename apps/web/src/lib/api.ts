@@ -4,7 +4,8 @@ import { authHeader, clearToken } from "./auth.ts";
 import { getPlatformAdapter } from "../platform/adapter.ts";
 
 /** Run 记录（与 apps/api 的 RunRecord 对齐，经 contracts 事件协议关联）。 */
-export interface RunRecord {
+/** Run 列表条目（与云端 RunListItem 对齐）：不含事件流，事件仅在详情响应里。 */
+export interface RunListItemRecord {
   id: string;
   agentName: string;
   task: string;
@@ -13,6 +14,9 @@ export interface RunRecord {
   startedAt?: string;
   finishedAt?: string;
   error?: string;
+}
+
+export interface RunRecord extends RunListItemRecord {
   events: AgentEvent[];
 }
 
@@ -33,7 +37,8 @@ const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
   return (await response.json()) as T;
 };
 
-export const fetchRuns = (): Promise<RunRecord[]> => runsRequest<RunRecord[]>(listRunsPath());
+export const fetchRuns = (): Promise<RunListItemRecord[]> =>
+  runsRequest<RunListItemRecord[]>(listRunsPath());
 
 /** Desktop + Runner 运行中时，Runs 数据源路由到本地 Runner；否则走云端 API。 */
 const runnerApi = async (): Promise<{

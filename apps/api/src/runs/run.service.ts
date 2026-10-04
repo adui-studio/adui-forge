@@ -3,8 +3,11 @@ import type { MessageEvent } from "@nestjs/common";
 import { Observable } from "rxjs";
 import type { AgentEvent, RunStatus } from "@adui-forge/contracts";
 import { AgentRegistry, type Agent } from "@adui-forge/agent";
-import type { RunRecord, RunStore } from "./run.types";
+import type { RunListItem, RunRecord, RunStore } from "./run.types";
 import { RUN_STORE } from "./run.tokens";
+
+/** 列表默认上限：浏览视图取最近记录即可，防止无界增长拖垮响应。 */
+const DEFAULT_LIST_LIMIT = 200;
 
 const TERMINAL_STATUSES: ReadonlySet<RunStatus> = new Set<RunStatus>([
   "completed",
@@ -228,7 +231,7 @@ export class RunService {
     status?: string;
     agentName?: string;
     limit?: number;
-  }): Promise<RunRecord[]> {
+  }): Promise<RunListItem[]> {
     let runs = await this.store.list();
     if (options?.status !== undefined) {
       runs = runs.filter((run) => run.status === options.status);
@@ -236,10 +239,9 @@ export class RunService {
     if (options?.agentName !== undefined) {
       runs = runs.filter((run) => run.agentName === options.agentName);
     }
-    if (options?.limit !== undefined) {
-      runs = runs.slice(0, options.limit);
-    }
-    return runs;
+    // 浏览视图不需要全量历史；事件流占响应体积大头，仅详情（getRun）携带
+    runs = runs.slice(0, options?.limit ?? DEFAULT_LIST_LIMIT);
+    return runs.map(({ events: _events, ...item }) => item);
   }
 
   async #execute(

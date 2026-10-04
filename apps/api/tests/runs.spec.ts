@@ -82,9 +82,12 @@ describe("RunService", () => {
     const service = new RunService(new InMemoryRunStore(), registry);
     const first = await service.createRun({ agentName: "forge-dev", task: "a" });
     const second = await service.createRun({ agentName: "forge-dev", task: "b" });
-    const ids = (await service.listRuns()).map((run) => run.id);
+    const list = await service.listRuns();
+    const ids = list.map((run) => run.id);
     expect(ids[0]).toBe(second.id);
     expect(ids.at(-1)).toBe(first.id);
+    // 列表是浏览视图：不携带事件流（体积大头仅在详情响应）
+    expect(list.every((run) => !Object.hasOwn(run, "events"))).toBe(true);
   });
 
   it("rejects unknown agent names", async () => {

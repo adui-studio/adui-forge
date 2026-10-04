@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { StatusTag } from "@/components/status-tag.tsx";
 import { Segmented, Select, Table, type TableColumnsType } from "antd";
 import { fetchRuns } from "@/lib/api.ts";
-import type { RunRecord } from "@/lib/api.ts";
+import type { RunListItemRecord } from "@/lib/api.ts";
 import { statusKeys, statusLabel } from "@/lib/status.ts";
 import { timeAgo } from "@/lib/relative-time.ts";
 
@@ -28,7 +28,7 @@ export function RunsPage() {
     setSearchParams(next, { replace: true });
   };
 
-  const columns: TableColumnsType<RunRecord> = [
+  const columns: TableColumnsType<RunListItemRecord> = [
     {
       title: t("runs.colStatus"),
       dataIndex: "status",
@@ -95,7 +95,7 @@ export function RunsPage() {
           />
         </div>
       </div>
-      <Table<RunRecord>
+      <Table<RunListItemRecord>
         columns={columns}
         dataSource={filtered}
         rowKey="id"

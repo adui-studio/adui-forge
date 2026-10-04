@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { RunRecord } from "@/lib/api.ts";
+import type { RunListItemRecord } from "@/lib/api.ts";
 import { getPlatformAdapter } from "@/platform/adapter.ts";
 import i18next from "i18next";
 
@@ -8,7 +8,7 @@ import i18next from "i18next";
  * 仅当窗口不在前台(document.hidden)时提醒,避免前台打扰。
  * 通知:Run 完成 / 失败 / 出现待审批。
  */
-export function useRunNotifications(runs: RunRecord[] | undefined): void {
+export function useRunNotifications(runs: RunListItemRecord[] | undefined): void {
   const previous = useRef<Map<string, string>>(new Map());
   const notifiedApprovals = useRef<Set<string>>(new Set());
 

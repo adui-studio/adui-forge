@@ -15,6 +15,9 @@ export interface RunnerRunRecord {
 
 type Subscriber = (event: AgentEvent) => void;
 
+/** 列表视图条目：不含事件流（与云端 listRuns 同形；详情经 GET /runs/:id）。 */
+export type RunnerRunListItem = Omit<RunnerRunRecord, "events">;
+
 const TERMINAL_STATUSES = new Set(["completed", "failed", "cancelled"]);
 
 /** Runner 本地 Runs 服务：内存存储 + 后台执行 + SSE 订阅（与云端 API 同形语义）。 */
@@ -51,9 +54,10 @@ export class RunnerRunService {
     return { ...record, events: [...record.events] };
   }
 
-  list(): RunnerRunRecord[] {
+  list(): RunnerRunListItem[] {
     // Map 保持插入序；倒排即为最新在前（同毫秒创建也稳定）
-    return [...this.#runs.values()].reverse();
+    // 列表视图不含事件流——响应体积大头，仅 GET /runs/:id 携带
+    return [...this.#runs.values()].reverse().map(({ events: _events, ...item }) => item);
   }
 
   get(id: string): RunnerRunRecord | undefined {
