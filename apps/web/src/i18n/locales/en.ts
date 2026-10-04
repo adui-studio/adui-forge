@@ -301,6 +301,9 @@ export const en: ZhCNTranslation = {
     subtitle:
       "Browse and edit files under FORGE_WORKSPACE_ROOT (ADR-004: boundary-checked, 1 MiB per file).",
     explorer: "Files",
+    searchPlaceholder: "Search file names or content…",
+    searchEmpty: "No matches",
+    searchTruncated: "Result limit reached — showing partial matches",
     pickFile: "Pick a file on the left to edit.",
     unavailable: "Workspace is disabled: configure in the API environment",
     openFile: "Open file",

@@ -44,6 +44,22 @@ export const fetchWorkspaceTree = (path: string): Promise<WorkspaceEntryRecord[]
 export const fetchWorkspaceFile = (path: string): Promise<WorkspaceFileRecord> =>
   workspaceRequest<WorkspaceFileRecord>(`file?path=${encodeURIComponent(path)}`);
 
+export interface WorkspaceSearchMatchRecord {
+  path: string;
+  kind: "filename" | "content";
+  line?: number;
+  text?: string;
+}
+
+export interface WorkspaceSearchResultRecord {
+  query: string;
+  matches: WorkspaceSearchMatchRecord[];
+  truncated: boolean;
+}
+
+export const searchWorkspaceFiles = (q: string): Promise<WorkspaceSearchResultRecord> =>
+  workspaceRequest<WorkspaceSearchResultRecord>(`search?q=${encodeURIComponent(q)}`);
+
 export const deleteWorkspaceFile = (path: string): Promise<void> =>
   workspaceRequest<void>(`file?path=${encodeURIComponent(path)}`, {
     method: "DELETE",

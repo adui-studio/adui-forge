@@ -9,6 +9,7 @@ import {
   deleteWorkspaceTextFile,
   listWorkspaceDir,
   readWorkspaceTextFile,
+  searchWorkspace,
   writeWorkspaceTextFile,
 } from "@adui-forge/tool-sdk";
 
@@ -24,6 +25,7 @@ export interface RunnerOptions {
 }
 
 const pathQuerySchema = z.object({ path: z.string().min(1).max(500) });
+const searchQuerySchema = z.object({ q: z.string().min(1).max(200) });
 const writeFileSchema = z.object({
   path: z.string().min(1).max(500),
   content: z.string().max(1024 * 1024),
@@ -75,6 +77,20 @@ export const buildServer = async (options: RunnerOptions): Promise<FastifyInstan
     }
     try {
       return listWorkspaceDir(options.root, parsed.data.path);
+    } catch (error) {
+      return await reply.code(statusCodeFor(errorMessage(error))).send({
+        message: errorMessage(error),
+      });
+    }
+  });
+
+  server.get("/api/v1/workspace/search", async (request, reply) => {
+    const parsed = searchQuerySchema.safeParse(request.query);
+    if (!parsed.success) {
+      return await reply.code(400).send({ message: "invalid query" });
+    }
+    try {
+      return searchWorkspace(options.root, parsed.data.q);
     } catch (error) {
       return await reply.code(statusCodeFor(errorMessage(error))).send({
         message: errorMessage(error),

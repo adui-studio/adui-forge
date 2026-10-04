@@ -3,9 +3,11 @@ import {
   deleteWorkspaceTextFile,
   listWorkspaceDir,
   readWorkspaceTextFile,
+  searchWorkspace,
   writeWorkspaceTextFile,
   type WorkspaceEntry,
   type WorkspaceFileContent,
+  type WorkspaceSearchResult,
 } from "@adui-forge/tool-sdk";
 
 export const WORKSPACE_ROOT = Symbol("WORKSPACE_ROOT");
@@ -35,6 +37,11 @@ export class WorkspaceService {
   /** 删除单个文件（目录拒绝）；文件必须存在于边界内。 */
   deleteFile(relativePath: string): void {
     deleteWorkspaceTextFile(this.#root(), relativePath);
+  }
+
+  /** 文件名 + 内容搜索（IDE 面板用；上限由共享实现兜底）。 */
+  search(query: string): WorkspaceSearchResult {
+    return searchWorkspace(this.#root(), query);
   }
 
   #root(): string {

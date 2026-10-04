@@ -12,7 +12,11 @@ import {
 import { z } from "zod";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { WorkspaceService } from "./workspace.service";
-import type { WorkspaceEntry, WorkspaceFileContent } from "@adui-forge/tool-sdk";
+import type {
+  WorkspaceEntry,
+  WorkspaceFileContent,
+  WorkspaceSearchResult,
+} from "@adui-forge/tool-sdk";
 import { WorkspaceGitService, type GitStatusResult } from "./workspace-git.service";
 
 const pathSchema = z.object({ path: z.string().min(1).max(500) });
@@ -26,6 +30,8 @@ const writeFileSchema = z.object({
   path: z.string().min(1).max(500),
   content: z.string().max(1024 * 1024),
 });
+
+const searchSchema = z.object({ q: z.string().min(1).max(200) });
 
 @Controller("workspace")
 export class WorkspaceController {
@@ -46,6 +52,14 @@ export class WorkspaceController {
     @Query(new ZodValidationPipe(pathSchema)) query: { path: string },
   ): Promise<WorkspaceFileContent> {
     return this.#call(() => this.workspace.readFile(query.path));
+  }
+
+  /** 文件名 + 内容搜索（IDE 面板）。 */
+  @Get("search")
+  async search(
+    @Query(new ZodValidationPipe(searchSchema)) query: { q: string },
+  ): Promise<WorkspaceSearchResult> {
+    return this.#call(() => this.workspace.search(query.q));
   }
 
   @Put("file")

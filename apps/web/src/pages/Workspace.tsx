@@ -35,7 +35,9 @@ import {
   deleteWorkspaceFile,
   fetchGitStatus,
   fetchWorkspaceFile,
+  searchWorkspaceFiles,
   writeWorkspaceFile,
+  type WorkspaceSearchResultRecord,
 } from "@/lib/workspace.ts";
 import { getPlatformAdapter, type RunnerInfo } from "@/platform/adapter.ts";
 import { fetchWorkspaceTree } from "@/lib/workspace.ts";
@@ -86,6 +88,10 @@ export function WorkspacePage() {
   const [showAgentPanel, setShowAgentPanel] = useState(false);
   const [showTerminal, setShowTerminal] = useState(false);
   const [gitMessage, setGitMessage] = useState("");
+  // Explorer 文件名/内容搜索：非空时结果列表替代文件树
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<WorkspaceSearchResultRecord | null>(null);
+  const [searching, setSearching] = useState(false);
 
   const { data: gitStatus, refetch: refetchGit } = useQuery({
     queryKey: ["workspace-git"],
@@ -182,6 +188,25 @@ export function WorkspacePage() {
   const closeTab = (index: number): void => {
     setTabs((current) => current.filter((_, i) => i !== index));
     setActiveIndex((current) => (current >= index ? Math.max(0, current - 1) : current));
+  };
+
+  /** Explorer 搜索：文件名 + 内容匹配，结果列表替代文件树；空查询还原。 */
+  const runSearch = async (value: string): Promise<void> => {
+    setSearchQuery(value);
+    const trimmed = value.trim();
+    if (trimmed === "") {
+      setSearchResults(null);
+      return;
+    }
+    setSearching(true);
+    try {
+      setSearchResults(await searchWorkspaceFiles(trimmed));
+    } catch (error) {
+      void message.error(String(error));
+      setSearchResults(null);
+    } finally {
+      setSearching(false);
+    }
   };
 
   const activeTab = tabs[activeIndex];
@@ -356,12 +381,62 @@ export function WorkspacePage() {
             <p className="px-2 pb-1 text-[10px] font-semibold tracking-wider text-slate-600 uppercase">
               {t("workspace.explorer")}
             </p>
-            <FileTree
-              path="."
-              depth={0}
-              activePath={activeTab?.path ?? null}
-              onOpenFile={(path) => void openFile(path)}
-            />
+            <div className="px-2 pb-2">
+              <Input
+                size="small"
+                allowClear
+                value={searchQuery}
+                placeholder={t("workspace.searchPlaceholder")}
+                aria-label={t("workspace.searchPlaceholder")}
+                onChange={(event) => void runSearch(event.target.value)}
+              />
+            </div>
+            {searchResults !== null ? (
+              <div className="px-1">
+                {searching ? (
+                  <div className="flex justify-center py-6">
+                    <Spin size="small" />
+                  </div>
+                ) : searchResults.matches.length === 0 ? (
+                  <p className="px-2 py-4 text-xs text-slate-500">{t("workspace.searchEmpty")}</p>
+                ) : (
+                  <>
+                    {searchResults.matches.map((match, index) => (
+                      <button
+                        key={`${match.path}-${match.kind}-${match.line ?? 0}-${index}`}
+                        type="button"
+                        className="block w-full rounded px-2 py-1 text-left hover:bg-[#1C2028]"
+                        onClick={() => void openFile(match.path)}
+                      >
+                        <span className="block truncate font-mono text-xs text-slate-300">
+                          {match.path}
+                          {match.line !== undefined && (
+                            <span className="text-slate-600">:{match.line}</span>
+                          )}
+                        </span>
+                        {match.text !== undefined && match.text !== "" && (
+                          <span className="block truncate text-[11px] text-slate-500">
+                            {match.text}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                    {searchResults.truncated && (
+                      <p className="px-2 py-1 text-[10px] text-amber-500">
+                        {t("workspace.searchTruncated")}
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            ) : (
+              <FileTree
+                path="."
+                depth={0}
+                activePath={activeTab?.path ?? null}
+                onOpenFile={(path) => void openFile(path)}
+              />
+            )}
           </div>
 
           {/* Editor + Tabs */}

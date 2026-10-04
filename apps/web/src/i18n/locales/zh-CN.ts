@@ -290,6 +290,9 @@ export const zhCN = {
     subtitle:
       "浏览与编辑 FORGE_WORKSPACE_ROOT 下的文件（ADR-004：边界内读写，单文件 1 MiB 上限）。",
     explorer: "文件",
+    searchPlaceholder: "搜索文件名或内容…",
+    searchEmpty: "无匹配结果",
+    searchTruncated: "结果已达上限，仅显示部分匹配",
     pickFile: "从左侧选择一个文件打开编辑。",
     unavailable: "Workspace 未启用：请在 API 环境配置",
     openFile: "打开文件",

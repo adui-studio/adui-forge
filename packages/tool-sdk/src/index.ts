@@ -6,9 +6,12 @@ export {
   deleteWorkspaceTextFile,
   listWorkspaceDir,
   readWorkspaceTextFile,
+  searchWorkspace,
   writeWorkspaceTextFile,
   type WorkspaceEntry,
   type WorkspaceFileContent,
+  type WorkspaceSearchMatch,
+  type WorkspaceSearchResult,
 } from "./workspace-files.ts";
 export { createReadFileTool, type ReadFileToolOptions } from "./fs/read-file.ts";
 export { createListFilesTool, type ListFilesToolOptions } from "./fs/list-files.ts";

@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { readdirSync, readFileSync, rmSync, statSync, writeFileSync, type Dirent } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { resolveInWorkspace } from "./fs/boundary.ts";
 
@@ -118,4 +118,104 @@ export const deleteWorkspaceTextFile = (root: string, relativePath: string): voi
     throw new Error(`not a file: ${relativePath}`);
   }
   rmSync(absolute);
+};
+
+/** 搜索时跳过的目录（依赖与版本库元数据规模过大且无检索价值）。 */
+const SEARCH_SKIP_DIRECTORIES = new Set([".git", "node_modules"]);
+const MAX_SEARCH_FILE_BYTES = 512 * 1024;
+const MAX_SEARCH_FILES = 2000;
+const MAX_SEARCH_MATCHES = 100;
+const MAX_SEARCH_LINE_CHARS = 200;
+
+export interface WorkspaceSearchMatch {
+  path: string;
+  kind: "filename" | "content";
+  /** content 命中时的 1-based 行号。 */
+  line?: number;
+  /** content 命中时的行文本（trim 后截断）。 */
+  text?: string;
+}
+
+export interface WorkspaceSearchResult {
+  query: string;
+  matches: WorkspaceSearchMatch[];
+  /** 命中数或扫描文件数达到上限时为 true。 */
+  truncated: boolean;
+}
+
+/**
+ * Workspace 内容/文件名搜索（ADR-004）：文件名不区分大小写包含匹配，
+ * 文本文件逐行内容匹配（跳过二进制扩展名、.git/node_modules、超大文件）。
+ * 同步实现与同文件其余助手一致；上限兜底防止大工作区拖垮请求。
+ */
+export const searchWorkspace = (root: string, rawQuery: string): WorkspaceSearchResult => {
+  const query = rawQuery.trim();
+  if (query === "") {
+    return { query, matches: [], truncated: false };
+  }
+  const lowerQuery = query.toLowerCase();
+  const rootAbsolute = resolveInWorkspace(root, ".");
+  const matches: WorkspaceSearchMatch[] = [];
+  let truncated = false;
+  let scanned = 0;
+
+  const walk = (relativeDir: string): void => {
+    let entries: Dirent<string>[];
+    try {
+      entries = readdirSync(join(rootAbsolute, relativeDir), { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (matches.length >= MAX_SEARCH_MATCHES) {
+        truncated = true;
+        return;
+      }
+      const relativePath = relativeDir === "" ? entry.name : `${relativeDir}/${entry.name}`;
+      if (entry.isDirectory()) {
+        if (!SEARCH_SKIP_DIRECTORIES.has(entry.name)) {
+          walk(relativePath);
+        }
+        continue;
+      }
+      if (scanned >= MAX_SEARCH_FILES) {
+        truncated = true;
+        return;
+      }
+      scanned += 1;
+      const dot = entry.name.lastIndexOf(".");
+      const extension = dot === -1 ? "" : entry.name.slice(dot).toLowerCase();
+      if (BINARY_EXTENSIONS.has(extension)) continue;
+      if (entry.name.toLowerCase().includes(lowerQuery)) {
+        matches.push({ path: relativePath, kind: "filename" });
+      }
+      const absolute = join(rootAbsolute, relativePath);
+      if (statSync(absolute).size > MAX_SEARCH_FILE_BYTES) continue;
+      let content: string;
+      try {
+        content = readFileSync(absolute, "utf8");
+      } catch {
+        continue;
+      }
+      const lines = content.split("\n");
+      for (let index = 0; index < lines.length; index += 1) {
+        const line = lines[index] ?? "";
+        if (line.toLowerCase().includes(lowerQuery)) {
+          matches.push({
+            path: relativePath,
+            kind: "content",
+            line: index + 1,
+            text: line.trim().slice(0, MAX_SEARCH_LINE_CHARS),
+          });
+          if (matches.length >= MAX_SEARCH_MATCHES) {
+            truncated = true;
+            return;
+          }
+        }
+      }
+    }
+  };
+
+  walk("");
+  return { query, matches, truncated };
 };
