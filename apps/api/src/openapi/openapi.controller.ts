@@ -23,7 +23,14 @@ const paths = {
     post: { summary: "注册 Workflow 定义" },
   },
   "/workflows/{name}/runs": { post: { summary: "运行 Workflow（新 Run）" } },
-  "/memory": { get: { summary: "查询 Session Memory 摘要" } },
+  "/memory": { get: { summary: "查询 Session Memory 摘要（注入用，停用时为空）" } },
+  "/memory/records": { get: { summary: "Memory 管理视图（全量记录）" } },
+  "/memory/{id}": { delete: { summary: "删除单条 Memory 记录" } },
+  "/memory/clear": { post: { summary: "清空 Memory（可按 Agent）" } },
+  "/memory/enabled": {
+    get: { summary: "查询 Memory 开关" },
+    post: { summary: "启停 Memory（停用后不记录不注入）" },
+  },
   "/metrics": { get: { summary: "运行指标" } },
 };
 

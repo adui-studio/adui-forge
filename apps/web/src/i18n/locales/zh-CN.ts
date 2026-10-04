@@ -436,6 +436,10 @@ export const zhCN = {
     subtitle:
       "Agent 每次运行的任务与结果摘要会记录在此，并注入后续任务的系统提示，形成会话连续性。",
     empty: "还没有记忆记录——完成一次 Run 后这里会出现任务摘要",
+    enabledLabel: "记忆开关",
+    clearAll: "清空",
+    clearConfirm: "确认清空该 Agent 的全部记忆记录？",
+    cleared: "已清空 {{count}} 条记忆",
   },
   settings: {
     title: "设置",

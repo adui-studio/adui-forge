@@ -490,6 +490,7 @@ export const fetchComparison = (
   );
 
 export interface MemoryRecord {
+  id: string;
   agentName: string;
   task: string;
   status: string;
@@ -501,6 +502,39 @@ export const fetchMemory = async (agent: string): Promise<MemoryRecord[]> => {
   const response = await fetch(`/api/v1/memory?agent=${encodeURIComponent(agent)}`);
   if (!response.ok) throw new Error(`request failed: ${response.status}`);
   return (await response.json()) as MemoryRecord[];
+};
+
+/** §49 记忆管理：删除单条 / 清空 / 启停。 */
+export const deleteMemoryRecord = async (id: string): Promise<void> => {
+  const response = await fetch(`/api/v1/memory/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error(`request failed: ${response.status}`);
+};
+
+export const clearMemory = async (agent?: string): Promise<number> => {
+  const response = await fetch("/api/v1/memory/clear", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(agent === undefined ? {} : { agent }),
+  });
+  if (!response.ok) throw new Error(`request failed: ${response.status}`);
+  return ((await response.json()) as { removed: number }).removed;
+};
+
+export const fetchMemoryEnabled = async (): Promise<boolean> => {
+  const response = await fetch("/api/v1/memory/enabled");
+  if (!response.ok) throw new Error(`request failed: ${response.status}`);
+  return ((await response.json()) as { enabled: boolean }).enabled;
+};
+
+export const setMemoryEnabled = async (enabled: boolean): Promise<void> => {
+  const response = await fetch("/api/v1/memory/enabled", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ enabled }),
+  });
+  if (!response.ok) throw new Error(`request failed: ${response.status}`);
 };
 
 export interface WorkflowDefinitionRecord {

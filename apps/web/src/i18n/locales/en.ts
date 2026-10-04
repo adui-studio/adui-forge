@@ -452,6 +452,10 @@ export const en: ZhCNTranslation = {
     subtitle:
       "Each run's task and result summary is recorded here and injected into future system prompts, giving conversations continuity.",
     empty: "No memory records yet — complete a run and its summary will appear here",
+    enabledLabel: "Memory enabled",
+    clearAll: "Clear all",
+    clearConfirm: "Clear all memory records for this agent?",
+    cleared: "Cleared {{count}} record(s)",
   },
   settings: {
     title: "Settings",
