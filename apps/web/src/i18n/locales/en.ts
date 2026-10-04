@@ -444,6 +444,8 @@ export const en: ZhCNTranslation = {
     viewRun: "View run",
     reject: "Reject",
     approve: "Approve",
+    historyTitle: "Decision history",
+    historyEmpty: "No approval decisions yet — approved or rejected requests are logged here",
   },
   memory: {
     title: "Session Memory",

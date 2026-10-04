@@ -16,12 +16,18 @@ export class ApprovalsController {
     return this.approvals.list();
   }
 
+  /** 审批决策审计（最近 50 条，按决策时间倒序）。 */
+  @Get("history")
+  history() {
+    return this.approvals.history(50);
+  }
+
   @Post(":id/decision")
-  decide(
+  async decide(
     @Param("id") id: string,
     @Body(new ZodValidationPipe(decisionSchema)) input: { decision: "approved" | "rejected" },
   ) {
-    const resolved = this.approvals.resolve(id, input.decision);
+    const resolved = await this.approvals.resolve(id, input.decision);
     if (!resolved) {
       throw new UnknownApprovalError(id);
     }

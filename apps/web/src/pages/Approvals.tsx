@@ -2,8 +2,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ShieldAlert } from "lucide-react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Button, Card, Listy, Spin } from "antd";
-import { fetchPendingApprovals, submitApprovalDecision } from "@/lib/approvals.ts";
+import { Button, Card, Listy, Spin, Tag } from "antd";
+import {
+  fetchApprovalHistory,
+  fetchPendingApprovals,
+  submitApprovalDecision,
+} from "@/lib/approvals.ts";
+import { timeAgo } from "@/lib/relative-time.ts";
 
 export function ApprovalsPage() {
   const { t } = useTranslation();
@@ -19,11 +24,19 @@ export function ApprovalsPage() {
     refetchInterval: 2_000,
   });
 
+  // 审计留痕：每次决策（批准/拒绝）在服务端只追加记录
+  const { data: history } = useQuery({
+    queryKey: ["approvals-history"],
+    queryFn: fetchApprovalHistory,
+    refetchInterval: 5_000,
+  });
+
   const decision = useMutation({
     mutationFn: (input: { id: string; decision: "approved" | "rejected" }) =>
       submitApprovalDecision(input.id, input.decision),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["approvals"] });
+      void queryClient.invalidateQueries({ queryKey: ["approvals-history"] });
       void queryClient.invalidateQueries({ queryKey: ["runs"] });
     },
   });
@@ -102,6 +115,42 @@ export function ApprovalsPage() {
         <p role="alert" className="mt-3 text-sm text-red-600">
           {String(decision.error)}
         </p>
+      )}
+
+      <div className="mb-3 mt-8">
+        <h2 className="text-sm font-medium text-slate-400">{t("approvals.historyTitle")}</h2>
+      </div>
+      {(history ?? []).length === 0 ? (
+        <Card>
+          <div className="p-8 text-center text-sm text-slate-500">
+            {t("approvals.historyEmpty")}
+          </div>
+        </Card>
+      ) : (
+        <Listy
+          items={history ?? []}
+          rowKey={(entry) => entry.id}
+          itemRender={(entry) => (
+            <div className="flex flex-wrap items-center gap-3 rounded-lg border border-[#20242C] bg-[#111318] px-4 py-3">
+              <Tag color={entry.decision === "approved" ? "green" : "red"}>
+                {entry.decision === "approved" ? t("approvals.approve") : t("approvals.reject")}
+              </Tag>
+              <span className="forge-code text-sm text-slate-200">{entry.toolName}</span>
+              <span className="max-w-md truncate text-sm text-slate-500">{entry.reason}</span>
+              <span className="ml-auto flex items-center gap-3">
+                <span className="forge-code text-xs text-slate-500">
+                  {timeAgo(entry.decidedAt)}
+                </span>
+                <Link
+                  to={`/runs/${entry.runId}`}
+                  className="text-xs text-[#B79AEC] hover:underline"
+                >
+                  {t("approvals.viewRun")}
+                </Link>
+              </span>
+            </div>
+          )}
+        />
       )}
     </>
   );

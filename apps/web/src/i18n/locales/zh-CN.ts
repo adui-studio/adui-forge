@@ -428,6 +428,8 @@ export const zhCN = {
     viewRun: "查看 Run",
     reject: "拒绝",
     approve: "批准",
+    historyTitle: "审批历史",
+    historyEmpty: "还没有审批决策记录——批准或拒绝后这里会留痕",
   },
   memory: {
     title: "Session Memory",

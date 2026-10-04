@@ -96,6 +96,21 @@ model Skill {
   @@map("skills")
 }
 
+/// 审批决策审计（REQUIREMENTS §48：人工审批闭环留痕，只追加不改写）
+model ApprovalAudit {
+  id        String   @id
+  runId     String
+  toolName  String
+  input     Json     @default("{}")
+  reason    String   @default("")
+  decision  String
+  createdAt DateTime @default(now())
+  decidedAt DateTime @default(now())
+
+  @@index([decidedAt])
+  @@map("approval_audits")
+}
+
 /// Chat 会话（消息为 Web ChatMessage 形状的 Json 列表；assistant 消息关联派生 Run）
 model Conversation {
   id        String   @id

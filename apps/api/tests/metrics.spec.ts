@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vite-plus/test";
 import { ApprovalService } from "../src/approvals/approval.service";
+import { InMemoryApprovalAuditStore } from "../src/approvals/approval.audit";
 import { MemoryService } from "../src/runs/memory.service";
 import { MetricsController } from "../src/metrics/metrics.controller";
 
 describe("MetricsController", () => {
   it("aggregates run / approval / memory counters", async () => {
-    const approvals = new ApprovalService();
+    const approvals = new ApprovalService(new InMemoryApprovalAuditStore());
     const memory = new MemoryService();
     const runs = {
       listRuns: async () => [

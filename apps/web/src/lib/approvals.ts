@@ -30,3 +30,22 @@ export const submitApprovalDecision = async (
     throw new Error(`request failed: ${response.status}`);
   }
 };
+
+export interface ApprovalAuditEntry {
+  id: string;
+  runId: string;
+  toolName: string;
+  input: unknown;
+  reason: string;
+  decision: "approved" | "rejected";
+  createdAt: string;
+  decidedAt: string;
+}
+
+export const fetchApprovalHistory = async (): Promise<ApprovalAuditEntry[]> => {
+  const response = await fetch("/api/v1/approvals/history", { headers: authHeader() });
+  if (!response.ok) {
+    throw new Error(`request failed: ${response.status}`);
+  }
+  return (await response.json()) as ApprovalAuditEntry[];
+};
