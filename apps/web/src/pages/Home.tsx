@@ -27,7 +27,7 @@ export function HomePage() {
   const queryClient = useQueryClient();
   const { data: runs } = useQuery({
     queryKey: ["runs"],
-    queryFn: fetchRuns,
+    queryFn: () => fetchRuns(),
     refetchInterval: 3_000,
   });
   const { data: agents } = useQuery({

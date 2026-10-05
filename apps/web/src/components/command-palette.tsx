@@ -21,7 +21,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
 
   const { data: runs } = useQuery({
     queryKey: ["runs"],
-    queryFn: fetchRuns,
+    queryFn: () => fetchRuns(),
     enabled: open,
   });
   const { data: workflows } = useQuery({

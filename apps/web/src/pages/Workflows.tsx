@@ -27,7 +27,7 @@ export function WorkflowsPage() {
   // 与 Runs 页共用 queryKey 缓存互通
   const { data: runs } = useQuery({
     queryKey: ["runs"],
-    queryFn: fetchRuns,
+    queryFn: () => fetchRuns(),
     refetchInterval: 5_000,
   });
   const workflowRuns = (runs ?? [])

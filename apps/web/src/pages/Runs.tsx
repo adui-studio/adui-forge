@@ -14,9 +14,10 @@ export function RunsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const statusFilter = searchParams.get("status") ?? "all";
   const agentFilter = searchParams.get("agent") ?? "all";
+  // 服务端过滤：筛选视图看到的是该维度下真实的最近 200 条（而非全局 200 条的子集）
   const { data: runs, isLoading } = useQuery({
-    queryKey: ["runs"],
-    queryFn: fetchRuns,
+    queryKey: ["runs", statusFilter, agentFilter],
+    queryFn: () => fetchRuns({ status: statusFilter, agentName: agentFilter }),
     refetchInterval: 2_000,
   });
 
@@ -62,12 +63,14 @@ export function RunsPage() {
     },
   ];
 
-  const agentOptions = [...new Set((runs ?? []).map((run) => run.agentName))].sort();
-  const filtered = (runs ?? []).filter(
-    (run) =>
-      (statusFilter === "all" || run.status === statusFilter) &&
-      (agentFilter === "all" || run.agentName === agentFilter),
-  );
+  // 下拉选项 = 当前（已过滤）视图中的 Agent ∪ 当前选中项——避免选项随筛选消失
+  const agentOptions = [
+    ...new Set([
+      ...(runs ?? []).map((run) => run.agentName),
+      ...(agentFilter !== "all" ? [agentFilter] : []),
+    ]),
+  ].sort();
+  const filtered = runs ?? [];
 
   return (
     <>

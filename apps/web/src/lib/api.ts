@@ -37,8 +37,22 @@ const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
   return (await response.json()) as T;
 };
 
-export const fetchRuns = (): Promise<RunListItemRecord[]> =>
-  runsRequest<RunListItemRecord[]>(listRunsPath());
+export const fetchRuns = (filters?: {
+  status?: string;
+  agentName?: string;
+}): Promise<RunListItemRecord[]> => {
+  const params = new URLSearchParams();
+  if (filters?.status !== undefined && filters.status !== "all") {
+    params.set("status", filters.status);
+  }
+  if (filters?.agentName !== undefined && filters.agentName !== "all") {
+    params.set("agentName", filters.agentName);
+  }
+  const query = params.toString();
+  return runsRequest<RunListItemRecord[]>(
+    query === "" ? listRunsPath() : `${listRunsPath()}?${query}`,
+  );
+};
 
 /** Desktop + Runner 运行中时，Runs 数据源路由到本地 Runner；否则走云端 API。 */
 const runnerApi = async (): Promise<{
