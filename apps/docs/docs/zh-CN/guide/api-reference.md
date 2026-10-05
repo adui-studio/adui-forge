@@ -13,7 +13,7 @@ title: API 参考
 | `/agents`                           | GET / POST   | Agent 列表 / 自定义 Agent 创建更新                           |
 | `/agents/{name}`                    | GET / DELETE | Agent 详情 / 删除自定义 Agent                                |
 | `/agents/models`                    | GET          | 命名模型目录                                                 |
-| `/runs`                             | GET / POST   | Run 列表（status/agentName/limit 过滤）与创建                |
+| `/runs`                             | GET / POST   | Run 列表（浏览视图，不含事件流，默认最近 200 条）与创建      |
 | `/runs/{id}`                        | GET          | Run 详情（事件流可派生 token 用量）                          |
 | `/runs/{id}/events`                 | GET          | SSE 事件流（快照 + 实时）                                    |
 | `/runs/{id}/artifacts`              | GET          | Run 产物                                                     |

@@ -53,7 +53,7 @@ Agent 负责理解、规划、检索、修改、测试、修复与交付，高�
 
 - 云端 API 与本地 Runner 对前端暴露**同一套 REST 形状**，`PlatformAdapter` 负责分发；
 - Agent Domain（Loop / 工具 / 沙箱边界 / Skill 组装）在 `packages/`，两端共用；
-- 决策记录见 [docs/decisions/](docs/decisions/)（ADR-001 ~ ADR-008）。
+- 决策记录见 [docs/decisions/](docs/decisions/)（ADR-001 ~ ADR-009）。
 
 ---
 
@@ -86,7 +86,7 @@ push 到 main 且 `apps/docs/**` 有变更时经 [deploy-docs.yml](.github/workf
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)       | 总体架构                         |
 | [docs/CODEBASE_MAP.md](docs/CODEBASE_MAP.md)       | 代码库地图（现状）               |
 | [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md) | 项目上下文快照                   |
-| [docs/decisions/](docs/decisions/)                 | 架构决策记录（ADR-001 ~ 008）    |
+| [docs/decisions/](docs/decisions/)                 | 架构决策记录（ADR-001 ~ 009）    |
 | [CHANGELOG.md](CHANGELOG.md)                       | 版本里程碑                       |
 | [.agents/skills/](.agents/skills/)                 | 仓库级 Agent Skill               |
 | [evals/](evals/)                                   | Agent 行为评估用例               |

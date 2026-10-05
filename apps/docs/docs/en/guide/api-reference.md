@@ -13,7 +13,7 @@ Base path `/api/v1`; machine-readable description at `GET /api/v1/openapi.json`.
 | `/agents`                           | GET / POST   | List agents / create or update a custom agent                        |
 | `/agents/{name}`                    | GET / DELETE | Agent detail / delete custom agent                                   |
 | `/agents/models`                    | GET          | Named model catalog                                                  |
-| `/runs`                             | GET / POST   | List runs (status/agentName filters) and create                      |
+| `/runs`                             | GET / POST   | List runs (browse view, no event stream, latest 200) and create      |
 | `/runs/{id}`                        | GET          | Run detail (events can derive token usage)                           |
 | `/runs/{id}/events`                 | GET          | SSE event stream (snapshot + live)                                   |
 | `/runs/{id}/artifacts`              | GET          | Run artifacts                                                        |
