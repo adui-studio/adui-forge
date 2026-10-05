@@ -98,3 +98,36 @@ describe("WorkflowService", () => {
     expect(stepIds).toEqual(["n1", "gate"]);
   }, 10_000);
 });
+
+describe("Workflow 运行溯源", () => {
+  it("带来源名时 agentName 为 workflow(<name>)，无名时退回步数描述", async () => {
+    const registry = new AgentRegistry();
+    const store = new InMemoryRunStore();
+    const workflowService = new WorkflowService(store, registry, {
+      emitEvent: () => {},
+    } as unknown as RunService);
+    registry.register(
+      defineAgent({
+        name: "forge-dev",
+        description: "t",
+        systemPrompt: "sys",
+        model: {
+          async generate() {
+            return { content: "ok", toolCalls: [] };
+          },
+        },
+        tools: [] as never[],
+        loop: { maxSteps: 2, timeoutMs: 2000 },
+      }),
+    );
+
+    const named = await workflowService.createWorkflowRun({
+      name: "release-flow",
+      tasks: ["a"],
+    });
+    expect(named.agentName).toBe("workflow(release-flow)");
+
+    const unnamed = await workflowService.createWorkflowRun({ tasks: ["a", "b"] });
+    expect(unnamed.agentName).toBe("workflow(2 steps)");
+  });
+});

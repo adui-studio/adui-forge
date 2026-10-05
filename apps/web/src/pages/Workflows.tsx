@@ -34,6 +34,8 @@ export function WorkflowsPage() {
     .filter((run) => run.agentName.startsWith("workflow("))
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 8);
+  const runCountFor = (name: string): number =>
+    (runs ?? []).filter((run) => run.agentName === `workflow(${name})`).length;
 
   const remove = useMutation({
     mutationFn: (name: string) => deleteWorkflow(name),
@@ -90,6 +92,12 @@ export function WorkflowsPage() {
               title={<span className="forge-code text-sm">{workflow.name}</span>}
               description={workflow.description}
             />
+            {/* 运行溯源：agentName 为 workflow(<name>)，按名归组计数 */}
+            {runCountFor(workflow.name) > 0 && (
+              <p className="mt-2 text-xs text-slate-500">
+                {t("workflows.runCount", { count: runCountFor(workflow.name) })}
+              </p>
+            )}
             {/* §107 节点序列视觉：Neutral Steps */}
             <Steps
               className="mt-4"

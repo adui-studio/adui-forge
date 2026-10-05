@@ -15,7 +15,13 @@ import { RunService } from "../runs/run.service";
 export interface CreateWorkflowRunInput {
   /** 顺序执行的子任务列表；每个任务一个 agent 节点。 */
   tasks: string[];
+  /** 来源 Workflow 名；写入 agentName（workflow(<name>)）供运行溯源与按工作流归组。 */
+  name?: string;
 }
+
+/** Run 的 agentName 修饰：有来源名用名字，否则退回步数描述。 */
+const workflowAgentName = (name: string | undefined, fallback: string): string =>
+  name === undefined || name === "" ? `workflow(${fallback})` : `workflow(${name})`;
 
 /**
  * Workflow 运行服务：把多任务编排映射为 WorkflowRunner 的 agent 节点序列，
@@ -40,7 +46,7 @@ export class WorkflowService {
 
     const record = await this.store.create({
       id: `workflow_${globalThis.crypto.randomUUID()}`,
-      agentName: `workflow(${input.tasks.length} steps)`,
+      agentName: workflowAgentName(input.name, `${input.tasks.length} steps`),
       task: input.tasks.join(" → "),
     });
 
@@ -57,7 +63,7 @@ export class WorkflowService {
   }
 
   /** 图定义（含条件分支）执行入口：编译为 WorkflowStep[] 后走同一执行通道。 */
-  async createWorkflowRunFromGraph(graph: WorkflowGraph): Promise<RunRecord> {
+  async createWorkflowRunFromGraph(graph: WorkflowGraph, name?: string): Promise<RunRecord> {
     const agent = this.agents.get(DEFAULT_AGENT_NAME);
     if (agent === undefined) {
       throw new NotFoundException(`unknown agent: "${DEFAULT_AGENT_NAME}"`);
@@ -74,7 +80,7 @@ export class WorkflowService {
     const agentTasks = graph.nodes.filter((node) => node.type === "agent").map((node) => node.task);
     const record = await this.store.create({
       id: `workflow_${globalThis.crypto.randomUUID()}`,
-      agentName: `workflow(${graph.nodes.length} nodes)`,
+      agentName: workflowAgentName(name, `${graph.nodes.length} nodes`),
       task: agentTasks.join(" → "),
     });
 

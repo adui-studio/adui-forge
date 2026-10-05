@@ -75,8 +75,8 @@ export class WorkflowsRegistryController {
     // 注册表实现可能为同步（内存）或异步（Prisma），统一收敛为 Promise
     const definition = await Promise.resolve(this.registry.get(name));
     if (definition.graph !== undefined) {
-      return this.workflows.createWorkflowRunFromGraph(definition.graph);
+      return this.workflows.createWorkflowRunFromGraph(definition.graph, name);
     }
-    return this.workflows.createWorkflowRun({ tasks: definition.tasks });
+    return this.workflows.createWorkflowRun({ tasks: definition.tasks, name });
   }
 }
