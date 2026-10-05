@@ -59,6 +59,34 @@ class RunRecord {
       const {'completed', 'failed', 'cancelled', 'timeout'}.contains(status);
 }
 
+class ApprovalAuditEntry {
+  ApprovalAuditEntry({
+    required this.id,
+    required this.runId,
+    required this.toolName,
+    required this.reason,
+    required this.decision,
+    required this.decidedAt,
+  });
+
+  final String id;
+  final String runId;
+  final String toolName;
+  final String reason;
+  final String decision;
+  final String decidedAt;
+
+  factory ApprovalAuditEntry.fromJson(Map<String, dynamic> json) =>
+      ApprovalAuditEntry(
+        id: json['id'] as String,
+        runId: json['runId'] as String,
+        toolName: json['toolName'] as String,
+        reason: (json['reason'] as String?) ?? '',
+        decision: (json['decision'] as String?) ?? 'approved',
+        decidedAt: (json['decidedAt'] as String?) ?? '',
+      );
+}
+
 class PendingApproval {
   PendingApproval({
     required this.id,
@@ -314,6 +342,19 @@ class ForgeApiClient {
       options: await _auth(),
     );
     return response.data!.map((item) => item as Map<String, dynamic>).toList();
+  }
+
+  /// 审批决策审计（最近 50 条，与 Web 端同源）。
+  Future<List<ApprovalAuditEntry>> fetchApprovalHistory() async {
+    final response = await _dio.get<List<dynamic>>(
+      '/approvals/history',
+      options: await _auth(),
+    );
+    return response.data!
+        .map(
+          (item) => ApprovalAuditEntry.fromJson(item as Map<String, dynamic>),
+        )
+        .toList();
   }
 
   Future<List<PendingApproval>> listPendingApprovals() async {

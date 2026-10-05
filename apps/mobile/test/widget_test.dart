@@ -58,6 +58,18 @@ class FakeApiClient extends ForgeApiClient {
   }
 
   @override
+  Future<List<ApprovalAuditEntry>> fetchApprovalHistory() async => [
+    ApprovalAuditEntry.fromJson({
+      'id': 'appr_hist_1',
+      'runId': 'run_1',
+      'toolName': 'shell_exec',
+      'reason': '高风险 Shell',
+      'decision': 'approved',
+      'decidedAt': '2026-10-06T08:00:00.000Z',
+    }),
+  ];
+
+  @override
   Future<List<Map<String, dynamic>>> fetchAgents() async => [
     {'name': 'scout', 'description': '探索者', 'model': 'gpt-x'},
   ];
@@ -120,8 +132,9 @@ void main() {
     await tester.tap(find.byTooltip('审批'));
     await tester.pumpAndSettle();
 
-    expect(find.text('shell_exec'), findsOneWidget);
+    expect(find.text('shell_exec'), findsNWidgets(2)); // 待审批 + 历史各一
     expect(find.text('批准'), findsOneWidget);
+    expect(find.textContaining('高风险 Shell'), findsOneWidget);
 
     await tester.tap(find.text('批准'));
     await tester.pumpAndSettle();

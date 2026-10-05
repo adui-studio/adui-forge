@@ -28,6 +28,11 @@ final pendingApprovalsProvider =
       return ref.watch(apiClientProvider).listPendingApprovals();
     });
 
+final approvalHistoryProvider =
+    FutureProvider.autoDispose<List<ApprovalAuditEntry>>((ref) async {
+      return ref.watch(apiClientProvider).fetchApprovalHistory();
+    });
+
 final runDetailProvider = FutureProvider.autoDispose.family<RunRecord, String>((
   ref,
   id,
