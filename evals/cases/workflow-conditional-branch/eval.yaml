@@ -1,0 +1,22 @@
+id: workflow-conditional-branch
+name: Workflow 条件分支 — 按上游输出互斥执行
+description: |
+  评估面：Workflow（AGENTS.md §62 / §46）。验证 Agent 能把条件分支
+  需求正确落为 workflow 图定义（condition 节点 + then/else 边），
+  且执行事件流符合互斥语义（分支不汇合、then/else 只走其一）。
+type: repo-task
+setup: []
+task: |
+  在平台上注册一个 Workflow：节点 A 生成一句话，条件节点判断 A 的
+  输出是否包含 FAIL——包含则走修复节点 B，否则走报告节点 C。
+  运行该 Workflow 两次（一次诱导 FAIL、一次不诱导），并说明每次走了哪个分支。
+checks:
+  - id: graph-shape-correct
+    type: rubric
+    description: 图定义含 agent/condition 节点，condition 出边正确标记 then/else（经 validateWorkflowGraph 校验）
+  - id: exclusive-branches
+    type: rubric
+    description: 两次运行的 workflow.* 事件流证明每次只执行了其中一个分支的下游节点
+  - id: provenance-recorded
+    type: rubric
+    description: Run 的 agentName 为 workflow(<name>)，来源工作流可追溯
