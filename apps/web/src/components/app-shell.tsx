@@ -27,6 +27,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { fetchHealth, fetchPendingApprovals } from "@/lib/approvals-metrics.ts";
 import { clearToken, getAccessToken } from "@/lib/auth.ts";
 import { CommandPalette } from "@/components/command-palette.tsx";
+import { appVersion } from "@/platform/adapter.ts";
 
 const { Sider, Content, Header } = Layout;
 
@@ -161,7 +162,7 @@ function StatusFooter() {
             ? "nav.apiOffline"
             : "nav.apiChecking",
       )}
-      <span className="ml-auto font-mono text-[10px] text-slate-600">v1.2.7</span>
+      <span className="ml-auto font-mono text-[10px] text-slate-600">v{appVersion}</span>
     </div>
   );
 }

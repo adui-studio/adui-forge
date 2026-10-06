@@ -4,7 +4,8 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { defineConfig } from "vite-plus";
 
-const pkg = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"));
+// 版本号单一来源是仓库根 package.json（发版只 bump 它），构建时注入 __APP_VERSION__
+const pkg = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"));
 
 export default defineConfig({
   define: {
