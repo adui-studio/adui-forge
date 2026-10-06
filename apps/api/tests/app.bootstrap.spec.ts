@@ -13,9 +13,10 @@ import { describe, it } from "vite-plus/test";
  */
 describe("AppModule 装配", () => {
   it("boots the real API and serves /health", { timeout: 300_000 }, async () => {
-    // 端口可配置：Windows winnat 动态保留范围可能恰好盖住默认端口（EACCES），
-    // 本地用 SMOKE_PORT 换端口即可；CI 保持默认 3999。
-    const port = Number(process.env.SMOKE_PORT ?? "3999");
+    // 端口选择：CI（linux）用默认 3999；Windows 上 winnat 动态保留范围
+    // （netsh excludedportrange）可能恰好盖住 3999 导致 EACCES，故 win32
+    // 默认换 4460；两者都可经 SMOKE_PORT 显式覆盖。
+    const port = Number(process.env.SMOKE_PORT ?? (process.platform === "win32" ? "4460" : "3999"));
     const child = spawn("pnpm exec tsx src/main.ts", {
       cwd: process.cwd(),
       shell: true,

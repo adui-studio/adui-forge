@@ -21,14 +21,14 @@ catalog:
   "@monaco-editor/react": ^4.7.0
   "@nestjs/common": ^12.0.1
   "@nestjs/core": ^12.0.1
-  "@nestjs/platform-fastify": ^12.0.1
+  "@nestjs/platform-fastify": ^12.1.2
   "@node-rs/argon2": ^2.1.0
   "@prisma/client": ^7.10.0
   "@resvg/resvg-js": ^2.6.2
   "@rspress/core": ^2.0.21
   "@tailwindcss/vite": ^4.3.3
   "@tanstack/react-query": ^5.102.8
-  "fastify": ^5.3.2
+  "fastify": ^5.12.5
   "@tauri-apps/cli": ^2.11.4
   "@types/node": ^24.13.3
   "@types/react": ^19.2.18
@@ -65,6 +65,11 @@ catalog:
   "@xterm/addon-fit": ^0.11.0
 overrides:
   vite: "catalog:"
+  # 安全升级（pnpm audit）：传递依赖的补丁版超出父包声明范围，显式钉住
+  # dompurify（经 monaco-editor，GHSA-c2j3-45gr-mqc4 等 3 项 XSS 修补 ≥3.4.13）
+  dompurify: ^3.4.16
+  # deepmerge-ts（经 @prisma/config，GHSA-ggr8-5vv4-36mx 原型污染 ≥8.0.0）
+  deepmerge-ts: ^8.0.2
 peerDependencyRules:
   allowAny:
     - vite
