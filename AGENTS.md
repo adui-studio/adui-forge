@@ -657,6 +657,8 @@ Zod
 
 # 17. Web 与 Desktop
 
+> **2026-10-07 更新**：本节被 [ADR-011](docs/decisions/ADR-011.md) 部分替代——桌面端已切换为独立前端 apps/desktop-ui（Svelte 5），不再复用 Web UI；packages/ 领域层继续两端共享。
+
 Desktop 必须最大程度复用 Web React UI。
 
 禁止：

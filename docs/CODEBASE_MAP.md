@@ -1,7 +1,7 @@
 # ADui Forge — CODEBASE_MAP.md
 
 > 代码库地图：当前实际结构。
-> 最后更新：2026-10-06（v1.2.8 + ADR-010）
+> 最后更新：2026-10-07（v1.3.0，ADR-011）
 
 ---
 
@@ -43,14 +43,15 @@ adui-forge/
 
 # 2. apps/
 
-| 目录           | 职责                                                                         | 技术栈                                       |
-| -------------- | ---------------------------------------------------------------------------- | -------------------------------------------- |
-| `apps/api`     | 云端平台 API（`/api/v1`）                                                    | NestJS 12 · Fastify · Prisma                 |
-| `apps/web`     | 工作台 / 管理平台 / Workspace IDE（桌面壳共用）                              | React 19 · antd 6 · TanStack Query · i18next |
-| `apps/desktop` | 桌面 Shell：窗口 + 系统能力 + Runner 进程管理                                | Tauri 2 · Rust                               |
-| `apps/runner`  | Local Runner：本地 workspace/runs/审批/终端                                  | Fastify · Bun sidecar                        |
-| `apps/mobile`  | Chat（Agent 选择）/ Runs / 审批+历史 / 对比查看与统计 / 技能库 / 任务 / 设置 | Flutter · Riverpod · go_router               |
-| `apps/docs`    | 文档站                                                                       | Rspress 2                                    |
+| 目录              | 职责                                                                         | 技术栈                                       |
+| ----------------- | ---------------------------------------------------------------------------- | -------------------------------------------- |
+| `apps/api`        | 云端平台 API（`/api/v1`）                                                    | NestJS 12 · Fastify · Prisma                 |
+| `apps/web`        | 工作台 / 管理平台 / Workspace IDE（桌面壳共用）                              | React 19 · antd 6 · TanStack Query · i18next |
+| `apps/desktop`    | 桌面 Shell：窗口 + 系统能力 + Runner 进程管理                                | Tauri 2 · Rust                               |
+| `apps/desktop-ui` | 独立桌面前端（不套壳 Web，ADR-011）：服务器 / 登录 / Runner / Runs           | Svelte 5 · Tailwind v4                       |
+| `apps/runner`     | Local Runner：本地 workspace/runs/审批/终端                                  | Fastify · Bun sidecar                        |
+| `apps/mobile`     | Chat（Agent 选择）/ Runs / 审批+历史 / 对比查看与统计 / 技能库 / 任务 / 设置 | Flutter · Riverpod · go_router               |
+| `apps/docs`       | 文档站                                                                       | Rspress 2                                    |
 
 ## 2.1 apps/api 模块（NestJS，全部显式 token 注入）
 
