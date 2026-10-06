@@ -4,8 +4,8 @@
   "version": "1.2.8",
   "identifier": "com.aduistudio.forge",
   "build": {
-    "devUrl": "http://localhost:5175",
-    "frontendDist": "../../web/dist"
+    "devUrl": "http://localhost:5176",
+    "frontendDist": "../../desktop-ui/dist"
   },
   "app": {
     "windows": [

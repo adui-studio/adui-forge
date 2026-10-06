@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+/* 桌面端专属深色基调：与品牌电光绿/深紫同源，密度高于 Web 端 */
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: #060609;
+  color: #e2e8f0;
+  font-family:
+    "Segoe UI Variable Display",
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    "PingFang SC",
+    "Microsoft YaHei UI",
+    sans-serif;
+}
+
+#app {
+  height: 100%;
+}
+
+/* 窗口拖拽区（Tauri decorations 关闭时的自定义标题栏预留） */
+[data-tauri-drag-region] {
+  app-region: drag;
+}
