@@ -1,7 +1,7 @@
 # ADui Forge — CODEBASE_MAP.md
 
 > 代码库地图：当前实际结构。
-> 最后更新：2026-09-13（v0.7.0）
+> 最后更新：2026-10-06（v1.2.6）
 
 ---
 
@@ -31,26 +31,26 @@ adui-forge/
 │  ├─ ARCHITECTURE.md         # 总体架构
 │  ├─ PROJECT_CONTEXT.md      # 项目上下文快照
 │  ├─ CODEBASE_MAP.md         # 本文件
-│  └─ decisions/              # 架构决策记录（ADR-001 ~ ADR-007）
+│  └─ decisions/              # 架构决策记录（ADR-001 ~ ADR-009）
 │
 ├─ .agents/skills/            # 仓库级 Agent Skill（plan / bug-fixing / conventional-* 等）
 ├─ evals/                     # Agent 行为评估
 ├─ infra/                     # docker-compose（PostgreSQL / Redis 开发实例）
-└─ scripts/                   # 发版 / 导入 / 构建辅助脚本（build-runner.mjs 等）
+└─ scripts/                   # 发版 / 导入 / 构建辅助脚本（build-runner.mjs、release-notes.mjs 等）
 ```
 
 ---
 
 # 2. apps/
 
-| 目录           | 职责                                            | 技术栈                                       |
-| -------------- | ----------------------------------------------- | -------------------------------------------- |
-| `apps/api`     | 云端平台 API（`/api/v1`）                       | NestJS 12 · Fastify · Prisma                 |
-| `apps/web`     | 工作台 / 管理平台 / Workspace IDE（桌面壳共用） | React 19 · antd 6 · TanStack Query · i18next |
-| `apps/desktop` | 桌面 Shell：窗口 + 系统能力 + Runner 进程管理   | Tauri 2 · Rust                               |
-| `apps/runner`  | Local Runner：本地 workspace/runs/审批/终端     | Fastify · Bun sidecar                        |
-| `apps/mobile`  | Runs / 审批 / Chat / 设置（连云端或本地 API）   | Flutter · Riverpod · go_router               |
-| `apps/docs`    | 文档站                                          | Rspress 2                                    |
+| 目录           | 职责                                                                         | 技术栈                                       |
+| -------------- | ---------------------------------------------------------------------------- | -------------------------------------------- |
+| `apps/api`     | 云端平台 API（`/api/v1`）                                                    | NestJS 12 · Fastify · Prisma                 |
+| `apps/web`     | 工作台 / 管理平台 / Workspace IDE（桌面壳共用）                              | React 19 · antd 6 · TanStack Query · i18next |
+| `apps/desktop` | 桌面 Shell：窗口 + 系统能力 + Runner 进程管理                                | Tauri 2 · Rust                               |
+| `apps/runner`  | Local Runner：本地 workspace/runs/审批/终端                                  | Fastify · Bun sidecar                        |
+| `apps/mobile`  | Chat（Agent 选择）/ Runs / 审批+历史 / 对比查看与统计 / 技能库 / 任务 / 设置 | Flutter · Riverpod · go_router               |
+| `apps/docs`    | 文档站                                                                       | Rspress 2                                    |
 
 ## 2.1 apps/api 模块（NestJS，全部显式 token 注入）
 
@@ -58,17 +58,17 @@ adui-forge/
 | ---------------- | ---------------- | ----------------------------------------------------------- |
 | `auth/`          | `/auth`          | 用户注册 / 登录（argon2 + JWT）                             |
 | `agents/`        | `/agents`        | Agent 注册表、自定义 Agent 配置、模型目录、工具池、MCP 观测 |
-| `approvals/`     | `/approvals`     | 云端运行中审批闭环                                          |
+| `approvals/`     | `/approvals`     | 云端运行中审批闭环 + 决策审计（/approvals/history）         |
 | `compare/`       | `/comparisons`   | 对比批次存储 + 从 Run 派生结果 + 跨批次统计                 |
 | `conversations/` | `/conversations` | Chat 会话持久化与消息追加                                   |
 | `health/`        | `/health`        | 存活 + DB 状态                                              |
 | `metrics/`       | `/metrics`       | Token / Run 指标                                            |
 | `openapi/`       | `/openapi`       | OpenAPI 规范                                                |
-| `runs/`          | `/runs`          | Run CRUD + SSE + 取消 + Session Memory                      |
-| `skills/`        | `/skills`        | Skill 库 CRUD / 启停 / SKILL.md 导入                        |
+| `runs/`          | `/runs`          | Run CRUD + SSE + 取消 + Session Memory（可删除/清空/关闭）  |
+| `skills/`        | `/skills`        | Skill 库 CRUD / 市场六步（bundled/粘贴/技能包/统计）/ 启停  |
 | `tasks/`         | `/tasks`         | 任务台账（创建派生 Run，列表实时回填状态）                  |
 | `workflows/`     | `/workflows`     | Workflow 定义注册 / 图执行                                  |
-| `workspace/`     | `/workspace`     | 文件 tree/read/write/delete + Git 面板后端                  |
+| `workspace/`     | `/workspace`     | 文件 tree/read/write/delete/search + Git 面板后端           |
 
 Agent 装配核心在 `agents/agent.factory.ts`（工具池 / 构建上下文 / 模型目录）与
 `agents/agent-config.service.ts`（自定义配置 ↔ 注册表同步 + Skill 注入）。
@@ -81,7 +81,7 @@ src/
 ├─ components/                # app-shell（侧栏/命令面板）、workspace/{file-tree, agent-panel, terminal-panel}
 ├─ pages/                     # Home / Runs / RunDetail / Tasks / Chat / Agents / AgentDetail /
 │                             # Workflows / WorkflowEditor / Skills / Tools / Mcp /
-│                             # Approvals / Memory / Compare / Settings / Login
+│                             # Approvals / Memory / Compare / Settings / Login / NotFound
 ├─ lib/                       # api（REST 封装）、chat、compare、i18n、status、相对时间等
 ├─ hooks/                     # use-run-notifications（系统通知）
 └─ platform/                  # PlatformAdapter（web/desktop 分发：Runner、通知、外链）
@@ -123,16 +123,17 @@ src/
 
 # 4. 数据与持久化
 
-| 表              | 用途                              | 迁移                            |
-| --------------- | --------------------------------- | ------------------------------- |
-| `runs`          | Run 记录 + 事件流（Json）         | 20260829000000_init             |
-| `users`         | 平台用户                          | 20260829000001_users            |
-| `tasks`         | 任务台账                          | 20260829000002_tasks            |
-| `workflows`     | Workflow 定义（linear / graph）   | 20260829000003 + 20260912000000 |
-| `agent_configs` | 自定义 Agent（含 model / skills） | 20260912010000 + 20260912020000 |
-| `conversations` | Chat 会话（消息 Json）            | 20260912030000                  |
-| `skills`        | Skill 指令库                      | 20260912040000                  |
-| `comparisons`   | 对比批次                          | 20260912050000                  |
+| 表                | 用途                               | 迁移                            |
+| ----------------- | ---------------------------------- | ------------------------------- |
+| `runs`            | Run 记录 + 事件流（Json）          | 20260829000000_init             |
+| `users`           | 平台用户                           | 20260829000001_users            |
+| `tasks`           | 任务台账                           | 20260829000002_tasks            |
+| `workflows`       | Workflow 定义（linear / graph）    | 20260829000003 + 20260912000000 |
+| `agent_configs`   | 自定义 Agent（含 model / skills）  | 20260912010000 + 20260912020000 |
+| `conversations`   | Chat 会话（消息 Json）             | 20260912030000                  |
+| `skills`          | Skill 指令库（bundled_version 列） | 20260912040000 + 20261001000000 |
+| `approval_audits` | 审批决策审计（只追加）             | 20261002000000                  |
+| `comparisons`     | 对比批次                           | 20260912050000                  |
 
 未配置 `DATABASE_URL` 时：全部模块显式降级为内存实现（各 `*.store.ts` 双实现）。
 
