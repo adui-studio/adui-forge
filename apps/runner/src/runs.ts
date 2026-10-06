@@ -20,13 +20,49 @@ export type RunnerRunListItem = Omit<RunnerRunRecord, "events">;
 
 const TERMINAL_STATUSES = new Set(["completed", "failed", "cancelled"]);
 
-/** Runner 本地 Runs 服务：内存存储 + 后台执行 + SSE 订阅（与云端 API 同形语义）。 */
+/**
+ * 运行持久化契约（ADR-010）：每次变更整行落库，Runner 重启时恢复。
+ * SQLite 实现仅在 Bun sidecar 下启用（bun:sqlite）；Node/tsx 开发态回退内存。
+ */
+export interface RunnerRunPersistence {
+  upsert(record: RunnerRunRecord): void;
+  /** 按 createdAt 倒序返回全部持久化 Run（含 events）。 */
+  loadAll(): RunnerRunRecord[];
+  close?(): void;
+}
+
+/** 非终态 Run 在重启后的收敛语义：执行进程已死，显式置败而非永久悬挂。 */
+const RESTART_ERROR = "runner restarted before completion";
+
+/** Runner 本地 Runs 服务：内存工作集 + 可选持久化 + 后台执行 + SSE 订阅。 */
 export class RunnerRunService {
   readonly #runs = new Map<string, RunnerRunRecord>();
   readonly #subscribers = new Map<string, Set<Subscriber>>();
   readonly #controllers = new Map<string, AbortController>();
+  readonly #persistence?: RunnerRunPersistence;
 
-  constructor(private readonly registry: AgentRegistry) {}
+  constructor(
+    private readonly registry: AgentRegistry,
+    persistence?: RunnerRunPersistence,
+  ) {
+    this.#persistence = persistence;
+    if (persistence === undefined) return;
+    // 恢复历史（loadAll 倒序，倒插使 Map 保持"旧→新"插入序）；
+    // 非终态 Run 的执行进程已随上次退出消失，显式收敛为 failed。
+    for (const record of [...persistence.loadAll()].reverse()) {
+      if (!TERMINAL_STATUSES.has(record.status)) {
+        record.status = "failed";
+        record.finishedAt = record.finishedAt ?? new Date().toISOString();
+        record.error = record.error ?? RESTART_ERROR;
+        persistence.upsert(record);
+      }
+      this.#runs.set(record.id, record);
+    }
+  }
+
+  #persist(record: RunnerRunRecord): void {
+    this.#persistence?.upsert(record);
+  }
 
   create(input: { task: string; agentName?: string }): RunnerRunRecord {
     const agent: Agent | undefined = this.registry.get(input.agentName ?? "forge-local");
@@ -43,6 +79,7 @@ export class RunnerRunService {
     };
     this.#runs.set(record.id, record);
     this.#subscribers.set(record.id, new Set());
+    this.#persist(record);
 
     // 创建即返回，执行在后台推进（AGENTS.md §30）
     const controller = new AbortController();
@@ -99,9 +136,11 @@ export class RunnerRunService {
     if (record === undefined) return;
     record.status = "running";
     record.startedAt = new Date().toISOString();
+    this.#persist(record);
 
     const emit = (event: AgentEvent): void => {
       record.events.push(event);
+      this.#persist(record);
       for (const subscriber of this.#subscribers.get(runId) ?? []) subscriber(event);
     };
 
@@ -120,5 +159,6 @@ export class RunnerRunService {
     record.finishedAt = new Date().toISOString();
     record.error = result.error;
     this.#controllers.delete(runId);
+    this.#persist(record);
   }
 }

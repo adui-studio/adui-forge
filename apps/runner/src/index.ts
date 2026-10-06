@@ -1,5 +1,6 @@
 import { buildLocalAgents } from "./agents.ts";
 import { RunnerApprovalService } from "./approvals.ts";
+import { createSqliteRunPersistence } from "./run-store-sqlite.ts";
 import { RunnerRunService } from "./runs.ts";
 import { buildServer } from "./server.ts";
 
@@ -27,7 +28,16 @@ const agents = buildLocalAgents({
   trustedLocalMode,
   createPending: (request) => approvals.createPending(request),
 });
-const runs = agents === null ? undefined : new RunnerRunService(agents);
+
+// 运行持久化（ADR-010）：FORGE_RUNNER_DB 由 Desktop Shell 注入
+// （app_data_dir/runner-runs.db）；未注入或 Node/tsx 开发态回退内存。
+const dbPath = process.env.FORGE_RUNNER_DB;
+const persistence =
+  dbPath === undefined || dbPath === "" ? null : await createSqliteRunPersistence(dbPath);
+if (dbPath !== undefined && dbPath !== "" && persistence === null) {
+  console.warn("FORGE_RUNNER_DB set but sqlite unavailable (non-Bun runtime); runs are in-memory");
+}
+const runs = agents === null ? undefined : new RunnerRunService(agents, persistence ?? undefined);
 if (runs === undefined) {
   console.warn("FORGE_MODEL_* not configured; local runs disabled (workspace-only mode)");
 }

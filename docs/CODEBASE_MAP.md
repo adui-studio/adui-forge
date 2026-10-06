@@ -1,7 +1,7 @@
 # ADui Forge — CODEBASE_MAP.md
 
 > 代码库地图：当前实际结构。
-> 最后更新：2026-10-06（v1.2.6）
+> 最后更新：2026-10-06（v1.2.8 + ADR-010）
 
 ---
 
@@ -31,7 +31,7 @@ adui-forge/
 │  ├─ ARCHITECTURE.md         # 总体架构
 │  ├─ PROJECT_CONTEXT.md      # 项目上下文快照
 │  ├─ CODEBASE_MAP.md         # 本文件
-│  └─ decisions/              # 架构决策记录（ADR-001 ~ ADR-009）
+│  └─ decisions/              # 架构决策记录（ADR-001 ~ ADR-010）
 │
 ├─ .agents/skills/            # 仓库级 Agent Skill（plan / bug-fixing / conventional-* 等）
 ├─ evals/                     # Agent 行为评估
@@ -94,7 +94,8 @@ src/
 ├─ index.ts                   # 入口：环境变量校验 + 装配 + 监听 127.0.0.1
 ├─ server.ts                  # Fastify：workspace/runs/审批/终端 同形 REST + token 握手
 ├─ agents.ts                  # 本地 Agent 装配（FORGE_MODEL_* + 文件工具 + Trusted Shell/Git）
-├─ runs.ts                    # 内存 Runs 服务（后台执行 + SSE 订阅 + 取消）
+├─ runs.ts                    # Runs 服务（后台执行 + SSE 订阅 + 取消 + 持久化钩子）
+├─ run-store-sqlite.ts        # bun:sqlite 持久化（ADR-010；Node dev 回退内存）
 └─ approvals.ts               # 本地审批服务（Pending + 决策 resolve）
 ```
 

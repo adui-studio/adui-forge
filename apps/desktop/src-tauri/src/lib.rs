@@ -92,6 +92,18 @@ fn spawn_runner(
     .env("RUNNER_TOKEN", &token)
     .env("RUNNER_PORT", "0")
     .env("FORGE_TRUSTED_LOCAL_MODE", if trusted_local_mode { "1" } else { "0" })
+    // 运行持久化（ADR-010）：SQLite 落在用户数据目录，不污染工作区
+    .env(
+      "FORGE_RUNNER_DB",
+      app
+        .path()
+        .app_data_dir()
+        .map(|dir| {
+          let _ = std::fs::create_dir_all(&dir);
+          dir.join("runner-runs.db").to_string_lossy().to_string()
+        })
+        .unwrap_or_default(),
+    )
     .stdout(Stdio::piped())
     .spawn()
     .map_err(|error| format!("failed to spawn runner: {error}"))?;
