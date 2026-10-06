@@ -13,11 +13,14 @@ import { describe, it } from "vite-plus/test";
  */
 describe("AppModule 装配", () => {
   it("boots the real API and serves /health", { timeout: 300_000 }, async () => {
+    // 端口可配置：Windows winnat 动态保留范围可能恰好盖住默认端口（EACCES），
+    // 本地用 SMOKE_PORT 换端口即可；CI 保持默认 3999。
+    const port = Number(process.env.SMOKE_PORT ?? "3999");
     const child = spawn("pnpm exec tsx src/main.ts", {
       cwd: process.cwd(),
       shell: true,
       detached: process.platform !== "win32",
-      env: { ...process.env, PORT: "3999" },
+      env: { ...process.env, PORT: String(port) },
       stdio: ["ignore", "pipe", "pipe"],
     });
     let stdoutText = "";
@@ -48,7 +51,7 @@ describe("AppModule 装配", () => {
       for (let attempt = 0; attempt < 240 && !healthy; attempt += 1) {
         await new Promise((resolve) => setTimeout(resolve, 500));
         try {
-          const response = await fetch("http://localhost:3999/api/v1/health");
+          const response = await fetch(`http://localhost:${port}/api/v1/health`);
           if (response.status === 200) {
             healthy = true;
           }
@@ -68,6 +71,26 @@ describe("AppModule 装配", () => {
           `API did not become healthy in 120s. ` +
             `stdout:\n${stdoutText.slice(-1500)}\nstderr:\n${stderrText.slice(-1500)}`,
         );
+      }
+
+      // 路由注册冒烟：健康只证明模块装配，以下证明新增域的路由真实可达
+      // （200 = 存在且可用；404 = 服务端显式降级语义，同样证明路由已注册；
+      //   两者之外的断言失败即路由缺失/装饰器错误）。
+      const routeChecks: Array<{ path: string; allowed: number[] }> = [
+        { path: "/api/v1/memory/enabled", allowed: [200] },
+        { path: "/api/v1/approvals/history", allowed: [200] },
+        { path: "/api/v1/skills/usage", allowed: [200] },
+        { path: "/api/v1/comparisons/stats", allowed: [200] },
+        { path: "/api/v1/workspace/search?q=x", allowed: [200, 404] },
+      ];
+      for (const route of routeChecks) {
+        const response = await fetch(`http://localhost:${port}${route.path}`);
+        if (!route.allowed.includes(response.status)) {
+          throw new Error(
+            `route ${route.path} responded ${String(response.status)} ` +
+              `(expected ${route.allowed.join("/")})`,
+          );
+        }
       }
     } finally {
       cleanup();

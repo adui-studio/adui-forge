@@ -109,7 +109,7 @@ export class WorkspaceController {
       return await operation();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      if (message.includes("未配置 FORGE_WORKSPACE_ROOT")) {
+      if (message.includes("FORGE_WORKSPACE_ROOT")) {
         throw new NotFoundException(message);
       }
       if (message.includes("escapes workspace boundary") || message.includes("not exist")) {
