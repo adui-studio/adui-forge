@@ -6,12 +6,13 @@ title: Desktop & Mobile
 
 ## Desktop (Tauri 2)
 
-`apps/desktop` reuses the entire React UI from `apps/web`; the Rust layer only
-provides the native bridge and the Local Runner process lifecycle.
+`apps/desktop` uses its own frontend `apps/desktop-ui` (Svelte 5, not a Web shell,
+ADR-011); the Rust layer only provides the native bridge and the Local Runner
+process lifecycle.
 
-- Run: start `pnpm --filter @adui-forge/web dev` (:5175), then
+- Run: start `pnpm --filter @adui-forge/desktop-ui dev` (:5176), then
   `pnpm --filter @adui-forge/desktop dev`
-- Bundle: `pnpm --filter @adui-forge/web build`, then
+- Bundle: `pnpm --filter @adui-forge/desktop-ui build`, then
   `pnpm --filter @adui-forge/desktop bundle`
 - Platform differences go through the **PlatformAdapter**
   (`apps/web/src/platform/adapter.ts`): the runner lifecycle, notifications and

@@ -6,11 +6,11 @@ title: Desktop 与 Mobile
 
 ## Desktop（Tauri 2）
 
-`apps/desktop` 复用 `apps/web` 的整套 React UI，Rust 层只承担 Native Bridge。
+`apps/desktop` 使用独立桌面前端 `apps/desktop-ui`（Svelte 5，不套壳 Web，ADR-011）；Rust 层只承担 Native Bridge 与 Runner 进程生命周期。
 
-- 运行：先起 `pnpm --filter @adui-forge/web dev`（:5175），
+- 运行：先起 `pnpm --filter @adui-forge/desktop-ui dev`（:5176），
   再 `pnpm --filter @adui-forge/desktop dev`
-- 打包：`pnpm --filter @adui-forge/web build` 后执行
+- 打包：`pnpm --filter @adui-forge/desktop-ui build` 后执行
   `pnpm --filter @adui-forge/desktop bundle`
 - 平台差异经 **PlatformAdapter** 抽象（`apps/web/src/platform/adapter.ts`）：
   Web 用 `window.open`，Desktop 经 opener 插件走系统浏览器；

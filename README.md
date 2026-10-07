@@ -120,14 +120,17 @@ pnpm --filter @adui-forge/web dev -- --port 5175   # Web :5175（桌面壳共用
 ## 桌面端（Tauri）
 
 ```bash
-pnpm --filter @adui-forge/web build      # 构建前端资源
+pnpm --filter @adui-forge/desktop-ui build # 构建桌面前端（Svelte 5，ADR-011）
 node scripts/build-runner.mjs windows-x64  # 构建 Runner sidecar
 pnpm --filter @adui-forge/desktop bundle # 产出 NSIS / MSI 安装包
 ```
 
-安装后：工作区页指定本地目录 → 「启动 Local Runner」→ 文件编辑 / Git / 终端 /
-本地 Agent 全部走本机进程；Shell/Git 能力需在工作区页显式开启
-**Trusted Local Mode**（默认关闭，开启后高风险操作仍需审批）。
+开发态预览：先 `pnpm --filter @adui-forge/desktop-ui dev`（:5176），
+再 `pnpm --filter @adui-forge/desktop dev`。
+
+安装后（v1.3.1 起）：新 UI 内配置服务器地址 → 登录（云端数据自动同步）→
+「Local Runner」段指定工作区目录启动本机进程；Trusted Local Mode 开启后
+可直接在 UI 内完成本地审批。本地 Run 历史经 SQLite 持久化，重启不丢。
 
 ## 本地 Runner（独立运行）
 
