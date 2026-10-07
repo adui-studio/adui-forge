@@ -3,6 +3,7 @@
     login,
     fetchCloudRuns,
     fetchHealth,
+    fetchLocalRuns,
     type CloudRunListItem,
     type HealthResult,
   } from "./lib/api.ts";
@@ -41,6 +42,10 @@
   let workspaceRoot = $state("");
   let trustedMode = $state(false);
   let runnerBusy = $state(false);
+
+  let localRuns = $state<CloudRunListItem[]>([]);
+  let localRunsError = $state("");
+  let loadingLocalRuns = $state(false);
 
   const desktop = $derived(isTauri());
   const hasServer = $derived(getServerAddress() !== "");
@@ -94,12 +99,31 @@
 
   const refreshRunner = async (): Promise<void> => {
     runner = await invokeRunnerStatus();
+    if (runner?.running === true && runner.baseUrl !== null) {
+      void loadLocalRuns();
+    }
+  };
+
+  const loadLocalRuns = async (): Promise<void> => {
+    if (runner?.running !== true || runner.baseUrl === null) return;
+    loadingLocalRuns = true;
+    localRunsError = "";
+    try {
+      localRuns = await fetchLocalRuns({ baseUrl: runner.baseUrl, token: runner.token });
+    } catch (error) {
+      localRunsError = String(error);
+    } finally {
+      loadingLocalRuns = false;
+    }
   };
 
   const startRunner = async (): Promise<void> => {
     runnerBusy = true;
     try {
       runner = await invokeStartRunner(workspaceRoot, trustedMode);
+      if (runner?.running === true && runner.baseUrl !== null) {
+        void loadLocalRuns();
+      }
     } finally {
       runnerBusy = false;
     }
@@ -110,6 +134,8 @@
     try {
       await invokeStopRunner();
       runner = await invokeRunnerStatus();
+      localRuns = [];
+      localRunsError = "";
     } finally {
       runnerBusy = false;
     }
@@ -239,6 +265,42 @@
             <span class="text-xs text-slate-600">未运行</span>
           {/if}
         </div>
+
+        {#if runner?.running === true}
+          <div class="mt-4">
+            <div class="mb-2 flex items-center justify-between">
+              <h3 class="text-xs font-medium text-slate-400">本地 Runs</h3>
+              <button
+                class="rounded border border-[#292E39] px-2.5 py-1 text-xs hover:border-[#6CFF00]/50 disabled:opacity-40"
+                disabled={loadingLocalRuns}
+                onclick={() => void loadLocalRuns()}
+              >
+                {loadingLocalRuns ? "加载中…" : "刷新"}
+              </button>
+            </div>
+            {#if localRunsError !== ""}
+              <p class="text-sm text-red-400">{localRunsError}</p>
+            {:else if localRuns.length === 0}
+              <p class="text-sm text-slate-600">
+                暂无本地运行记录（历史经 SQLite 持久化，Runner 重启后保留）。
+              </p>
+            {:else}
+              <div class="overflow-hidden rounded border border-[#20242C]">
+                {#each localRuns.slice(0, 15) as run (run.id)}
+                  <div
+                    class="flex items-center gap-3 border-b border-[#1C2028] px-3 py-2 last:border-b-0 hover:bg-[#13161C]"
+                  >
+                    <span class="w-20 shrink-0 font-mono text-xs {statusColor(run.status)}"
+                      >{run.status}</span
+                    >
+                    <span class="flex-1 truncate text-sm">{run.task}</span>
+                    <span class="shrink-0 font-mono text-xs text-slate-600">{run.agentName}</span>
+                  </div>
+                {/each}
+              </div>
+            {/if}
+          </div>
+        {/if}
       {/if}
     </section>
 

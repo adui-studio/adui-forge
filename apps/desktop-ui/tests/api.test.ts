@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vite-plus/test";
-import { buildUrl, fetchCloudRuns, fetchHealth, login } from "../src/lib/api.ts";
+import { buildUrl, fetchCloudRuns, fetchHealth, fetchLocalRuns, login } from "../src/lib/api.ts";
 import {
   authHeader,
   clearToken,
@@ -78,5 +78,32 @@ describe("云端请求层（绝对基址）", () => {
     const headers = calls[0]?.init?.headers as Record<string, string>;
     expect(headers.authorization).toBe("Bearer jwt-3");
     expect(calls[0]?.url).toBe("http://srv/api/v1/runs");
+  });
+});
+
+describe("本地 Runner 请求（127.0.0.1 + Bearer）", () => {
+  afterEach(() => {
+    globalThis.localStorage?.clear();
+  });
+
+  it("fetchLocalRuns 命中 Runner baseUrl 的 /runs 并带 Bearer", async () => {
+    const { impl, calls } = fetchStub(200, [
+      { id: "run_1", agentName: "forge-local", task: "t", status: "completed", createdAt: "x" },
+    ]);
+    const runs = await fetchLocalRuns({ baseUrl: "http://127.0.0.1:52133/", token: "rt-1" }, impl);
+    expect(runs).toHaveLength(1);
+    expect(calls[0]?.url).toBe("http://127.0.0.1:52133/api/v1/runs");
+    expect((calls[0]?.init?.headers as Record<string, string>).authorization).toBe("Bearer rt-1");
+  });
+
+  it("无 token 时省略 authorization；非 2xx 读 body.message", async () => {
+    const ok = fetchStub(200, []);
+    await fetchLocalRuns({ baseUrl: "http://127.0.0.1:1", token: null }, ok.impl);
+    expect(ok.calls[0]?.init?.headers).not.toHaveProperty("authorization");
+
+    const bad = fetchStub(503, { message: "local runs unavailable" });
+    await expect(
+      fetchLocalRuns({ baseUrl: "http://127.0.0.1:1", token: null }, bad.impl),
+    ).rejects.toThrow("local runs unavailable");
   });
 });

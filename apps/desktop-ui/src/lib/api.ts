@@ -74,3 +74,24 @@ export const fetchHealth = async (
   }
   return (await response.json()) as HealthResult;
 };
+
+/** 本地 Runner 请求：基址与 token 来自 Tauri 的 RunnerInfo（127.0.0.1 + Bearer 握手）。 */
+export const fetchLocalRuns = async (
+  runner: { baseUrl: string; token: string | null },
+  fetchImpl: FetchLike = fetch,
+): Promise<CloudRunListItem[]> => {
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+    ...(runner.token !== null && runner.token !== ""
+      ? { authorization: `Bearer ${runner.token}` }
+      : {}),
+  };
+  const response = await fetchImpl(`${runner.baseUrl.replace(/\/+$/, "")}/api/v1/runs`, {
+    headers,
+  });
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message ?? `request failed: ${response.status}`);
+  }
+  return (await response.json()) as CloudRunListItem[];
+};
