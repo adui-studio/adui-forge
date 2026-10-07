@@ -50,6 +50,28 @@ export function SettingsPage({ state }: { state: AppState }) {
         </p>
       </Card>
 
+      <Card title="诊断（临时，定位 IPC 注入问题后移除）">
+        <pre className="overflow-auto rounded border border-[#2A2F3A] bg-[#171A21] p-3 font-mono text-xs text-slate-300">
+          {JSON.stringify(
+            (() => {
+              const internals = (
+                globalThis as unknown as {
+                  __TAURI_INTERNALS__?: { invoke?: unknown };
+                }
+              ).__TAURI_INTERNALS__;
+              return {
+                internalsType: typeof internals,
+                invokeType: typeof internals?.invoke,
+                href: window.location.href,
+                uaPrefix: navigator.userAgent.slice(0, 90),
+              };
+            })(),
+            null,
+            2,
+          )}
+        </pre>
+      </Card>
+
       <Card title="关于">
         <div className="flex flex-col gap-1 text-sm text-slate-400">
           <p>

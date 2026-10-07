@@ -43,29 +43,43 @@ const DARK = [0x12, 0x14, 0x1a];
 const outDir = "apps/desktop/src-tauri/icons/nsis";
 mkdirSync(outDir, { recursive: true });
 
-// headerImage 150x57：深底，右端一抹品牌渐变
+// headerImage 150x57：深底 + 左端品牌色块 + 斜切光带
 writeFileSync(
   `${outDir}/headerImage.bmp`,
   encodeBmp(150, 57, (x, y) => {
-    const t = Math.max(0, (x - 70) / 80) * (1 - Math.abs(y - 28) / 40);
+    // 左端 28px 品牌色块（深紫→绿竖向渐变），其余深底 + 斜切光带
+    if (x < 28) {
+      const t = y / 57;
+      return [
+        lerp(PURPLE[0], GREEN[0], t),
+        lerp(PURPLE[1], GREEN[1], t),
+        lerp(PURPLE[2], GREEN[2], t),
+      ];
+    }
+    const band = Math.abs(x - y * 2.2 - 20) < 14 ? 0.35 : 0;
+    const fade = Math.max(0, (x - 28) / 122) * 0.25;
+    const t = band + fade;
     return [
-      lerp(DARK[0], GREEN[0], t * 0.85),
-      lerp(DARK[1], GREEN[1], t * 0.85),
-      lerp(DARK[2], GREEN[2], t * 0.85),
+      lerp(DARK[0], GREEN[0], t * 0.9),
+      lerp(DARK[1], GREEN[1], t * 0.9),
+      lerp(DARK[2], GREEN[2], t * 0.9),
     ];
   }),
 );
 
-// sidebarImage 164x314：对角品牌渐变，整体压暗保持文字可读
+// sidebarImage 164x314：品牌渐变 + 双斜光带 + 底部压暗
 writeFileSync(
   `${outDir}/sidebarImage.bmp`,
   encodeBmp(164, 314, (x, y) => {
-    const t = (x / 164) * 0.55 + (y / 314) * 0.45;
-    const shade = 0.55 + 0.2 * (y / 314);
+    const t = (x / 164) * 0.5 + (y / 314) * 0.5;
+    const band1 = Math.abs(x - y * 0.55 - 30) < 10 ? 0.3 : 0;
+    const band2 = Math.abs(x - y * 0.55 - 70) < 4 ? 0.45 : 0;
+    const shade = 0.5 + 0.22 * (y / 314);
+    const mix = Math.min(1, t + band1 + band2);
     return [
-      lerp(PURPLE[0], GREEN[0], t) * shade,
-      lerp(PURPLE[1], GREEN[1], t) * shade,
-      lerp(PURPLE[2], GREEN[2], t) * shade,
+      lerp(PURPLE[0], GREEN[0], mix) * shade,
+      lerp(PURPLE[1], GREEN[1], mix) * shade,
+      lerp(PURPLE[2], GREEN[2], mix) * shade,
     ];
   }),
 );
