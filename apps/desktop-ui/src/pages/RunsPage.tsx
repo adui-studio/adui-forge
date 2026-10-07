@@ -26,7 +26,7 @@ const RunRow = ({
 }) => (
   <button
     type="button"
-    className="flex w-full items-center gap-3 border-b border-[#1C2028] px-3 py-2 text-left last:border-b-0 hover:bg-[#13161C]"
+    className="flex w-full items-center gap-3 border-b border-[#232833] px-3 py-2 text-left last:border-b-0 hover:bg-[#2A2F3A]"
     onClick={onClick}
   >
     <span className={`w-20 shrink-0 font-mono text-xs ${statusColor(status)}`}>{status}</span>
@@ -77,7 +77,7 @@ export function RunsPage({ state }: { state: AppState }) {
         ) : state.cloudRuns.length === 0 ? (
           <p className="text-sm text-slate-600">暂无记录——点「刷新」加载。</p>
         ) : (
-          <div className="overflow-hidden rounded border border-[#20242C]">
+          <div className="overflow-hidden rounded border border-[#2A2F3A]">
             {state.cloudRuns.slice(0, 20).map((run) => (
               <RunRow key={run.id} {...run} />
             ))}
@@ -120,14 +120,14 @@ export function RunsPage({ state }: { state: AppState }) {
           <p className="text-sm text-slate-600">暂无本地运行记录。</p>
         ) : (
           <>
-            <div className="overflow-hidden rounded border border-[#20242C]">
+            <div className="overflow-hidden rounded border border-[#2A2F3A]">
               {state.localRuns.slice(0, 15).map((run) => (
                 <RunRow key={run.id} {...run} onClick={() => void state.openRunDetail(run.id)} />
               ))}
             </div>
 
             {state.selectedRunId !== null && (
-              <div className="mt-3 rounded border border-[#292E39] bg-[#0D0F13] p-3">
+              <div className="mt-3 rounded border border-[#343B48] bg-[#171A21] p-3">
                 {state.loadingDetail ? (
                   <div className="flex justify-center py-4">
                     <Spin />
@@ -159,7 +159,7 @@ export function RunsPage({ state }: { state: AppState }) {
                         {state.selectedRun.error}
                       </p>
                     )}
-                    <div className="max-h-56 overflow-y-auto rounded border border-[#20242C] bg-[#0D0F13] p-2">
+                    <div className="max-h-56 overflow-y-auto rounded border border-[#2A2F3A] bg-[#171A21] p-2">
                       {state.selectedRun.events.length === 0 ? (
                         <p className="text-xs text-slate-600">（无事件）</p>
                       ) : (

@@ -1,6 +1,15 @@
-import { Activity, ListChecks, Rocket, Settings as SettingsIcon } from "lucide-react";
+import {
+  Activity,
+  ListChecks,
+  Minus,
+  Rocket,
+  Settings as SettingsIcon,
+  Square,
+  X,
+} from "lucide-react";
 import { Layout, Menu, Typography } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import logoUrl from "./assets/logo.svg";
 import {
   cancelLocalRun,
   decideLocalApproval,
@@ -24,10 +33,13 @@ import {
   saveToken,
 } from "./lib/settings.ts";
 import {
+  closeWindow,
   invokeRunnerStatus,
   invokeStartRunner,
   invokeStopRunner,
   isTauri,
+  minimizeWindow,
+  toggleMaximizeWindow,
   type RunnerInfo,
 } from "./lib/tauri.ts";
 import { OverviewPage } from "./pages/Overview.tsx";
@@ -45,6 +57,49 @@ const NAV_ITEMS: Array<{ key: PageKey; icon: typeof Rocket; label: string }> = [
   { key: "approvals", icon: ListChecks, label: "审批" },
   { key: "settings", icon: SettingsIcon, label: "设置" },
 ];
+
+/** 自定义标题栏（decorations:false；浏览器 dev 时不渲染窗口控制）。 */
+function TitleBar() {
+  const desktop = useMemo(() => isTauri(), []);
+  return (
+    <div
+      data-tauri-drag-region
+      className="flex h-10 shrink-0 select-none items-center gap-2.5 border-b border-[#232833] px-4"
+      style={{ background: "#0F1116" }}
+    >
+      <img src={logoUrl} alt="ADui Forge" className="h-5 w-5" />
+      <span className="text-sm font-semibold">ADui Forge</span>
+      <span className="font-mono text-[10px] text-slate-500">
+        Desktop · v{typeof __APP_VERSION__ === "string" ? __APP_VERSION__ : "dev"}
+      </span>
+      {desktop && (
+        <div className="ml-auto flex h-full items-center">
+          <button
+            className="flex h-full w-11 items-center justify-center text-slate-400 hover:bg-[#2A2F3A] hover:text-slate-100"
+            onClick={() => void minimizeWindow()}
+            aria-label="最小化"
+          >
+            <Minus size={14} />
+          </button>
+          <button
+            className="flex h-full w-11 items-center justify-center text-slate-400 hover:bg-[#2A2F3A] hover:text-slate-100"
+            onClick={() => void toggleMaximizeWindow()}
+            aria-label="最大化"
+          >
+            <Square size={12} />
+          </button>
+          <button
+            className="flex h-full w-11 items-center justify-center text-slate-400 hover:bg-red-500/90 hover:text-white"
+            onClick={() => void closeWindow()}
+            aria-label="关闭"
+          >
+            <X size={15} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /** 桌面端全局状态 + 动作（M1/M2 逻辑层与 lib/ 一致，仅视图层为 React 重写）。 */
 export function useAppState() {
@@ -309,57 +364,58 @@ export default function App() {
   const { page } = state;
 
   return (
-    <Layout className="h-full" style={{ background: "#060609" }}>
-      <Sider width={216} style={{ background: "#0A0C10", borderRight: "1px solid #1C2028" }}>
-        <div className="flex h-full flex-col">
-          <div className="flex items-center gap-2.5 px-4 py-4">
-            <div className="flex h-7 w-7 items-center justify-center rounded bg-[#6CFF00] text-sm font-black text-black">
-              A
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold leading-tight">ADui Forge</p>
-              <p className="font-mono text-[10px] text-slate-600">Desktop · v{__APP_VERSION__}</p>
-            </div>
-          </div>
-          <Menu
-            mode="inline"
-            style={{ background: "transparent", borderInlineEnd: "none", padding: "0 8px" }}
-            selectedKeys={[page]}
-            onClick={(info) => state.setPage(info.key as PageKey)}
-            items={NAV_ITEMS.map((item) => ({
-              key: item.key,
-              icon: <item.icon size={15} />,
-              label: item.label,
-            }))}
-          />
-          <div className="mt-auto border-t border-[#1C2028] px-4 py-3">
-            {state.loggedIn ? (
-              <div className="flex items-center justify-between">
-                <span className="truncate text-xs text-slate-400">{getUsername()}</span>
-                <Typography.Link
-                  className="text-xs"
-                  onClick={() => {
-                    state.logout();
-                    state.setPage("overview");
-                  }}
-                >
-                  退出
-                </Typography.Link>
+    <div className="flex h-full flex-col">
+      <TitleBar />
+      <Layout className="min-h-0 flex-1" style={{ background: "#12141A" }}>
+        <Sider width={216} style={{ background: "#0F1116", borderRight: "1px solid #232833" }}>
+          <div className="flex h-full flex-col">
+            <div className="flex items-center gap-2.5 px-4 py-4">
+              <img src={logoUrl} alt="" className="h-7 w-7" />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold leading-tight">ADui Forge</p>
+                <p className="font-mono text-[10px] text-slate-500">Workspace</p>
               </div>
-            ) : (
-              <span className="text-xs text-slate-600">未登录</span>
-            )}
+            </div>
+            <Menu
+              mode="inline"
+              style={{ background: "transparent", borderInlineEnd: "none", padding: "0 8px" }}
+              selectedKeys={[page]}
+              onClick={(info) => state.setPage(info.key as PageKey)}
+              items={NAV_ITEMS.map((item) => ({
+                key: item.key,
+                icon: <item.icon size={15} />,
+                label: item.label,
+              }))}
+            />
+            <div className="mt-auto border-t border-[#232833] px-4 py-3">
+              {state.loggedIn ? (
+                <div className="flex items-center justify-between">
+                  <span className="truncate text-xs text-slate-400">{getUsername()}</span>
+                  <Typography.Link
+                    className="text-xs"
+                    onClick={() => {
+                      state.logout();
+                      state.setPage("overview");
+                    }}
+                  >
+                    退出
+                  </Typography.Link>
+                </div>
+              ) : (
+                <span className="text-xs text-slate-600">未登录</span>
+              )}
+            </div>
           </div>
-        </div>
-      </Sider>
-      <Content className="overflow-y-auto" style={{ background: "#060609" }}>
-        <div className="mx-auto max-w-3xl px-6 py-6">
-          {page === "overview" && <OverviewPage state={state} />}
-          {page === "runs" && <RunsPage state={state} />}
-          {page === "approvals" && <ApprovalsPage state={state} />}
-          {page === "settings" && <SettingsPage state={state} />}
-        </div>
-      </Content>
-    </Layout>
+        </Sider>
+        <Content className="overflow-y-auto" style={{ background: "#12141A" }}>
+          <div className="mx-auto max-w-3xl px-6 py-6">
+            {page === "overview" && <OverviewPage state={state} />}
+            {page === "runs" && <RunsPage state={state} />}
+            {page === "approvals" && <ApprovalsPage state={state} />}
+            {page === "settings" && <SettingsPage state={state} />}
+          </div>
+        </Content>
+      </Layout>
+    </div>
   );
 }

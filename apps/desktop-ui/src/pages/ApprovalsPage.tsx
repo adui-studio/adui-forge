@@ -64,7 +64,7 @@ export function ApprovalsPage({ state }: { state: AppState }) {
                     <span className="ml-auto font-mono text-xs text-slate-600">{item.runId}</span>
                   </div>
                   <p className="mt-1 text-sm text-slate-400">{item.reason}</p>
-                  <pre className="mt-2 max-h-32 overflow-auto rounded border border-[#20242C] bg-[#0D0F13] p-2 font-mono text-xs text-slate-300">
+                  <pre className="mt-2 max-h-32 overflow-auto rounded border border-[#2A2F3A] bg-[#171A21] p-2 font-mono text-xs text-slate-300">
                     {JSON.stringify(item.input, null, 2)}
                   </pre>
                   <div className="mt-2 flex justify-end gap-2">

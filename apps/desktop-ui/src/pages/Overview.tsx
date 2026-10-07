@@ -51,7 +51,7 @@ export function OverviewPage({ state }: { state: AppState }) {
         )}
 
         {!state.loggedIn && (
-          <div className="mt-4 border-t border-[#1C2028] pt-4">
+          <div className="mt-4 border-t border-[#232833] pt-4">
             <p className="mb-2 flex items-center gap-1.5 text-xs text-slate-500">
               <KeyRound size={12} /> 登录以同步会话 / Skills / 任务 / 对比（与 Web 端同一账号）
             </p>

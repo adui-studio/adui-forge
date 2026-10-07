@@ -46,3 +46,22 @@ export const invokeStopRunner = async (): Promise<void> => {
   if (invoke === null) return;
   await invoke("runner_stop");
 };
+
+/** 窗口控制（decorations:false 的自定义标题栏用；core:default 已含 window 基本操作）。 */
+export const minimizeWindow = async (): Promise<void> => {
+  const invoke = getInvoke();
+  if (invoke === null) return;
+  await invoke("plugin:window|minimize", { label: "main" });
+};
+
+export const toggleMaximizeWindow = async (): Promise<void> => {
+  const invoke = getInvoke();
+  if (invoke === null) return;
+  await invoke("plugin:window|toggle_maximize", { label: "main" });
+};
+
+export const closeWindow = async (): Promise<void> => {
+  const invoke = getInvoke();
+  if (invoke === null) return;
+  await invoke("plugin:window|close", { label: "main" });
+};
