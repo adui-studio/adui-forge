@@ -47,21 +47,27 @@ export const invokeStopRunner = async (): Promise<void> => {
   await invoke("runner_stop");
 };
 
-/** 窗口控制（decorations:false 的自定义标题栏用；core:default 已含 window 基本操作）。 */
+/** 窗口控制与拖拽：官方 @tauri-apps/api（decorations:false 自定义标题栏用）。
+ *  不走手写裸 invoke——参数格式与错误传播的细节差异无法从外部排查。 */
+import { getCurrentWindow } from "@tauri-apps/api/window";
+
 export const minimizeWindow = async (): Promise<void> => {
-  const invoke = getInvoke();
-  if (invoke === null) return;
-  await invoke("plugin:window|minimize", { label: "main" });
+  if (getInvoke() === null) return;
+  await getCurrentWindow().minimize();
 };
 
 export const toggleMaximizeWindow = async (): Promise<void> => {
-  const invoke = getInvoke();
-  if (invoke === null) return;
-  await invoke("plugin:window|toggle_maximize", { label: "main" });
+  if (getInvoke() === null) return;
+  await getCurrentWindow().toggleMaximize();
 };
 
 export const closeWindow = async (): Promise<void> => {
-  const invoke = getInvoke();
-  if (invoke === null) return;
-  await invoke("plugin:window|close", { label: "main" });
+  if (getInvoke() === null) return;
+  await getCurrentWindow().close();
+};
+
+/** 显式拖拽（TitleBar onMouseDown 调用；不再依赖注入的 drag-region 处理器）。 */
+export const startDragging = async (): Promise<void> => {
+  if (getInvoke() === null) return;
+  await getCurrentWindow().startDragging();
 };

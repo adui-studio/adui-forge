@@ -39,6 +39,7 @@ import {
   invokeStopRunner,
   isTauri,
   minimizeWindow,
+  startDragging,
   toggleMaximizeWindow,
   type RunnerInfo,
 } from "./lib/tauri.ts";
@@ -63,6 +64,12 @@ function TitleBar() {
   return (
     <div
       data-tauri-drag-region
+      onMouseDown={(event) => {
+        // 仅左键、且落在拖拽区（非按钮）时显式拖动
+        if (event.button === 0 && event.target === event.currentTarget) {
+          void startDragging();
+        }
+      }}
       className="flex h-11 shrink-0 select-none items-center border-b border-[#232833]"
       style={{ background: "#0F1116" }}
     >

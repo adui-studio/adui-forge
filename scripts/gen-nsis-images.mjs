@@ -40,6 +40,37 @@ const PURPLE = [0x5b, 0x2b, 0x82];
 const GREEN = [0x6c, 0xff, 0x00];
 const DARK = [0x12, 0x14, 0x1a];
 
+// —— 线段光栅化（圆头粗线）：点到线段距离场 ——
+const strokePixel = (x, y, ax, ay, bx, by, halfWidth) => {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len2 = dx * dx + dy * dy;
+  let t = len2 === 0 ? 0 : ((x - ax) * dx + (y - ay) * dy) / len2;
+  t = Math.max(0, Math.min(1, t));
+  const px = ax + t * dx;
+  const py = ay + t * dy;
+  const dist = Math.hypot(x - px, y - py);
+  return dist <= halfWidth;
+};
+
+// 品牌 A 字形（两斜线 + 横杠），在给定包围盒内
+const logoAPixel = (x, y, cx, cy, scale) => {
+  // 以 logo.svg 的 A 字比例简化：顶点/底脚/横杠
+  const apexX = cx;
+  const apexY = cy - 52 * scale;
+  const leftX = cx - 44 * scale;
+  const leftY = cy + 52 * scale;
+  const rightX = cx + 44 * scale;
+  const rightY = cy + 52 * scale;
+  const barY = cy + 14 * scale;
+  const barHalf = 11 * scale;
+  const stroke = 9 * scale;
+  if (strokePixel(x, y, apexX, apexY, leftX, leftY, stroke)) return true;
+  if (strokePixel(x, y, apexX, apexY, rightX, rightY, stroke)) return true;
+  if (strokePixel(x, y, cx - barHalf, barY, cx + barHalf, barY, stroke * 0.8)) return true;
+  return false;
+};
+
 const outDir = "apps/desktop/src-tauri/icons/nsis";
 mkdirSync(outDir, { recursive: true });
 
@@ -72,10 +103,29 @@ writeFileSync(
   `${outDir}/sidebarImage.bmp`,
   encodeBmp(164, 314, (x, y) => {
     const t = (x / 164) * 0.5 + (y / 314) * 0.5;
-    const band1 = Math.abs(x - y * 0.55 - 30) < 10 ? 0.3 : 0;
-    const band2 = Math.abs(x - y * 0.55 - 70) < 4 ? 0.45 : 0;
     const shade = 0.5 + 0.22 * (y / 314);
-    const mix = Math.min(1, t + band1 + band2);
+    const mix = Math.min(1, t);
+    // 中央品牌方块（圆角渐变底 + 白色 A）
+    const bx = x - 38;
+    const by = y - 96;
+    if (bx >= 0 && bx <= 88 && by >= 0 && by <= 88) {
+      const r = 16;
+      const cxp = Math.max(r, Math.min(88 - r, bx));
+      const cyp = Math.max(r, Math.min(88 - r, by));
+      if (
+        Math.hypot(bx - cxp, by - cyp) <= r ||
+        (bx >= r && bx <= 88 - r) ||
+        (by >= r && by <= 88 - r)
+      ) {
+        if (logoAPixel(x, y, 82, 140, 0.62)) return [0xff, 0xff, 0xff];
+        const gt = (bx / 88 + by / 88) / 2;
+        return [
+          lerp(PURPLE[0], GREEN[0], gt) * 0.95,
+          lerp(PURPLE[1], GREEN[1], gt) * 0.95,
+          lerp(PURPLE[2], GREEN[2], gt) * 0.95,
+        ];
+      }
+    }
     return [
       lerp(PURPLE[0], GREEN[0], mix) * shade,
       lerp(PURPLE[1], GREEN[1], mix) * shade,
