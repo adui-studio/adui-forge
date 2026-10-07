@@ -1,14 +1,17 @@
 @import "tailwindcss";
 
-/* 桌面端专属深色基调：与品牌电光绿/深紫同源，密度高于 Web 端 */
 :root {
   color-scheme: dark;
 }
 
 html,
-body {
+body,
+#app {
   height: 100%;
   margin: 0;
+}
+
+body {
   background: #060609;
   color: #e2e8f0;
   font-family:
@@ -19,13 +22,18 @@ body {
     "PingFang SC",
     "Microsoft YaHei UI",
     sans-serif;
+  overflow: hidden;
 }
 
-#app {
-  height: 100%;
+/* 滚动条贴桌面风格 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
-
-/* 窗口拖拽区（Tauri decorations 关闭时的自定义标题栏预留） */
-[data-tauri-drag-region] {
-  app-region: drag;
+::-webkit-scrollbar-thumb {
+  background: #262b34;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
 }

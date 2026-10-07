@@ -150,6 +150,7 @@ export const decideLocalApproval = (
   );
 
 export interface LocalRunDetail extends CloudRunListItem {
+  error?: string;
   events: Array<{ name: string; stepId?: string; payload?: unknown }>;
 }
 
