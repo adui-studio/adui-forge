@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, it } from "vite-plus/test";
-import { buildUrl, fetchCloudRuns, fetchHealth, fetchLocalRuns, login } from "../src/lib/api.ts";
+import {
+  buildUrl,
+  decideLocalApproval,
+  fetchCloudRuns,
+  fetchHealth,
+  fetchLocalPendingApprovals,
+  fetchLocalRuns,
+  login,
+} from "../src/lib/api.ts";
 import {
   authHeader,
   clearToken,
@@ -93,7 +101,7 @@ describe("本地 Runner 请求（127.0.0.1 + Bearer）", () => {
     const runs = await fetchLocalRuns({ baseUrl: "http://127.0.0.1:52133/", token: "rt-1" }, impl);
     expect(runs).toHaveLength(1);
     expect(calls[0]?.url).toBe("http://127.0.0.1:52133/api/v1/runs");
-    expect((calls[0]?.init?.headers as Record<string, string>).authorization).toBe("Bearer rt-1");
+    expect((calls[0]!.init!.headers as Record<string, string>).authorization).toBe("Bearer rt-1");
   });
 
   it("无 token 时省略 authorization；非 2xx 读 body.message", async () => {
@@ -105,5 +113,52 @@ describe("本地 Runner 请求（127.0.0.1 + Bearer）", () => {
     await expect(
       fetchLocalRuns({ baseUrl: "http://127.0.0.1:1", token: null }, bad.impl),
     ).rejects.toThrow("local runs unavailable");
+  });
+});
+
+describe("本地审批请求（Trusted Local Mode）", () => {
+  afterEach(() => {
+    globalThis.localStorage?.clear();
+  });
+
+  it("fetchLocalPendingApprovals 命中 /approvals/pending 并带 Bearer", async () => {
+    const { impl, calls } = fetchStub(200, [
+      {
+        id: "appr_1",
+        runId: "run_1",
+        toolName: "shell_exec",
+        input: { command: "echo hi" },
+        reason: "requires approval",
+        createdAt: "x",
+      },
+    ]);
+    const list = await fetchLocalPendingApprovals(
+      { baseUrl: "http://127.0.0.1:52133", token: "rt-1" },
+      impl,
+    );
+    expect(list).toHaveLength(1);
+    expect(calls[0]?.url).toBe("http://127.0.0.1:52133/api/v1/approvals/pending");
+    expect((calls[0]!.init!.headers as Record<string, string>).authorization).toBe("Bearer rt-1");
+  });
+
+  it("decideLocalApproval POST 决策（含 id 编码）", async () => {
+    const { impl, calls } = fetchStub(200, { ok: true, decision: "approved" });
+    const result = await decideLocalApproval(
+      { baseUrl: "http://127.0.0.1:1", token: null },
+      "appr x/1",
+      "approved",
+      impl,
+    );
+    expect(result.ok).toBe(true);
+    expect(calls[0]?.url).toBe("http://127.0.0.1:1/api/v1/approvals/appr%20x%2F1/decision");
+    expect(calls[0]?.init?.method).toBe("POST");
+    expect(calls[0]?.init?.body).toBe(JSON.stringify({ decision: "approved" }));
+  });
+
+  it("503（未启用 Trusted Local Mode）抛出 Runner 的降级消息", async () => {
+    const bad = fetchStub(503, { message: "approvals unavailable: trusted local mode disabled" });
+    await expect(
+      fetchLocalPendingApprovals({ baseUrl: "http://127.0.0.1:1", token: null }, bad.impl),
+    ).rejects.toThrow("approvals unavailable");
   });
 });

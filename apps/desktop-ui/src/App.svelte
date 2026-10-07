@@ -4,8 +4,11 @@
     fetchCloudRuns,
     fetchHealth,
     fetchLocalRuns,
+    decideLocalApproval,
+    fetchLocalPendingApprovals,
     type CloudRunListItem,
     type HealthResult,
+    type LocalPendingApproval,
   } from "./lib/api.ts";
   import {
     clearToken,
@@ -46,6 +49,10 @@
   let localRuns = $state<CloudRunListItem[]>([]);
   let localRunsError = $state("");
   let loadingLocalRuns = $state(false);
+
+  let pendingApprovals = $state<LocalPendingApproval[]>([]);
+  let loadingApprovals = $state(false);
+  let actingApprovalId = $state<string | null>(null);
 
   const desktop = $derived(isTauri());
   const hasServer = $derived(getServerAddress() !== "");
@@ -101,6 +108,7 @@
     runner = await invokeRunnerStatus();
     if (runner?.running === true && runner.baseUrl !== null) {
       void loadLocalRuns();
+      void loadApprovals();
     }
   };
 
@@ -117,12 +125,41 @@
     }
   };
 
+  const loadApprovals = async (): Promise<void> => {
+    if (runner?.running !== true || runner.baseUrl === null || runner.trusted !== true) return;
+    loadingApprovals = true;
+    try {
+      pendingApprovals = await fetchLocalPendingApprovals({
+        baseUrl: runner.baseUrl,
+        token: runner.token,
+      });
+    } catch {
+      // Trusted Local Mode 半途关闭等场景：静默置空（禁用态由 trusted 控制）
+      pendingApprovals = [];
+    } finally {
+      loadingApprovals = false;
+    }
+  };
+
+  const decide = async (id: string, decision: "approved" | "rejected"): Promise<void> => {
+    if (runner?.running !== true || runner.baseUrl === null) return;
+    actingApprovalId = id;
+    try {
+      await decideLocalApproval({ baseUrl: runner.baseUrl, token: runner.token }, id, decision);
+      await loadApprovals();
+      void loadLocalRuns();
+    } finally {
+      actingApprovalId = null;
+    }
+  };
+
   const startRunner = async (): Promise<void> => {
     runnerBusy = true;
     try {
       runner = await invokeStartRunner(workspaceRoot, trustedMode);
       if (runner?.running === true && runner.baseUrl !== null) {
         void loadLocalRuns();
+        void loadApprovals();
       }
     } finally {
       runnerBusy = false;
@@ -265,6 +302,60 @@
             <span class="text-xs text-slate-600">未运行</span>
           {/if}
         </div>
+
+        {#if runner?.running === true && runner.trusted === true}
+          <div class="mt-4">
+            <div class="mb-2 flex items-center justify-between">
+              <h3 class="text-xs font-medium text-slate-400">
+                待审批
+                <span class="ml-2 text-slate-600">Shell / Git 高风险操作等待人工决策</span>
+              </h3>
+              <button
+                class="rounded border border-[#292E39] px-2.5 py-1 text-xs hover:border-[#6CFF00]/50 disabled:opacity-40"
+                disabled={loadingApprovals}
+                onclick={() => void loadApprovals()}
+              >
+                刷新
+              </button>
+            </div>
+            {#if pendingApprovals.length === 0}
+              <p class="text-sm text-slate-600">当前没有待审批操作。</p>
+            {:else}
+              <div class="flex flex-col gap-2">
+                {#each pendingApprovals as item (item.id)}
+                  <div class="rounded border border-[#4A3A5C] bg-[#241B2E] p-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="font-mono text-sm font-semibold text-amber-300"
+                        >⚠ {item.toolName}</span
+                      >
+                      <span class="ml-auto font-mono text-xs text-slate-600">{item.runId}</span>
+                    </div>
+                    <p class="mt-1 text-sm text-slate-400">{item.reason}</p>
+                    <pre
+                      class="mt-2 max-h-32 overflow-auto rounded border border-[#20242C] bg-[#0D0F13] p-2 font-mono text-xs text-slate-300">{JSON.stringify(item.input, null, 2)}</pre
+                    >
+                    <div class="mt-2 flex justify-end gap-2">
+                      <button
+                        class="rounded border border-red-400/50 px-3 py-1 text-xs text-red-300 hover:bg-red-400/10 disabled:opacity-40"
+                        disabled={actingApprovalId !== null}
+                        onclick={() => void decide(item.id, "rejected")}
+                      >
+                        拒绝
+                      </button>
+                      <button
+                        class="rounded bg-[#6CFF00] px-3 py-1 text-xs font-semibold text-black hover:brightness-110 disabled:opacity-40"
+                        disabled={actingApprovalId !== null}
+                        onclick={() => void decide(item.id, "approved")}
+                      >
+                        批准
+                      </button>
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            {/if}
+          </div>
+        {/if}
 
         {#if runner?.running === true}
           <div class="mt-4">

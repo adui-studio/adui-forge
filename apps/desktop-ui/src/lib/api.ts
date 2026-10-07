@@ -95,3 +95,56 @@ export const fetchLocalRuns = async (
   }
   return (await response.json()) as CloudRunListItem[];
 };
+
+export interface LocalPendingApproval {
+  id: string;
+  runId: string;
+  toolName: string;
+  input: unknown;
+  reason: string;
+  createdAt: string;
+}
+
+/** 本地 Runner 请求复用体：baseUrl/token 拼接 + Bearer + 错误语义统一。 */
+const localRequest = async <T>(
+  runner: { baseUrl: string; token: string | null },
+  path: string,
+  init: RequestInit = {},
+  fetchImpl: FetchLike = fetch,
+): Promise<T> => {
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+    ...(runner.token !== null && runner.token !== ""
+      ? { authorization: `Bearer ${runner.token}` }
+      : {}),
+  };
+  const response = await fetchImpl(`${runner.baseUrl.replace(/\/+$/, "")}${path}`, {
+    headers,
+    ...init,
+  });
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message ?? `request failed: ${response.status}`);
+  }
+  return (await response.json()) as T;
+};
+
+/** 本地待审批；Trusted Local Mode 未启用时 Runner 显式 503（调用方按禁用态展示）。 */
+export const fetchLocalPendingApprovals = (
+  runner: { baseUrl: string; token: string | null },
+  fetchImpl: FetchLike = fetch,
+): Promise<LocalPendingApproval[]> =>
+  localRequest(runner, "/api/v1/approvals/pending", { method: "GET" }, fetchImpl);
+
+export const decideLocalApproval = (
+  runner: { baseUrl: string; token: string | null },
+  id: string,
+  decision: "approved" | "rejected",
+  fetchImpl: FetchLike = fetch,
+): Promise<{ ok: boolean; decision: string }> =>
+  localRequest(
+    runner,
+    `/api/v1/approvals/${encodeURIComponent(id)}/decision`,
+    { method: "POST", body: JSON.stringify({ decision }) },
+    fetchImpl,
+  );
