@@ -4,11 +4,14 @@
     fetchCloudRuns,
     fetchHealth,
     fetchLocalRuns,
+    fetchLocalRun,
+    cancelLocalRun,
     decideLocalApproval,
     fetchLocalPendingApprovals,
     type CloudRunListItem,
     type HealthResult,
     type LocalPendingApproval,
+    type LocalRunDetail,
   } from "./lib/api.ts";
   import {
     clearToken,
@@ -53,6 +56,12 @@
   let pendingApprovals = $state<LocalPendingApproval[]>([]);
   let loadingApprovals = $state(false);
   let actingApprovalId = $state<string | null>(null);
+
+  let selectedRunId = $state<string | null>(null);
+  let selectedRun = $state<LocalRunDetail | null>(null);
+  let runDetailError = $state("");
+  let loadingDetail = $state(false);
+  let cancellingRun = $state(false);
 
   const desktop = $derived(isTauri());
   const hasServer = $derived(getServerAddress() !== "");
@@ -150,6 +159,32 @@
       void loadLocalRuns();
     } finally {
       actingApprovalId = null;
+    }
+  };
+
+  const openRunDetail = async (id: string): Promise<void> => {
+    if (runner?.running !== true || runner.baseUrl === null) return;
+    selectedRunId = id;
+    loadingDetail = true;
+    runDetailError = "";
+    try {
+      selectedRun = await fetchLocalRun({ baseUrl: runner.baseUrl, token: runner.token }, id);
+    } catch (error) {
+      selectedRun = null;
+      runDetailError = String(error);
+    } finally {
+      loadingDetail = false;
+    }
+  };
+
+  const cancelRun = async (id: string): Promise<void> => {
+    if (runner?.running !== true || runner.baseUrl === null) return;
+    cancellingRun = true;
+    try {
+      selectedRun = await cancelLocalRun({ baseUrl: runner.baseUrl, token: runner.token }, id);
+      void loadLocalRuns();
+    } finally {
+      cancellingRun = false;
     }
   };
 
@@ -415,17 +450,63 @@
       {:else if runs.length === 0}
         <p class="text-sm text-slate-600">暂无记录——点「刷新」加载。</p>
       {:else}
-        <div class="overflow-hidden rounded border border-[#20242C]">
-          {#each runs.slice(0, 20) as run (run.id)}
-            <div
-              class="flex items-center gap-3 border-b border-[#1C2028] px-3 py-2 last:border-b-0 hover:bg-[#13161C]"
-            >
-              <span class="w-20 shrink-0 font-mono text-xs {statusColor(run.status)}">{run.status}</span>
-              <span class="flex-1 truncate text-sm">{run.task}</span>
-              <span class="shrink-0 font-mono text-xs text-slate-600">{run.agentName}</span>
-            </div>
-          {/each}
-        </div>
+              <div class="overflow-hidden rounded border border-[#20242C]">
+                {#each localRuns.slice(0, 15) as run (run.id)}
+                  <button
+                    type="button"
+                    class="flex w-full items-center gap-3 border-b border-[#1C2028] px-3 py-2 text-left last:border-b-0 hover:bg-[#13161C]"
+                    onclick={() => void openRunDetail(run.id)}
+                  >
+                    <span class="w-20 shrink-0 font-mono text-xs {statusColor(run.status)}">{run.status}</span>
+                    <span class="flex-1 truncate text-sm">{run.task}</span>
+                    <span class="shrink-0 font-mono text-xs text-slate-600">{run.agentName}</span>
+                  </button>
+                {/each}
+              </div>
+
+              {#if selectedRunId !== null}
+                <div class="mt-3 rounded border border-[#292E39] bg-[#0D0F13] p-3">
+                  {#if loadingDetail}
+                    <p class="text-sm text-slate-500">加载中…</p>
+                  {:else if runDetailError !== ""}
+                    <p class="text-sm text-red-400">{runDetailError}</p>
+                  {:else if selectedRun !== null}
+                    <div class="mb-2 flex flex-wrap items-center gap-2">
+                      <span class="font-mono text-xs {statusColor(selectedRun.status)}"
+                        >{selectedRun.status}</span
+                      >
+                      <span class="text-sm">{selectedRun.task}</span>
+                      {#if selectedRun.status === "running" || selectedRun.status === "queued"}
+                        <button
+                          class="ml-auto rounded border border-red-400/50 px-2.5 py-1 text-xs text-red-300 hover:bg-red-400/10 disabled:opacity-40"
+                          disabled={cancellingRun}
+                          onclick={() => void cancelRun(selectedRun!.id)}
+                        >
+                          {cancellingRun ? "取消中…" : "取消"}
+                        </button>
+                      {/if}
+                    </div>
+                    {#if selectedRun.error !== undefined && selectedRun.error !== ""}
+                      <p class="mb-2 font-mono text-xs text-red-400">{selectedRun.error}</p>
+                    {/if}
+                    <div class="max-h-56 overflow-y-auto rounded border border-[#20242C] bg-[#0D0F13] p-2">
+                      {#if selectedRun.events.length === 0}
+                        <p class="text-xs text-slate-600">（无事件）</p>
+                      {:else}
+                        {#each selectedRun.events as event, index (index)}
+                          <div class="font-mono text-xs">
+                            <span class="text-slate-600">{event.stepId ?? "—"}</span>
+                            <span
+                              class={event.name.startsWith("run.") ? "text-[#6CFF00]" : "text-slate-300"}
+                              >{event.name}</span
+                            >
+                          </div>
+                        {/each}
+                      {/if}
+                    </div>
+                  {/if}
+                </div>
+              {/if}
       {/if}
     </section>
   </main>

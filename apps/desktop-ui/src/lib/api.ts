@@ -148,3 +148,27 @@ export const decideLocalApproval = (
     { method: "POST", body: JSON.stringify({ decision }) },
     fetchImpl,
   );
+
+export interface LocalRunDetail extends CloudRunListItem {
+  events: Array<{ name: string; stepId?: string; payload?: unknown }>;
+}
+
+/** 本地 Run 详情（完整事件流；列表条目经 GET /runs/:id 补齐）。 */
+export const fetchLocalRun = (
+  runner: { baseUrl: string; token: string | null },
+  id: string,
+  fetchImpl: FetchLike = fetch,
+): Promise<LocalRunDetail> =>
+  localRequest(runner, `/api/v1/runs/${encodeURIComponent(id)}`, {}, fetchImpl);
+
+export const cancelLocalRun = (
+  runner: { baseUrl: string; token: string | null },
+  id: string,
+  fetchImpl: FetchLike = fetch,
+): Promise<LocalRunDetail> =>
+  localRequest(
+    runner,
+    `/api/v1/runs/${encodeURIComponent(id)}/cancel`,
+    { method: "POST" },
+    fetchImpl,
+  );

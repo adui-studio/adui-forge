@@ -4,7 +4,9 @@ import {
   decideLocalApproval,
   fetchCloudRuns,
   fetchHealth,
+  cancelLocalRun,
   fetchLocalPendingApprovals,
+  fetchLocalRun,
   fetchLocalRuns,
   login,
 } from "../src/lib/api.ts";
@@ -160,5 +162,48 @@ describe("本地审批请求（Trusted Local Mode）", () => {
     await expect(
       fetchLocalPendingApprovals({ baseUrl: "http://127.0.0.1:1", token: null }, bad.impl),
     ).rejects.toThrow("approvals unavailable");
+  });
+});
+
+describe("本地 Run 详情与取消", () => {
+  afterEach(() => {
+    globalThis.localStorage?.clear();
+  });
+
+  it("fetchLocalRun 命中 /runs/:id（id 编码）并返回完整事件流", async () => {
+    const { impl, calls } = fetchStub(200, {
+      id: "run 1",
+      agentName: "forge-local",
+      task: "t",
+      status: "running",
+      createdAt: "x",
+      events: [{ name: "run.started" }],
+    });
+    const detail = await fetchLocalRun(
+      { baseUrl: "http://127.0.0.1:1", token: null },
+      "run 1",
+      impl,
+    );
+    expect(detail.events).toHaveLength(1);
+    expect(calls[0]?.url).toBe("http://127.0.0.1:1/api/v1/runs/run%201");
+  });
+
+  it("cancelLocalRun POST /runs/:id/cancel", async () => {
+    const { impl, calls } = fetchStub(200, {
+      id: "run 1",
+      agentName: "forge-local",
+      task: "t",
+      status: "cancelled",
+      createdAt: "x",
+      events: [],
+    });
+    const record = await cancelLocalRun(
+      { baseUrl: "http://127.0.0.1:1", token: "rt" },
+      "run 1",
+      impl,
+    );
+    expect(record.status).toBe("cancelled");
+    expect(calls[0]?.url).toBe("http://127.0.0.1:1/api/v1/runs/run%201/cancel");
+    expect(calls[0]?.init?.method).toBe("POST");
   });
 });
