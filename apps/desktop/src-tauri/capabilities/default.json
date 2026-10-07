@@ -1,7 +1,15 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "主窗口默认能力：核心 IPC + 打开外部链接（Least Privilege）",
+  "description": "主窗口默认能力：核心 IPC + 打开外部链接 + 自定义标题栏的窗口操作（Least Privilege）",
   "windows": ["main"],
-  "permissions": ["core:default", "opener:default", "notification:default"]
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "notification:default",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-close",
+    "core:window:allow-start-dragging"
+  ]
 }

@@ -23,6 +23,14 @@
     "active": true,
     "externalBin": ["binaries/forge-runner"],
     "targets": "all",
+    "windows": {
+      "nsis": {
+        "installerIcon": "icons/icon.ico",
+        "headerImage": "icons/nsis/headerImage.bmp",
+        "sidebarImage": "icons/nsis/sidebarImage.bmp",
+        "languages": ["SimpChinese", "English"]
+      }
+    },
     "icon": [
       "icons/32x32.png",
       "icons/64x64.png",
