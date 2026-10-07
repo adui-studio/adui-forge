@@ -58,45 +58,44 @@ const NAV_ITEMS: Array<{ key: PageKey; icon: typeof Rocket; label: string }> = [
   { key: "settings", icon: SettingsIcon, label: "设置" },
 ];
 
-/** 自定义标题栏（decorations:false；浏览器 dev 时不渲染窗口控制）。 */
+/** 自定义标题栏（decorations:false；按钮常驻渲染，非 Tauri 环境点击 no-op）。 */
 function TitleBar() {
-  const desktop = useMemo(() => isTauri(), []);
   return (
     <div
       data-tauri-drag-region
-      className="flex h-10 shrink-0 select-none items-center gap-2.5 border-b border-[#232833] px-4"
+      className="flex h-11 shrink-0 select-none items-center border-b border-[#232833]"
       style={{ background: "#0F1116" }}
     >
-      <img src={logoUrl} alt="ADui Forge" className="h-5 w-5" />
-      <span className="text-sm font-semibold">ADui Forge</span>
-      <span className="font-mono text-[10px] text-slate-500">
-        Desktop · v{typeof __APP_VERSION__ === "string" ? __APP_VERSION__ : "dev"}
-      </span>
-      {desktop && (
-        <div className="ml-auto flex h-full items-center">
-          <button
-            className="flex h-full w-11 items-center justify-center text-slate-400 hover:bg-[#2A2F3A] hover:text-slate-100"
-            onClick={() => void minimizeWindow()}
-            aria-label="最小化"
-          >
-            <Minus size={14} />
-          </button>
-          <button
-            className="flex h-full w-11 items-center justify-center text-slate-400 hover:bg-[#2A2F3A] hover:text-slate-100"
-            onClick={() => void toggleMaximizeWindow()}
-            aria-label="最大化"
-          >
-            <Square size={12} />
-          </button>
-          <button
-            className="flex h-full w-11 items-center justify-center text-slate-400 hover:bg-red-500/90 hover:text-white"
-            onClick={() => void closeWindow()}
-            aria-label="关闭"
-          >
-            <X size={15} />
-          </button>
-        </div>
-      )}
+      <div data-tauri-drag-region className="flex w-[216px] shrink-0 items-center gap-2.5 px-4">
+        <img src={logoUrl} alt="ADui Forge" className="h-6 w-6" />
+        <span className="text-sm font-semibold tracking-wide">ADui Forge</span>
+        <span className="font-mono text-[10px] text-slate-500">
+          v{typeof __APP_VERSION__ === "string" ? __APP_VERSION__ : "dev"}
+        </span>
+      </div>
+      <div className="ml-auto flex h-full items-center self-stretch">
+        <button
+          className="flex h-full w-[46px] items-center justify-center text-slate-400 hover:bg-[#2A2F3A] hover:text-slate-100"
+          onClick={() => void minimizeWindow()}
+          aria-label="最小化"
+        >
+          <Minus size={15} />
+        </button>
+        <button
+          className="flex h-full w-[46px] items-center justify-center text-slate-400 hover:bg-[#2A2F3A] hover:text-slate-100"
+          onClick={() => void toggleMaximizeWindow()}
+          aria-label="最大化"
+        >
+          <Square size={12} />
+        </button>
+        <button
+          className="flex h-full w-[46px] items-center justify-center text-slate-400 hover:bg-red-500 hover:text-white"
+          onClick={() => void closeWindow()}
+          aria-label="关闭"
+        >
+          <X size={16} />
+        </button>
+      </div>
     </div>
   );
 }
@@ -137,7 +136,20 @@ export function useAppState() {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [cancellingRun, setCancellingRun] = useState(false);
 
-  const desktop = useMemo(() => isTauri(), []);
+  // isTauri 运行时判定 + 重试：理论注入先于脚本，重试兜底任何时序差异
+  const [desktop, setDesktop] = useState(() => isTauri());
+  useEffect(() => {
+    if (isTauri()) {
+      setDesktop(true);
+      return;
+    }
+    const timers = [300, 1000, 2500].map((delay) =>
+      setTimeout(() => {
+        if (isTauri()) setDesktop(true);
+      }, delay),
+    );
+    return () => timers.forEach(clearTimeout);
+  }, []);
   const runnerEndpoint = useMemo(
     () =>
       runner?.running === true && runner.baseUrl !== null
@@ -369,16 +381,9 @@ export default function App() {
       <Layout className="min-h-0 flex-1" style={{ background: "#12141A" }}>
         <Sider width={216} style={{ background: "#0F1116", borderRight: "1px solid #232833" }}>
           <div className="flex h-full flex-col">
-            <div className="flex items-center gap-2.5 px-4 py-4">
-              <img src={logoUrl} alt="" className="h-7 w-7" />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold leading-tight">ADui Forge</p>
-                <p className="font-mono text-[10px] text-slate-500">Workspace</p>
-              </div>
-            </div>
             <Menu
               mode="inline"
-              style={{ background: "transparent", borderInlineEnd: "none", padding: "0 8px" }}
+              style={{ background: "transparent", borderInlineEnd: "none", padding: "12px 8px 0" }}
               selectedKeys={[page]}
               onClick={(info) => state.setPage(info.key as PageKey)}
               items={NAV_ITEMS.map((item) => ({
